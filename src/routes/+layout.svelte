@@ -17,6 +17,10 @@
   <meta name="description" content={data.description} />
   <link rel="canonical" href={data.canonicalURL} />
 
+  {#if data.robots}
+    <meta name="robots" content={data.robots} />
+  {/if}
+
   <!-- OpenGraph -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content={data.canonicalURL} />
