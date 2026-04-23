@@ -1,0 +1,30 @@
+# ==========================================
+# LUMIVIA - BOTS & AI ENGINE OPTIMIZATION 
+# ==========================================
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Agentes IA
+User-agent: GPTBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Google-Extended
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+
+# Regla Global
+User-agent: *
+Allow: /
+
+# EL SITEMAP CORRECTO (Con WWW y tu nombre de archivo exacto)
+Sitemap: https://www.lumivia.app/sitemap.xml
