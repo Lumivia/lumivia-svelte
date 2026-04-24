@@ -1,43 +1,38 @@
+// src/routes/masdestinos/+page.server.ts
 import type { PageServerLoad } from './$types';
 import { createClient } from '@supabase/supabase-js';
-import { error } from '@sveltejs/kit';
 
-// ⚠️ Por ahora dejamos las keys aquí como en Astro.
-// Luego las movemos a variables de entorno privadas.
 const SUPABASE_URL = 'https://khmkpkbhlzpvowesbkgu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_uyjRiobM7d6m7IdMPUQi9Q_-RPZuIvt';
-
+// Idealmente mover a variables de entorno, pero por ahora respetamos tu setup actual.
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-export const load: PageServerLoad = async ({ setHeaders, url }) => {
-    // 1. Cache-Control equivalente al de Astro
-    setHeaders({
-        'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60'
-    });
+const PAGE_SIZE = 18;
 
-    // 2. Consulta global para SEO / bots (últimas 20 ofertas activas)
-    const { data: ofertasGlobales, error: supaError } = await supabase
+export const load: PageServerLoad = async ({ url }) => {
+    // Página actual
+    const pageParam = Number(url.searchParams.get('page') ?? '1');
+    const page = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
+
+    // País de mercado (antes lo resolvías en el cliente)
+    const pais = (url.searchParams.get('pais') ?? 'MX').toUpperCase();
+
+    // Rango para Supabase
+    const from = (page - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    // 1) Ofertas globales para schema.org (igual que en Astro)
+    const { data: ofertasGlobales } = await supabase
         .from('publicaciones_lumivia')
         .select('*')
         .eq('activo', true)
         .order('created_at', { ascending: false })
         .limit(20);
 
-    if (supaError) {
-        console.error('Error Supabase publicaciones_lumivia (masdestinos SSR):', supaError);
-        // No rompemos la página, pero devolvemos sin schema
-        return {
-            ofertasGlobales: [],
-            schemaAEO: null
-        };
-    }
-
-    // 3. Construcción de schema SEO dinámico (igual que en Astro)
-    let schemaAEO: string | null = null;
-    const baseUrl = 'https://www.lumivia.app';
+    let schemaJSON: string | null = null;
 
     if (ofertasGlobales && ofertasGlobales.length > 0) {
-        const schemaOffers = ofertasGlobales.map((deal: any, index: number) => ({
+        const schemaOffers = ofertasGlobales.map((deal, index) => ({
             '@type': 'ListItem',
             position: index + 1,
             item: {
@@ -47,7 +42,7 @@ export const load: PageServerLoad = async ({ setHeaders, url }) => {
                 price: deal.precio,
                 priceCurrency: deal.moneda || deal.currency || 'USD',
                 availability: 'https://schema.org/InStock',
-                url: `${baseUrl}/masdestinos?vuelo=${deal.id}`,
+                url: `https://www.lumivia.app/masdestinos?vuelo=${deal.id}`,
                 itemOffered: {
                     '@type': 'Flight',
                     departureAirport: {
@@ -62,7 +57,7 @@ export const load: PageServerLoad = async ({ setHeaders, url }) => {
             }
         }));
 
-        schemaAEO = JSON.stringify({
+        schemaJSON = JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'CollectionPage',
             name: 'Catálogo Global de Oportunidades - Lumivia',
@@ -76,8 +71,38 @@ export const load: PageServerLoad = async ({ setHeaders, url }) => {
         });
     }
 
+    // 2) Catálogo paginado por país
+    const { data: deals, count, error } = await supabase
+        .from('publicaciones_lumivia')
+        .select('*', { count: 'exact' })
+        .eq('activo', true)
+        .eq('pais_mercado', pais)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+    if (error) {
+        console.error('Error cargando catálogo:', error);
+        return {
+            pais,
+            page,
+            pageSize: PAGE_SIZE,
+            total: 0,
+            totalPages: 1,
+            deals: [],
+            schemaJSON
+        };
+    }
+
+    const total = count ?? 0;
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
     return {
-        ofertasGlobales: ofertasGlobales ?? [],
-        schemaAEO
+        pais,
+        page,
+        pageSize: PAGE_SIZE,
+        total,
+        totalPages,
+        deals: deals ?? [],
+        schemaJSON
     };
 };
