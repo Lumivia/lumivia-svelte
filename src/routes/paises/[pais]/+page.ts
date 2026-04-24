@@ -1,7 +1,7 @@
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ data }) => {
-  const { mercado, schemaJSON } = data;
+  const { mercado, schemaAEO } = data;
 
   return {
     ...data,
@@ -11,7 +11,7 @@ export const load: PageLoad = async ({ data }) => {
     description: `Encuentra las mejores ofertas de vuelos y viajes desde ${mercado.nombre}. Lumivia rastrea tarifas ocultas diariamente para que viajes más pagando menos.`,
     robots: 'index, follow',
 
-    // Pasamos el schema al layout
-    schemaAEO: schemaJSON
+    // Pasamos el schema al layout / page
+    schemaAEO
   };
 };
