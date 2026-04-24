@@ -4,23 +4,17 @@
   import { obtenerImagen } from '$lib/utils/imagenes';
   import { copiarUrlUnica } from '$lib/utils/clipboard';
 
-  export let deal: any;
-  export let monedaActual: string;
+  // Runes: reemplazo de export let
+  const { deal, monedaActual } = $props();
 
   const dispatch = createEventDispatcher();
 
-  // Imagen final con fallback
-  const imgFinal = obtenerImagen(deal, 150);
-
-  // Fechas
-  const fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`;
-
-  // Precio
-  const precio = Number(deal.precio || deal.price || 0).toLocaleString('en-US');
-  const monedaDeal = (deal.moneda || deal.currency || monedaActual).toUpperCase();
-
-  // Badge HOT
-  const esHot = deal.calidad_oferta >= 9;
+  // Reactividad derivada
+  $: imgFinal = obtenerImagen(deal, 150);
+  $: fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`;
+  $: precio = Number(deal.precio || deal.price || 0).toLocaleString('en-US');
+  $: monedaDeal = (deal.moneda || deal.currency || monedaActual).toUpperCase();
+  $: esHot = deal.calidad_oferta >= 9;
 
   function abrir() {
     dispatch('abrir', deal);
