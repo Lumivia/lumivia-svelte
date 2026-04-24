@@ -1,20 +1,17 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { createClient } from '@supabase/supabase-js';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
-// 🔥 Variables de entorno (Cloudflare Pages + .env local)
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL!;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY!;
-
-// 🔥 Cliente Supabase exclusivo para servidor
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+// Cliente Supabase (server)
+const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
   auth: {
     persistSession: false,
     autoRefreshToken: false
   }
 });
 
-// Catálogo de mercados permitidos
+// Mercados permitidos
 const mercadosPermitidos = {
   mx: { nombre: 'México', moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' },
   co: { nombre: 'Colombia', moneda: 'COP', bandera: 'https://flagcdn.com/w20/co.png' },
@@ -28,11 +25,9 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
   const paisParam = params.pais ?? '';
   const codigoPais = paisParam.toLowerCase();
 
-  // Validamos país
+  // Validación
   const mercado = mercadosPermitidos[codigoPais as CodigoPais];
-  if (!mercado) {
-    throw redirect(302, '/');
-  }
+  if (!mercado) throw redirect(302, '/');
 
   const paisUpper = codigoPais.toUpperCase();
 
@@ -41,67 +36,43 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
     'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60'
   });
 
-  // Consulta dinámica a Supabase
-  const { data: ofertas, error } = await supabase
+  // 🔥 6 destacadas
+  const { data: destacadas, error: err1 } = await supabase
     .from('publicaciones_lumivia')
     .select('*')
     .eq('activo', true)
     .eq('pais_mercado', paisUpper)
     .order('created_at', { ascending: false })
-    .limit(10);
+    .limit(6);
 
-  if (error) {
-    console.error('Error Supabase publicaciones_lumivia:', error);
-  }
+  if (err1) console.error('Error destacadas:', err1);
 
-  // Construcción de schema SEO dinámico
-  const baseUrl = 'https://www.lumivia.app';
-  let schemaAEO: string | null = null;
+  // 🔥 8 adicionales
+  const { data: masDestinos, error: err2 } = await supabase
+    .from('publicaciones_lumivia')
+    .select('*')
+    .eq('activo', true)
+    .eq('pais_mercado', paisUpper)
+    .order('created_at', { ascending: false })
+    .range(6, 13);
 
-  if (ofertas && ofertas.length > 0) {
-    const schemaOffers = ofertas.map((deal: any, index: number) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      item: {
-        '@type': 'Offer',
-        name: `Vuelo a ${deal.destino} desde ${deal.origen}`,
-        description: deal.titulo_gancho,
-        price: deal.price ?? deal.precio,
-        priceCurrency: mercado.moneda,
-        availability: 'https://schema.org/InStock',
-        url: `${baseUrl}/paises/${codigoPais}/?vuelo=${deal.id}`,
-        itemOffered: {
-          '@type': 'Flight',
-          departureAirport: {
-            '@type': 'Airport',
-            iataCode: deal.origen
-          },
-          arrivalAirport: {
-            '@type': 'Airport',
-            iataCode: deal.destino
-          }
-        }
-      }
-    }));
+  if (err2) console.error('Error masDestinos:', err2);
 
-    schemaAEO = JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'CollectionPage',
-      name: `Catálogo en vivo de Vuelos Baratos desde ${mercado.nombre} - Lumivia`,
-      description: `Las mejores tarifas aéreas detectadas en tiempo real desde ${mercado.nombre}.`,
-      mainEntity: {
-        '@type': 'OfferCatalog',
-        name: `Radar de Vuelos Lumivia ${paisUpper}`,
-        itemListElement: schemaOffers
-      }
-    });
-  }
+  // Schema ligero (NO OfferCatalog para evitar duplicado con MasDestinos)
+  const schemaAEO = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: `Vuelos baratos desde ${mercado.nombre} - Lumivia`,
+    description: `Ofertas destacadas y destinos populares desde ${mercado.nombre}.`,
+    url: `https://www.lumivia.app/${codigoPais}`
+  });
 
   return {
     pais: codigoPais,
     paisUpper,
     mercado,
-    ofertas: ofertas ?? [],
+    destacadas: destacadas ?? [],
+    masDestinos: masDestinos ?? [],
     schemaAEO
   };
 };
