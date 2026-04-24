@@ -9,9 +9,9 @@
     const { pais, page, totalPages, deals, schemaJSON } = data;
 
     // Supabase cliente (lado cliente para radar, newsletter, RPC, etc.)
-    const SUPABASE_URL = 'https://khmkpkbhlzpvowesbkgu.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_uyjRiobM7d6m7IdMPUQi9Q_-RPZuIvt';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+    const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
+
 
     // Configuración de países
     const configMercado: Record<string, { moneda: string; bandera: string }> = {
