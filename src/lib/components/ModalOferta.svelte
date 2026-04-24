@@ -8,10 +8,10 @@
   import ExtrasOferta from '$lib/components/ExtrasOferta.svelte';
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
 
-  export let deal: any = null;
-  export let abierto = false;
-  export let cerrar: () => void;
+  // Runes: reemplazo de export let
+  const { deal, abierto, cerrar } = $props();
 
+  // Estado interno
   let imgFinal = '';
   let fechasCortas = '';
   let esims = [];
@@ -31,6 +31,7 @@
     window.removeEventListener('keydown', handleKey);
   });
 
+  // Reactividad derivada del deal
   $: if (deal) {
     imgFinal = obtenerImagen(deal, 800);
     fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`;
