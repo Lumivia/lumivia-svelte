@@ -34,13 +34,14 @@
   <meta name="twitter:title" content={data.title} />
   <meta name="twitter:description" content={data.description} />
 
-  <!-- Hreflangs -->
-  <link rel="alternate" hreflang="es-mx" href="https://lumivia.app/mx/" />
-  <link rel="alternate" hreflang="es-co" href="https://lumivia.app/co/" />
-  <link rel="alternate" hreflang="es-cl" href="https://lumivia.app/cl/" />
-  <link rel="alternate" hreflang="es-cr" href="https://lumivia.app/cr/" />
-  <link rel="alternate" hreflang="x-default" href="https://lumivia.app/mx/" />
-  <link rel="alternate" hreflang="es" href="https://lumivia.app/mx/" />
+<!-- Hreflangs dinámicos para MasDestinos -->
+<link rel="alternate" hreflang="es-mx" href="https://www.lumivia.app/masdestinos?pais=MX" />
+<link rel="alternate" hreflang="es-co" href="https://www.lumivia.app/masdestinos?pais=CO" />
+<link rel="alternate" hreflang="es-cl" href="https://www.lumivia.app/masdestinos?pais=CL" />
+<link rel="alternate" hreflang="es-cr" href="https://www.lumivia.app/masdestinos?pais=CR" />
+<link rel="alternate" hreflang="es" href="https://www.lumivia.app/masdestinos?pais=MX" />
+<link rel="alternate" hreflang="x-default" href="https://www.lumivia.app/masdestinos?pais=MX" />
+
 
   <!-- Icons -->
   <link rel="icon" type="image/png" href="/favicon.png" />
