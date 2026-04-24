@@ -6,8 +6,10 @@ import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/publi
 const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
 const PAGE_SIZE = 18;
+const BASE_URL = 'https://www.lumivia.app/masdestinos';
 
 export const load: PageServerLoad = async ({ url }) => {
+    // Query params
     const pageParam = Number(url.searchParams.get('page') ?? '1');
     const pageFromQuery = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
 
@@ -15,7 +17,7 @@ export const load: PageServerLoad = async ({ url }) => {
     const vueloParam = url.searchParams.get('vuelo');
     const vueloId = vueloParam ? Number(vueloParam) : null;
 
-    // 1) Schema global
+    // 1) Schema global (últimas 20 ofertas activas, sin filtrar por país)
     const { data: ofertasGlobales } = await supabase
         .from('publicaciones_lumivia')
         .select('*')
@@ -39,8 +41,14 @@ export const load: PageServerLoad = async ({ url }) => {
                 url: `https://www.lumivia.app/masdestinos?vuelo=${deal.id}`,
                 itemOffered: {
                     '@type': 'Flight',
-                    departureAirport: { '@type': 'Airport', iataCode: deal.origen },
-                    arrivalAirport: { '@type': 'Airport', iataCode: deal.destino }
+                    departureAirport: {
+                        '@type': 'Airport',
+                        iataCode: deal.origen
+                    },
+                    arrivalAirport: {
+                        '@type': 'Airport',
+                        iataCode: deal.destino
+                    }
                 }
             }
         }));
@@ -59,7 +67,7 @@ export const load: PageServerLoad = async ({ url }) => {
         });
     }
 
-    // 2) Vuelo único
+    // 2) Modo "vuelo único" (cuando viene ?vuelo=)
     if (vueloId && !Number.isNaN(vueloId)) {
         const { data, error } = await supabase
             .from('publicaciones_lumivia')
@@ -67,6 +75,9 @@ export const load: PageServerLoad = async ({ url }) => {
             .eq('activo', true)
             .eq('id', vueloId)
             .limit(1);
+
+        // Canonical para vuelo único
+        const canonicalURL = `${BASE_URL}?vuelo=${vueloId}`;
 
         if (error) {
             console.error('Error cargando vuelo único:', error);
@@ -77,7 +88,8 @@ export const load: PageServerLoad = async ({ url }) => {
                 total: 0,
                 totalPages: 1,
                 deals: [],
-                schemaJSON
+                schemaJSON,
+                canonicalURL
             };
         }
 
@@ -91,7 +103,8 @@ export const load: PageServerLoad = async ({ url }) => {
                 total: 0,
                 totalPages: 1,
                 deals: [],
-                schemaJSON
+                schemaJSON,
+                canonicalURL
             };
         }
 
@@ -104,11 +117,12 @@ export const load: PageServerLoad = async ({ url }) => {
             total: 1,
             totalPages: 1,
             deals: [dealUnico],
-            schemaJSON
+            schemaJSON,
+            canonicalURL
         };
     }
 
-    // 3) Catálogo paginado
+    // 3) Modo catálogo paginado por país
     const page = pageFromQuery;
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
@@ -121,6 +135,14 @@ export const load: PageServerLoad = async ({ url }) => {
         .order('created_at', { ascending: false })
         .range(from, to);
 
+    // Canonical para catálogo:
+    // - page 1 → sin page en la URL
+    // - page > 1 → incluye page
+    const canonicalURL =
+        page > 1
+            ? `${BASE_URL}?pais=${paisQuery}&page=${page}`
+            : `${BASE_URL}?pais=${paisQuery}`;
+
     if (error) {
         console.error('Error cargando catálogo:', error);
         return {
@@ -130,7 +152,8 @@ export const load: PageServerLoad = async ({ url }) => {
             total: 0,
             totalPages: 1,
             deals: [],
-            schemaJSON
+            schemaJSON,
+            canonicalURL
         };
     }
 
@@ -144,6 +167,7 @@ export const load: PageServerLoad = async ({ url }) => {
         total,
         totalPages,
         deals: deals ?? [],
-        schemaJSON
+        schemaJSON,
+        canonicalURL
     };
 };
