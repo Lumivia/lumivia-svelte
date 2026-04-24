@@ -2,11 +2,17 @@ import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { createClient } from '@supabase/supabase-js';
 
-// ⚠️ Idealmente mover a variables de entorno (.env)
-const SUPABASE_URL = 'https://khmkpkbhlzpvowesbkgu.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_uyjRiobM7d6m7IdMPUQi9Q_-RPZuIvt';
+// 🔥 Variables de entorno (Cloudflare Pages + .env local)
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL!;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY!;
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// 🔥 Cliente Supabase exclusivo para servidor
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false
+  }
+});
 
 // Catálogo de mercados permitidos
 const mercadosPermitidos = {
