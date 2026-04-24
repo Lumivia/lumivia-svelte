@@ -1,4 +1,5 @@
 <script lang="ts">
+  import "../app.css"; // Activa TailwindCSS globalmente
   const { data } = $props();
 </script>
 
@@ -45,14 +46,8 @@
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/favicon.png" />
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Schema AEO dinámico -->
   {#if data.schemaAEO}
