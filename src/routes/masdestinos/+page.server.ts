@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ url }) => {
     const vueloParam = url.searchParams.get('vuelo');
     const vueloId = vueloParam ? Number(vueloParam) : null;
 
-    // 1) Schema global (últimas 20 ofertas activas, sin filtrar por país)
+    // 1) Schema global (últimas 20 ofertas activas)
     const { data: ofertasGlobales } = await supabase
         .from('publicaciones_lumivia')
         .select('*')
@@ -27,6 +27,12 @@ export const load: PageServerLoad = async ({ url }) => {
 
     let schemaJSON: string | null = null;
 
+    // 2) Canonical dinámico (se define antes del schema)
+    let canonicalURL = `${BASE_URL}?pais=${paisQuery}`;
+    if (vueloId) canonicalURL = `${BASE_URL}?vuelo=${vueloId}`;
+    if (!vueloId && pageFromQuery > 1) canonicalURL = `${BASE_URL}?pais=${paisQuery}&page=${pageFromQuery}`;
+
+    // 3) Schema AEO nivel enterprise
     if (ofertasGlobales && ofertasGlobales.length > 0) {
         const schemaOffers = ofertasGlobales.map((deal: any, index: number) => ({
             '@type': 'ListItem',
@@ -35,12 +41,21 @@ export const load: PageServerLoad = async ({ url }) => {
                 '@type': 'Offer',
                 name: `Vuelo a ${deal.destino} desde ${deal.origen}`,
                 description: deal.titulo_gancho,
+                url: `https://www.lumivia.app/masdestinos?vuelo=${deal.id}`,
                 price: deal.precio,
                 priceCurrency: deal.moneda || deal.currency || 'USD',
                 availability: 'https://schema.org/InStock',
-                url: `https://www.lumivia.app/masdestinos?vuelo=${deal.id}`,
+                priceValidUntil: deal.fecha_fin || undefined,
+                availabilityStarts: deal.created_at || undefined,
+                image: deal.url_imagen || undefined,
+                brand: {
+                    '@type': 'Organization',
+                    name: 'Lumivia',
+                    url: 'https://www.lumivia.app'
+                },
                 itemOffered: {
                     '@type': 'Flight',
+                    flightNumber: deal.id,
                     departureAirport: {
                         '@type': 'Airport',
                         iataCode: deal.origen
@@ -55,19 +70,23 @@ export const load: PageServerLoad = async ({ url }) => {
 
         schemaJSON = JSON.stringify({
             '@context': 'https://schema.org',
-            '@type': 'CollectionPage',
+            '@type': 'OfferCatalog',
             name: 'Catálogo Global de Oportunidades - Lumivia',
             description:
                 'Explora todos los destinos y tarifas ocultas globales rastreadas por Lumivia en tiempo real.',
-            mainEntity: {
-                '@type': 'OfferCatalog',
-                name: 'Radar Global Lumivia',
-                itemListElement: schemaOffers
-            }
+            url: canonicalURL,
+            mainEntityOfPage: canonicalURL,
+            publisher: {
+                '@type': 'Organization',
+                name: 'Lumivia',
+                url: 'https://www.lumivia.app',
+                logo: 'https://www.lumivia.app/favicon.png'
+            },
+            itemListElement: schemaOffers
         });
     }
 
-    // 2) Modo "vuelo único" (cuando viene ?vuelo=)
+    // 4) Modo "vuelo único"
     if (vueloId && !Number.isNaN(vueloId)) {
         const { data, error } = await supabase
             .from('publicaciones_lumivia')
@@ -75,9 +94,6 @@ export const load: PageServerLoad = async ({ url }) => {
             .eq('activo', true)
             .eq('id', vueloId)
             .limit(1);
-
-        // Canonical para vuelo único
-        const canonicalURL = `${BASE_URL}?vuelo=${vueloId}`;
 
         if (error) {
             console.error('Error cargando vuelo único:', error);
@@ -122,7 +138,7 @@ export const load: PageServerLoad = async ({ url }) => {
         };
     }
 
-    // 3) Modo catálogo paginado por país
+    // 5) Modo catálogo paginado por país
     const page = pageFromQuery;
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
@@ -134,14 +150,6 @@ export const load: PageServerLoad = async ({ url }) => {
         .eq('pais_mercado', paisQuery)
         .order('created_at', { ascending: false })
         .range(from, to);
-
-    // Canonical para catálogo:
-    // - page 1 → sin page en la URL
-    // - page > 1 → incluye page
-    const canonicalURL =
-        page > 1
-            ? `${BASE_URL}?pais=${paisQuery}&page=${page}`
-            : `${BASE_URL}?pais=${paisQuery}`;
 
     if (error) {
         console.error('Error cargando catálogo:', error);
@@ -171,3 +179,4 @@ export const load: PageServerLoad = async ({ url }) => {
         canonicalURL
     };
 };
+
