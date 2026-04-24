@@ -7,6 +7,8 @@
   import { curarOfertas } from '$lib/utils/curacion';
   import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
   import { onMount } from 'svelte';
+  import Footer from '$lib/components/Footer.svelte';
+
 
 
   // Datos que vienen desde +page.server.ts y +page.ts
@@ -459,7 +461,8 @@ async function enviarRadar() {
 
   </main>
 
-  <!-- Footer (lo agregamos al final) -->
+  <Footer />
+
 
   <!-- Modal -->
   {#if modalAbierto}
