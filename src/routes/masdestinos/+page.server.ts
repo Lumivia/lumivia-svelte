@@ -1,16 +1,13 @@
 // src/routes/masdestinos/+page.server.ts
 import type { PageServerLoad } from './$types';
 import { createClient } from '@supabase/supabase-js';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
-const SUPABASE_URL = 'https://khmkpkbhlzpvowesbkgu.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_uyjRiobM7d6m7IdMPUQi9Q_-RPZuIvt';
-// (Ideal mover a env, pero respetamos tu setup actual)
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
 const PAGE_SIZE = 18;
 
 export const load: PageServerLoad = async ({ url }) => {
-    // Query params
     const pageParam = Number(url.searchParams.get('page') ?? '1');
     const pageFromQuery = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
 
@@ -18,7 +15,7 @@ export const load: PageServerLoad = async ({ url }) => {
     const vueloParam = url.searchParams.get('vuelo');
     const vueloId = vueloParam ? Number(vueloParam) : null;
 
-    // 1) Schema global (últimas 20 ofertas activas, sin filtrar por país)
+    // 1) Schema global
     const { data: ofertasGlobales } = await supabase
         .from('publicaciones_lumivia')
         .select('*')
@@ -42,14 +39,8 @@ export const load: PageServerLoad = async ({ url }) => {
                 url: `https://www.lumivia.app/masdestinos?vuelo=${deal.id}`,
                 itemOffered: {
                     '@type': 'Flight',
-                    departureAirport: {
-                        '@type': 'Airport',
-                        iataCode: deal.origen
-                    },
-                    arrivalAirport: {
-                        '@type': 'Airport',
-                        iataCode: deal.destino
-                    }
+                    departureAirport: { '@type': 'Airport', iataCode: deal.origen },
+                    arrivalAirport: { '@type': 'Airport', iataCode: deal.destino }
                 }
             }
         }));
@@ -68,7 +59,7 @@ export const load: PageServerLoad = async ({ url }) => {
         });
     }
 
-    // 2) Modo "vuelo único" (cuando viene ?vuelo=)
+    // 2) Vuelo único
     if (vueloId && !Number.isNaN(vueloId)) {
         const { data, error } = await supabase
             .from('publicaciones_lumivia')
@@ -93,7 +84,6 @@ export const load: PageServerLoad = async ({ url }) => {
         const dealUnico = data && data.length > 0 ? data[0] : null;
 
         if (!dealUnico) {
-            // Vuelo no encontrado: devolvemos catálogo vacío pero sin romper
             return {
                 pais: paisQuery,
                 page: 1,
@@ -105,8 +95,6 @@ export const load: PageServerLoad = async ({ url }) => {
             };
         }
 
-        // En modo vuelo único ignoramos paginación y país de query para el filtro;
-        // pero devolvemos el pais_mercado real del vuelo para coherencia en el front.
         const paisReal = (dealUnico as any).pais_mercado || paisQuery;
 
         return {
@@ -120,7 +108,7 @@ export const load: PageServerLoad = async ({ url }) => {
         };
     }
 
-    // 3) Modo catálogo paginado por país
+    // 3) Catálogo paginado
     const page = pageFromQuery;
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
