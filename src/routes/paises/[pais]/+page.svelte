@@ -4,12 +4,13 @@
   import ModalOferta from '$lib/components/ModalOferta.svelte';
   import DealCard from '$lib/components/DealCard.svelte';
   import RadarItem from '$lib/components/RadarItem.svelte';
+  import Footer from '$lib/components/Footer.svelte';
+
   import { curarOfertas } from '$lib/utils/curacion';
   import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
-  import Footer from '$lib/components/Footer.svelte';
   import { supabase } from '$lib/supabaseClient';
 
-  // Runes: reemplazo de export let data
+  // Runes: props modernos
   const { data } = $props();
 
   const {
@@ -22,18 +23,39 @@
     description
   } = data;
 
-  // Estado global
-  let ofertasHook: any[] = [];
-  let ofertasRadar: any[] = [];
-  let ofertaSeleccionada: any = null;
-  let modalAbierto = false;
-  let scrollContainer: HTMLElement | null = null;
+  // -----------------------------
+  // ESTADOS (RUNES)
+  // -----------------------------
+  let ofertasHook = $state<any[]>([]);
+  let ofertasRadar = $state<any[]>([]);
+  let ofertaSeleccionada = $state<any | null>(null);
+  let modalAbierto = $state(false);
 
-  // Procesar ofertas iniciales
+  let scrollContainer = $state<HTMLElement | null>(null);
+
+  // Newsletter
+  let emailNewsletter = $state('');
+  let newsletterMensaje = $state('');
+  let newsletterClase = $state('');
+  let newsletterCargando = $state(false);
+
+  // Radar personalizado
+  let radarNombre = $state('');
+  let radarOrigen = $state('');
+  let radarDestino = $state('');
+  let radarMes = $state('');
+  let radarContacto = $state('');
+  let radarExito = $state(false);
+  let radarCargando = $state(false);
+  let meses = $state<string[]>([]);
+
+  // -----------------------------
+  // PROCESAR OFERTAS
+  // -----------------------------
   function procesarOfertasIniciales() {
-    if (!data.ofertas || data.ofertas.length === 0) return;
+    if (!ofertas || ofertas.length === 0) return;
 
-    const enriquecidas = data.ofertas.map((d) => ({
+    const enriquecidas = ofertas.map((d) => ({
       ...d,
       tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at)
     }));
@@ -44,7 +66,9 @@
     ofertasRadar = radarDeals;
   }
 
-  // Carrusel
+  // -----------------------------
+  // CARRUSEL
+  // -----------------------------
   function iniciarCarrusel() {
     if (!scrollContainer) return;
 
@@ -64,12 +88,9 @@
     return () => clearInterval(intervalo);
   }
 
-  // Newsletter
-  let emailNewsletter = '';
-  let newsletterMensaje = '';
-  let newsletterClase = '';
-  let newsletterCargando = false;
-
+  // -----------------------------
+  // NEWSLETTER
+  // -----------------------------
   async function enviarNewsletter() {
     newsletterCargando = true;
     newsletterMensaje = '';
@@ -94,16 +115,9 @@
     }
   }
 
-  // Radar personalizado
-  let radarNombre = '';
-  let radarOrigen = '';
-  let radarDestino = '';
-  let radarMes = '';
-  let radarContacto = '';
-  let radarExito = false;
-  let radarCargando = false;
-  let meses: string[] = [];
-
+  // -----------------------------
+  // RADAR PERSONALIZADO
+  // -----------------------------
   function poblarMeses() {
     const fechaActual = new Date();
     meses = [];
@@ -141,7 +155,9 @@
     }
   }
 
-  // Modal
+  // -----------------------------
+  // MODAL
+  // -----------------------------
   function abrirModal(oferta: any) {
     ofertaSeleccionada = oferta;
     modalAbierto = true;
@@ -152,7 +168,9 @@
     ofertaSeleccionada = null;
   }
 
-  // Inicialización
+  // -----------------------------
+  // INICIALIZACIÓN
+  // -----------------------------
   onMount(() => {
     procesarOfertasIniciales();
     poblarMeses();
@@ -173,6 +191,9 @@
   {/if}
 </svelte:head>
 
+<!-- ========================= -->
+<!-- CONTENIDO PRINCIPAL -->
+<!-- ========================= -->
 <div class="bg-gray-50 text-lumiDark min-h-screen">
   <Header {paisUpper} {mercado} />
 
