@@ -1,7 +1,6 @@
 <script lang="ts">
-  export let esims = [];
-  export let tours = [];
-  export let hoteles: any = null;
+  // Runes: reemplazo de export let
+  const { esims, tours, hoteles } = $props();
 </script>
 
 <div class="space-y-10">
