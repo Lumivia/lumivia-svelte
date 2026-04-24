@@ -3,13 +3,12 @@ import { redirect } from '@sveltejs/kit';
 import { createClient } from '@supabase/supabase-js';
 
 // ⚠️ Idealmente mover a variables de entorno (.env)
-// Por ahora los dejamos igual que en Astro para mantener paridad.
 const SUPABASE_URL = 'https://khmkpkbhlzpvowesbkgu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_uyjRiobM7d6m7IdMPUQi9Q_-RPZuIvt';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Catálogo de mercados permitidos (igual que en Astro)
+// Catálogo de mercados permitidos
 const mercadosPermitidos = {
   mx: { nombre: 'México', moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' },
   co: { nombre: 'Colombia', moneda: 'COP', bandera: 'https://flagcdn.com/w20/co.png' },
@@ -31,7 +30,7 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 
   const paisUpper = codigoPais.toUpperCase();
 
-  // Cache-Control (equivalente a Astro.response.headers.set)
+  // Cache-Control
   setHeaders({
     'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60'
   });
@@ -51,7 +50,7 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 
   // Construcción de schema SEO dinámico
   const baseUrl = 'https://www.lumivia.app';
-  let schemaJSON: string | null = null;
+  let schemaAEO: string | null = null;
 
   if (ofertas && ofertas.length > 0) {
     const schemaOffers = ofertas.map((deal: any, index: number) => ({
@@ -79,7 +78,7 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
       }
     }));
 
-    schemaJSON = JSON.stringify({
+    schemaAEO = JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
       name: `Catálogo en vivo de Vuelos Baratos desde ${mercado.nombre} - Lumivia`,
@@ -97,6 +96,6 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
     paisUpper,
     mercado,
     ofertas: ofertas ?? [],
-    schemaJSON
+    schemaAEO
   };
 };
