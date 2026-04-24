@@ -1,50 +1,52 @@
-<script>
-  // Se ejecuta solo en el navegador
-  if (typeof window !== 'undefined') {
+<script lang="ts">
+  import { onMount } from 'svelte';
+
+  onMount(() => {
     const paisGuardado = localStorage.getItem('lumivia_pais');
 
     if (paisGuardado) {
       window.location.replace(`/paises/${paisGuardado.toLowerCase()}/`);
-    } else {
-      try {
-        const zonaHoraria = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        let pais = 'mx';
-
-        if (zonaHoraria.includes('Bogota') || zonaHoraria.includes('Colombia')) {
-          pais = 'co';
-        } else if (
-          zonaHoraria.includes('Santiago') ||
-          zonaHoraria.includes('Chile') ||
-          zonaHoraria.includes('Punta_Arenas') ||
-          zonaHoraria.includes('Easter')
-        ) {
-          pais = 'cl';
-        } else if (zonaHoraria.includes('Costa_Rica')) {
-          pais = 'cr';
-        } else if (
-          zonaHoraria.includes('Mexico') ||
-          zonaHoraria.includes('Cancun') ||
-          zonaHoraria.includes('Monterrey') ||
-          zonaHoraria.includes('Tijuana') ||
-          zonaHoraria.includes('Hermosillo') ||
-          zonaHoraria.includes('Mazatlan') ||
-          zonaHoraria.includes('Chihuahua') ||
-          zonaHoraria.includes('Ojinaga') ||
-          zonaHoraria.includes('Matamoros') ||
-          zonaHoraria.includes('Merida') ||
-          zonaHoraria.includes('Bahia_Banderas')
-        ) {
-          pais = 'mx';
-        }
-
-        localStorage.setItem('lumivia_pais', pais.toUpperCase());
-        window.location.replace(`/paises/${pais}/`);
-      } catch (e) {
-        localStorage.setItem('lumivia_pais', 'MX');
-        window.location.replace('/paises/mx/');
-      }
+      return;
     }
-  }
+
+    try {
+      const zonaHoraria = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      let pais = 'mx';
+
+      if (zonaHoraria.includes('Bogota') || zonaHoraria.includes('Colombia')) {
+        pais = 'co';
+      } else if (
+        zonaHoraria.includes('Santiago') ||
+        zonaHoraria.includes('Chile') ||
+        zonaHoraria.includes('Punta_Arenas') ||
+        zonaHoraria.includes('Easter')
+      ) {
+        pais = 'cl';
+      } else if (zonaHoraria.includes('Costa_Rica')) {
+        pais = 'cr';
+      } else if (
+        zonaHoraria.includes('Mexico') ||
+        zonaHoraria.includes('Cancun') ||
+        zonaHoraria.includes('Monterrey') ||
+        zonaHoraria.includes('Tijuana') ||
+        zonaHoraria.includes('Hermosillo') ||
+        zonaHoraria.includes('Mazatlan') ||
+        zonaHoraria.includes('Chihuahua') ||
+        zonaHoraria.includes('Ojinaga') ||
+        zonaHoraria.includes('Matamoros') ||
+        zonaHoraria.includes('Merida') ||
+        zonaHoraria.includes('Bahia_Banderas')
+      ) {
+        pais = 'mx';
+      }
+
+      localStorage.setItem('lumivia_pais', pais.toUpperCase());
+      window.location.replace(`/paises/${pais}/`);
+    } catch (e) {
+      localStorage.setItem('lumivia_pais', 'MX');
+      window.location.replace('/paises/mx/');
+    }
+  });
 </script>
 
 <!-- Loader visual -->
@@ -54,7 +56,7 @@
 </div>
 
 <style>
-  body {
+  :global(body) {
     background-color: #f9fafb;
     display: flex;
     justify-content: center;
