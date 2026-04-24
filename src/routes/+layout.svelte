@@ -1,5 +1,5 @@
-<script>
-  export let data;
+<script lang="ts">
+  const { data } = $props();
 </script>
 
 <svelte:head>
