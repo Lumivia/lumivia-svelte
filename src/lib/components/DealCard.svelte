@@ -6,25 +6,20 @@
   import { reportarCambioPrecio } from '$lib/utils/reportes';
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
 
-  export let deal: any;
-  export let monedaActual: string;
-  export let paisActual: string;
+  // Runes: reemplazo de export let
+  const { deal, monedaActual, paisActual } = $props();
 
   const dispatch = createEventDispatcher();
 
-  // Imagen final con fallback
-  const imgFinal = obtenerImagen(deal);
-
-  // Fechas
-  const fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`;
-
-  // Precio
-  const precio = Number(deal.precio || deal.price || 0).toLocaleString('en-US');
-  const monedaDeal = (deal.moneda || deal.currency || monedaActual).toUpperCase();
+  // Reactividad derivada
+  $: imgFinal = obtenerImagen(deal);
+  $: fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`;
+  $: precio = Number(deal.precio || deal.price || 0).toLocaleString('en-US');
+  $: monedaDeal = (deal.moneda || deal.currency || monedaActual).toUpperCase();
 
   // Badges
-  const esVip = deal.tipo_vuelo === 'directo';
-  const esHot = deal.calidad_oferta >= 9;
+  $: esVip = deal.tipo_vuelo === 'directo';
+  $: esHot = deal.calidad_oferta >= 9;
 
   function abrir() {
     dispatch('abrir', deal);
