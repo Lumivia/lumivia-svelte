@@ -4,24 +4,21 @@ import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://khmkpkbhlzpvowesbkgu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_uyjRiobM7d6m7IdMPUQi9Q_-RPZuIvt';
-// Idealmente mover a variables de entorno, pero por ahora respetamos tu setup actual.
+// (Ideal mover a env, pero respetamos tu setup actual)
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const PAGE_SIZE = 18;
 
 export const load: PageServerLoad = async ({ url }) => {
-    // Página actual
+    // Query params
     const pageParam = Number(url.searchParams.get('page') ?? '1');
-    const page = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
+    const pageFromQuery = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
 
-    // País de mercado (antes lo resolvías en el cliente)
-    const pais = (url.searchParams.get('pais') ?? 'MX').toUpperCase();
+    const paisQuery = (url.searchParams.get('pais') ?? 'MX').toUpperCase();
+    const vueloParam = url.searchParams.get('vuelo');
+    const vueloId = vueloParam ? Number(vueloParam) : null;
 
-    // Rango para Supabase
-    const from = (page - 1) * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
-
-    // 1) Ofertas globales para schema.org (igual que en Astro)
+    // 1) Schema global (últimas 20 ofertas activas, sin filtrar por país)
     const { data: ofertasGlobales } = await supabase
         .from('publicaciones_lumivia')
         .select('*')
@@ -32,7 +29,7 @@ export const load: PageServerLoad = async ({ url }) => {
     let schemaJSON: string | null = null;
 
     if (ofertasGlobales && ofertasGlobales.length > 0) {
-        const schemaOffers = ofertasGlobales.map((deal, index) => ({
+        const schemaOffers = ofertasGlobales.map((deal: any, index: number) => ({
             '@type': 'ListItem',
             position: index + 1,
             item: {
@@ -71,19 +68,75 @@ export const load: PageServerLoad = async ({ url }) => {
         });
     }
 
-    // 2) Catálogo paginado por país
+    // 2) Modo "vuelo único" (cuando viene ?vuelo=)
+    if (vueloId && !Number.isNaN(vueloId)) {
+        const { data, error } = await supabase
+            .from('publicaciones_lumivia')
+            .select('*')
+            .eq('activo', true)
+            .eq('id', vueloId)
+            .limit(1);
+
+        if (error) {
+            console.error('Error cargando vuelo único:', error);
+            return {
+                pais: paisQuery,
+                page: 1,
+                pageSize: PAGE_SIZE,
+                total: 0,
+                totalPages: 1,
+                deals: [],
+                schemaJSON
+            };
+        }
+
+        const dealUnico = data && data.length > 0 ? data[0] : null;
+
+        if (!dealUnico) {
+            // Vuelo no encontrado: devolvemos catálogo vacío pero sin romper
+            return {
+                pais: paisQuery,
+                page: 1,
+                pageSize: PAGE_SIZE,
+                total: 0,
+                totalPages: 1,
+                deals: [],
+                schemaJSON
+            };
+        }
+
+        // En modo vuelo único ignoramos paginación y país de query para el filtro;
+        // pero devolvemos el pais_mercado real del vuelo para coherencia en el front.
+        const paisReal = (dealUnico as any).pais_mercado || paisQuery;
+
+        return {
+            pais: paisReal,
+            page: 1,
+            pageSize: PAGE_SIZE,
+            total: 1,
+            totalPages: 1,
+            deals: [dealUnico],
+            schemaJSON
+        };
+    }
+
+    // 3) Modo catálogo paginado por país
+    const page = pageFromQuery;
+    const from = (page - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
     const { data: deals, count, error } = await supabase
         .from('publicaciones_lumivia')
         .select('*', { count: 'exact' })
         .eq('activo', true)
-        .eq('pais_mercado', pais)
+        .eq('pais_mercado', paisQuery)
         .order('created_at', { ascending: false })
         .range(from, to);
 
     if (error) {
         console.error('Error cargando catálogo:', error);
         return {
-            pais,
+            pais: paisQuery,
             page,
             pageSize: PAGE_SIZE,
             total: 0,
@@ -97,7 +150,7 @@ export const load: PageServerLoad = async ({ url }) => {
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     return {
-        pais,
+        pais: paisQuery,
         page,
         pageSize: PAGE_SIZE,
         total,
