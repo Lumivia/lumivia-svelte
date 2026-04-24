@@ -1,14 +1,14 @@
 <script lang="ts">
-  export let deal: any;
-  export let paisActual: string;
+  // Runes: reemplazo de export let
+  const { deal, paisActual } = $props();
 
-  // Normalización
-  const vueloDirecto = deal.tipo_vuelo === 'directo';
-  const escalas = deal.escalas || 0;
-  const equipaje = deal.equipaje || 'Sin equipaje';
-  const aerolinea = deal.aerolinea || deal.airline || '';
-  const duracion = deal.duracion || deal.duration || '';
-  const clase = deal.clase || deal.fare_class || '';
+  // Variables derivadas (reactivas)
+  $: vueloDirecto = deal?.tipo_vuelo === 'directo';
+  $: escalas = deal?.escalas ?? 0;
+  $: equipaje = deal?.equipaje ?? 'Sin equipaje';
+  $: aerolinea = deal?.aerolinea ?? deal?.airline ?? '';
+  $: duracion = deal?.duracion ?? deal?.duration ?? '';
+  $: clase = deal?.clase ?? deal?.fare_class ?? '';
 </script>
 
 <div class="flex flex-wrap items-center gap-3 text-[11px] text-gray-500 font-medium">
