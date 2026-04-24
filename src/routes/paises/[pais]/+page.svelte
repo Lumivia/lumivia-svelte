@@ -4,6 +4,10 @@
   import ModalOferta from '$lib/components/ModalOferta.svelte';
   import DealCard from '$lib/components/DealCard.svelte';
   import RadarItem from '$lib/components/RadarItem.svelte';
+  import { curarOfertas } from '$lib/utils/curacion';
+  import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
+  import { onMount } from 'svelte';
+
 
   // Datos que vienen desde +page.server.ts y +page.ts
   export let data;
@@ -23,6 +27,26 @@
   let ofertasRadar: any[] = [];
   let ofertaSeleccionada: any = null;
   let modalAbierto = false;
+  let ofertasHook: any[] = [];
+  let ofertasRadar: any[] = [];
+  let scrollContainer: HTMLElement | null = null;
+
+function procesarOfertasIniciales() {
+  if (!data.ofertas || data.ofertas.length === 0) return;
+
+  // Añadimos tiempo transcurrido a cada deal
+  const enriquecidas = data.ofertas.map((d) => ({
+    ...d,
+    tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at)
+  }));
+
+  // Curamos las ofertas
+  const { hookDeals, radarDeals } = curarOfertas(enriquecidas, paisUpper);
+
+  ofertasHook = hookDeals;
+  ofertasRadar = radarDeals;
+}
+
 
   // Inicialización
   onMount(() => {
@@ -30,6 +54,11 @@
     // - curarOfertas()
     // - poblar meses
     // - cargar deals
+procesarOfertasIniciales();
+iniciarCarrusel();
+poblarMeses();
+
+
   });
 
   function abrirModal(oferta: any) {
@@ -41,6 +70,26 @@
     modalAbierto = false;
     ofertaSeleccionada = null;
   }
+
+function iniciarCarrusel() {
+  if (!scrollContainer) return;
+
+  const intervalo = setInterval(() => {
+    if (!scrollContainer) return;
+
+    const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+
+    if (scrollContainer.scrollLeft >= maxScroll - 10) {
+      scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      const avance = scrollContainer.children[0]?.clientWidth + 24 || 300;
+      scrollContainer.scrollBy({ left: avance, behavior: 'smooth' });
+    }
+  }, 5000);
+
+  return () => clearInterval(intervalo);
+}
+
 
 // Newsletter
 let emailNewsletter = '';
@@ -72,6 +121,55 @@ async function enviarNewsletter() {
   }
 }
 
+// Radar Personalizado
+let radarNombre = '';
+let radarOrigen = '';
+let radarDestino = '';
+let radarMes = '';
+let radarContacto = '';
+
+let radarExito = false;
+let radarCargando = false;
+
+let meses: string[] = [];
+
+function poblarMeses() {
+  const fechaActual = new Date();
+  meses = [];
+
+  for (let i = 0; i < 12; i++) {
+    const fechaFutura = new Date(fechaActual.getFullYear(), fechaActual.getMonth() + i, 1);
+    const mesTexto = fechaFutura.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    const mesFormateado = mesTexto.charAt(0).toUpperCase() + mesTexto.slice(1);
+    meses.push(mesFormateado);
+  }
+}
+
+async function enviarRadar() {
+  radarCargando = true;
+  radarExito = false;
+
+  const { error } = await supabase
+    .from('radares_personales')
+    .insert([{
+      nombre: radarNombre,
+      origen: radarOrigen,
+      destino: radarDestino,
+      mes_esperado: radarMes,
+      contacto: radarContacto,
+      status: 'pendiente_verificacion'
+    }]);
+
+  radarCargando = false;
+
+  if (!error) {
+    radarExito = true;
+    radarNombre = radarOrigen = radarDestino = radarMes = radarContacto = '';
+  } else {
+    alert("Hubo un error al guardar. Intenta de nuevo.");
+    console.error(error);
+  }
+}
 
 </script>
 
@@ -158,13 +256,206 @@ async function enviarNewsletter() {
 </div>
 
 
-    <!-- SECCIÓN OPORTUNIDADES DESTACADAS -->
+<!-- OPORTUNIDADES DESTACADAS -->
+<div class="mb-6 flex items-center justify-between" id="titulo-hook">
+  <h2 class="text-2xl font-bold tracking-tight">Oportunidades Destacadas</h2>
+</div>
 
-    <!-- SECCIÓN MÁS DESTINOS (RADAR) -->
+<div class="relative w-full mb-16 group">
+  <div
+    bind:this={scrollContainer}
+    class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth"
+  >
+    {#if ofertasHook.length === 0}
+      <div class="w-full text-center text-gray-400 py-10 font-medium animate-pulse">
+        Conectando con la base de datos...
+      </div>
+    {:else}
+      {#each ofertasHook as deal}
+        <DealCard
+          {deal}
+          monedaActual={mercado.moneda}
+          paisActual={paisUpper}
+          on:abrir={(e) => abrirModal(e.detail)}
+        />
+      {/each}
+    {/if}
+  </div>
+</div>
 
-    <!-- SECCIÓN BUSCADOR GLOBAL -->
 
-    <!-- SECCIÓN RADAR PERSONALIZADO -->
+<!-- MÁS DESTINOS -->
+<div class="mb-6 mt-4" id="titulo-radar">
+  <h2 class="text-2xl font-bold tracking-tight">Más Destinos</h2>
+</div>
+
+<div class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6" id="contenedor-radar">
+  <ul class="divide-y divide-gray-100/80">
+    {#if ofertasRadar.length === 0}
+      <li class="p-6 text-gray-400 text-center">No hay más destinos por ahora.</li>
+    {:else}
+      {#each ofertasRadar as deal}
+        <RadarItem
+          {deal}
+          monedaActual={mercado.moneda}
+          on:abrir={(e) => abrirModal(e.detail)}
+        />
+      {/each}
+    {/if}
+  </ul>
+</div>
+
+<div class="text-center mb-16 relative z-10" id="btn-radar-completo">
+  <a
+    href="/masdestinos/"
+    class="inline-flex items-center justify-center bg-white border border-gray-200 text-lumiDark hover:border-lumiCyan hover:text-lumiCyan px-8 py-3.5 rounded-full font-bold transition-all shadow-sm hover:shadow-md active:scale-95 text-sm group"
+  >
+    Explorar más destinos
+    <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+    </svg>
+  </a>
+</div>
+
+
+<!-- BUSCADOR GLOBAL -->
+<div class="bg-lumiDark text-white border border-gray-800 rounded-3xl px-8 py-8 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 mb-20 transform transition-all hover:scale-[1.01] duration-500 group">
+  <div class="absolute inset-0 bg-gradient-to-r from-lumiCyan/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+
+  <div class="relative z-10 text-center md:text-left flex-grow">
+    <h3 class="text-2xl font-bold mb-2">¿Tienes un viaje específico en mente?</h3>
+    <p class="text-gray-400 text-sm font-light">
+      Explora nuestro buscador global y compara todas las aerolíneas en milisegundos.
+    </p>
+  </div>
+
+  <div class="relative z-10 whitespace-nowrap">
+    <a
+      href="https://vuelos.lumivia.app/"
+      target="_blank"
+      class="inline-flex items-center justify-center bg-white text-lumiDark hover:bg-lumiCyan hover:text-white px-8 py-3 rounded-2xl font-extrabold transition-all shadow-[0_0_20px_rgba(0,210,255,0.3)] active:scale-95 text-sm uppercase tracking-wide"
+    >
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      </svg>
+      Abrir Buscador
+    </a>
+  </div>
+</div>
+
+
+ <!-- RADAR PERSONALIZADO -->
+<div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800">
+  <div class="absolute right-0 bottom-0 opacity-10 pointer-events-none translate-x-1/4 translate-y-1/4">
+    <svg width="300" height="300" viewBox="0 0 24 24" fill="white">
+      <path d="M12 2L1 21h22L12 2zm0 3.83L19.17 19H4.83L12 5.83zM11 16h2v2h-2v-2zm0-7h2v5h-2V9z"/>
+    </svg>
+  </div>
+
+  <div class="relative z-10 md:w-1/2 text-center md:text-left">
+    <div class="inline-flex items-center gap-1.5 text-lumiCyan text-xs font-bold uppercase tracking-widest mb-3">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+      </svg>
+      Alerta Personalizada
+    </div>
+
+    <h3 class="text-3xl font-bold text-white mb-4">¿No ves tu destino soñado?</h3>
+    <p class="text-gray-400 font-light leading-relaxed">
+      Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos el momento perfecto.
+    </p>
+  </div>
+
+  <div class="relative z-10 md:w-1/2 w-full bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
+    <form class="space-y-4" on:submit|preventDefault={enviarRadar}>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-400 mb-1">Tu Nombre</label>
+        <input
+          type="text"
+          bind:value={radarNombre}
+          placeholder="Ej. Juan Pérez"
+          required
+          class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition"
+        />
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 mb-1">Origen</label>
+          <input
+            type="text"
+            bind:value={radarOrigen}
+            placeholder="Ej. CDMX"
+            required
+            class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 mb-1">Destino</label>
+          <input
+            type="text"
+            bind:value={radarDestino}
+            placeholder="Ej. Madrid"
+            required
+            class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition"
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="relative">
+          <label class="block text-xs font-semibold text-gray-400 mb-1">Mes aproximado</label>
+          <select
+            bind:value={radarMes}
+            required
+            class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-lumiCyan transition appearance-none cursor-pointer"
+          >
+            <option value="" disabled>Elige un mes...</option>
+            {#each meses as m}
+              <option value={m} class="bg-lumiDark text-white">{m}</option>
+            {/each}
+          </select>
+
+          <div class="pointer-events-none absolute bottom-0 right-0 flex items-center px-4 py-3 text-gray-400">
+            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+            </svg>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 mb-1">Correo Electrónico</label>
+          <input
+            type="email"
+            bind:value={radarContacto}
+            placeholder="tucorreo@ejemplo.com"
+            required
+            class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition"
+          />
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="w-full bg-lumiCyan hover:bg-lumiCyanDark text-lumiDark font-bold py-3 rounded-lg transition-colors shadow-lg mt-2"
+        disabled={radarCargando}
+      >
+        {radarCargando ? 'Activando...' : 'Activar mi Radar 🎯'}
+      </button>
+
+      {#if radarExito}
+        <p class="text-emerald-400 text-sm font-semibold text-center mt-2">
+          ¡Radar activado! Revisa tu correo pronto.
+        </p>
+      {/if}
+    </form>
+  </div>
+</div>
+
 
   </main>
 
