@@ -2,12 +2,8 @@
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
 
-  export let paisUpper: string;
-  export let mercado: {
-    nombre: string;
-    moneda: string;
-    bandera: string;
-  };
+  // Runes: reemplazo de export let
+  const { paisUpper, mercado } = $props();
 
   let dropdownAbierto = false;
 
@@ -27,7 +23,6 @@
     goto(`/paises/${codigo}`);
   }
 
-  // Cerrar dropdown al hacer click fuera
   function handleClickOutside(event: MouseEvent) {
     const target = event.target as HTMLElement;
     if (!target.closest('#selector-pais')) {
