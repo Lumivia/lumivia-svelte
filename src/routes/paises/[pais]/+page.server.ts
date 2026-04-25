@@ -1,17 +1,10 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { createClient } from '@supabase/supabase-js';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
-// Cliente Supabase (server)
-const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false
-  }
-});
+// 🔥 Sincronización con el entorno de Cloudflare: Usamos dynamic para evitar llaves vacías en el SSR
+import { env } from '$env/dynamic/public';
 
-// Mercados permitidos
 const mercadosPermitidos = {
   mx: { nombre: 'México', moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' },
   co: { nombre: 'Colombia', moneda: 'COP', bandera: 'https://flagcdn.com/w20/co.png' },
@@ -25,17 +18,34 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
   const paisParam = params.pais ?? '';
   const codigoPais = paisParam.toLowerCase();
 
-  // Validación
+  // 1) Validación de Mercado
   const mercado = mercadosPermitidos[codigoPais as CodigoPais];
   if (!mercado) throw redirect(302, '/');
 
   const paisUpper = codigoPais.toUpperCase();
 
-  // Cache-Control
+  // 2) Inicialización Segura de Supabase (DENTRO del load para el entorno Worker)
+  const supabaseUrl = env.PUBLIC_SUPABASE_URL;
+  const supabaseKey = env.PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error("🔥 Error Crítico: Llaves de Supabase no detectadas en el servidor.");
+    return {
+      pais: codigoPais, paisUpper, mercado, destacadas: [], masDestinos: [], schemaAEO: null
+    };
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+
+  // 3) Configuración de Cache para Cloudflare Edge
   setHeaders({
     'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60'
   });
 
+  // 4) Ejecución de Consultas (Paralelismo implícito por Supabase)
+  
   // 🔥 6 destacadas
   const { data: destacadas, error: err1 } = await supabase
     .from('publicaciones_lumivia')
@@ -47,7 +57,7 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 
   if (err1) console.error('Error destacadas:', err1);
 
-  // 🔥 8 adicionales
+  // 🔥 8 adicionales (usando range para evitar solapamiento)
   const { data: masDestinos, error: err2 } = await supabase
     .from('publicaciones_lumivia')
     .select('*')
@@ -58,21 +68,22 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 
   if (err2) console.error('Error masDestinos:', err2);
 
-  // Schema ligero (NO OfferCatalog para evitar duplicado con MasDestinos)
+  // 5) Generación de Metadata / Schema
   const schemaAEO = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: `Vuelos baratos desde ${mercado.nombre} - Lumivia`,
     description: `Ofertas destacadas y destinos populares desde ${mercado.nombre}.`,
-    url: `https://www.lumivia.app/${codigoPais}`
+    url: `https://www.lumivia.app/paises/${codigoPais}`
   });
 
+  // 6) Retorno de Datos Garantizado (Evita fallos de hidratación)
   return {
     pais: codigoPais,
     paisUpper,
     mercado,
-    destacadas: destacadas ?? [],
-    masDestinos: masDestinos ?? [],
+    destacadas: destacadas || [],
+    masDestinos: masDestinos || [],
     schemaAEO
   };
 };
