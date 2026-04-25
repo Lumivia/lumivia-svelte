@@ -6,21 +6,15 @@
   import RadarItem from '$lib/components/RadarItem.svelte';
   import Footer from '$lib/components/Footer.svelte';
 
-  import { curarOfertas } from '$lib/utils/curacion';
   import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
   import { supabase } from '$lib/supabaseClient';
 
-  // Runes props
-  const datos = $derived(data);
-  const {
-    pais,
-    paisUpper,
-    mercado,
-    ofertas,
-    schemaAEO,
-    title,
-    description
-  } = datos;
+  // 🔥 SVELTE 5: Así se recibe 'data' del servidor (AQUÍ ESTABA EL COLAPSO)
+  let { data } = $props();
+
+  // 🔥 Variables derivadas de SEO correctas (El server solo manda mercado y schema)
+  const title = $derived(`Vuelos baratos desde ${data.mercado.nombre} - Lumivia`);
+  const description = $derived(`Ofertas destacadas y destinos populares desde ${data.mercado.nombre}.`);
 
   function handleSubmitNewsletter(e: Event) {
     e.preventDefault();
@@ -62,17 +56,20 @@
   // PROCESAR OFERTAS
   // -----------------------------
   function procesarOfertasIniciales() {
-    if (!ofertas || ofertas.length === 0) return;
+    // Leemos 'destacadas' y 'masDestinos' que son los verdaderos datos del server
+    if (data.destacadas) {
+      ofertasHook = data.destacadas.map((d: any) => ({
+        ...d,
+        tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at)
+      }));
+    }
 
-    const enriquecidas = ofertas.map((d) => ({
-      ...d,
-      tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at)
-    }));
-
-    const { hookDeals, radarDeals } = curarOfertas(enriquecidas, paisUpper);
-
-    ofertasHook = hookDeals;
-    ofertasRadar = radarDeals;
+    if (data.masDestinos) {
+      ofertasRadar = data.masDestinos.map((d: any) => ({
+        ...d,
+        tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at)
+      }));
+    }
   }
 
   // -----------------------------
@@ -83,7 +80,6 @@
 
     const intervalo = setInterval(() => {
       if (!scrollContainer) return;
-
       const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
 
       if (scrollContainer.scrollLeft >= maxScroll - 10) {
@@ -107,7 +103,7 @@
 
     const { error } = await supabase
       .from('suscriptores_radar')
-      .insert([{ email: emailNewsletter.toLowerCase(), pais: paisUpper, nombre: 'Viajero' }]);
+      .insert([{ email: emailNewsletter.toLowerCase(), pais: data.paisUpper, nombre: 'Viajero' }]);
 
     newsletterCargando = false;
 
@@ -193,22 +189,16 @@
   <meta name="description" content={description} />
   <meta name="robots" content="index, follow" />
 
-  {#if schemaAEO}
-    <script type="application/ld+json">
-      {schemaAEO}
-    </script>
+  {#if data.schemaAEO}
+    {@html `<script type="application/ld+json">${data.schemaAEO}</script>`}
   {/if}
 </svelte:head>
 
-<!-- ========================= -->
-<!-- CONTENIDO PRINCIPAL -->
-<!-- ========================= -->
 <div class="bg-gray-50 text-lumiDark min-h-screen">
-  <Header {paisUpper} {mercado} />
+  <Header paisUpper={data.paisUpper} mercado={data.mercado} />
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
 
-    <!-- HERO -->
     <div class="text-center max-w-3xl mx-auto mb-10 relative z-10" id="hero-section">
       <h1 class="text-4xl md:text-5xl font-black tracking-tighter mb-4 text-lumiDark leading-tight drop-shadow-sm mt-4">
         Viajes para tus recuerdos.<br>
@@ -225,7 +215,6 @@
       </p>
     </div>
 
-    <!-- NEWSLETTER -->
     <div class="max-w-xl mx-auto mb-16 relative z-20 group" id="newsletter-section">
       <div class="bg-white/80 backdrop-blur-xl p-1.5 rounded-full shadow-sm border border-gray-200 flex flex-col sm:flex-row items-center gap-2">
         <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
@@ -255,7 +244,6 @@
       </div>
     </div>
 
-    <!-- OPORTUNIDADES DESTACADAS -->
     <div class="mb-6 flex items-center justify-between" id="titulo-hook">
       <h2 class="text-2xl font-bold tracking-tight">Oportunidades Destacadas</h2>
     </div>
@@ -273,8 +261,8 @@
           {#each ofertasHook as deal}
             <DealCard
               {deal}
-              monedaActual={mercado.moneda}
-              paisActual={paisUpper}
+              monedaActual={data.mercado.moneda}
+              paisActual={data.paisUpper}
               onclick={(e) => abrirModal(e.detail)}
             />
           {/each}
@@ -282,7 +270,6 @@
       </div>
     </div>
 
-    <!-- MÁS DESTINOS -->
     <div class="mb-6 mt-4" id="titulo-radar">
       <h2 class="text-2xl font-bold tracking-tight">Más Destinos</h2>
     </div>
@@ -295,7 +282,7 @@
           {#each ofertasRadar as deal}
             <RadarItem
               {deal}
-              monedaActual={mercado.moneda}
+              monedaActual={data.mercado.moneda}
               onclick={(e) => abrirModal(e.detail)}
             />
           {/each}
@@ -312,7 +299,6 @@
       </a>
     </div>
 
-    <!-- BUSCADOR GLOBAL -->
     <div class="bg-lumiDark text-white border border-gray-800 rounded-3xl px-8 py-8 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 mb-20">
       <div class="relative z-10 text-center md:text-left flex-grow">
         <h3 class="text-2xl font-bold mb-2">¿Tienes un viaje específico en mente?</h3>
@@ -332,7 +318,6 @@
       </div>
     </div>
 
-    <!-- RADAR PERSONALIZADO -->
     <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800">
       <div class="relative z-10 md:w-1/2 text-center md:text-left">
         <h3 class="text-3xl font-bold text-white mb-4">¿No ves tu destino soñado?</h3>
@@ -430,4 +415,3 @@
     <ModalOferta deal={ofertaSeleccionada} abierto={modalAbierto} cerrar={cerrarModal} />
   {/if}
 </div>
-
