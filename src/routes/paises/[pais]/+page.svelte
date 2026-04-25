@@ -10,9 +10,8 @@
   import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
   import { supabase } from '$lib/supabaseClient';
 
-  // Runes: props modernos
-  const { data } = $props();
-
+  // Runes props
+  const datos = $derived(data);
   const {
     pais,
     paisUpper,
@@ -21,17 +20,17 @@
     schemaAEO,
     title,
     description
-  } = data;
+  } = datos;
 
-function handleSubmitNewsletter(e: Event) {
-  e.preventDefault();
-  enviarNewsletter();
-}
+  function handleSubmitNewsletter(e: Event) {
+    e.preventDefault();
+    enviarNewsletter();
+  }
 
-function handleSubmitRadar(e: Event) {
-  e.preventDefault();
-  enviarRadar();
-}
+  function handleSubmitRadar(e: Event) {
+    e.preventDefault();
+    enviarRadar();
+  }
 
   // -----------------------------
   // ESTADOS (RUNES)
@@ -231,6 +230,7 @@ function handleSubmitRadar(e: Event) {
       <div class="bg-white/80 backdrop-blur-xl p-1.5 rounded-full shadow-sm border border-gray-200 flex flex-col sm:flex-row items-center gap-2">
         <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
           <input
+            id="newsletter-email"
             type="email"
             bind:value={emailNewsletter}
             placeholder="Recibe nuestra selección del día..."
@@ -275,7 +275,7 @@ function handleSubmitRadar(e: Event) {
               {deal}
               monedaActual={mercado.moneda}
               paisActual={paisUpper}
-              on:abrir={(e) => abrirModal(e.detail)}
+              onclick={(e) => abrirModal(e.detail)}
             />
           {/each}
         {/if}
@@ -296,7 +296,7 @@ function handleSubmitRadar(e: Event) {
             <RadarItem
               {deal}
               monedaActual={mercado.moneda}
-              on:abrir={(e) => abrirModal(e.detail)}
+              onclick={(e) => abrirModal(e.detail)}
             />
           {/each}
         {/if}
@@ -344,8 +344,9 @@ function handleSubmitRadar(e: Event) {
       <div class="relative z-10 md:w-1/2 w-full bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
         <form class="space-y-4" onsubmit={handleSubmitRadar}>
           <div>
-            <label class="block text-xs font-semibold text-gray-400 mb-1">Tu Nombre</label>
+            <label for="radar-nombre" class="block text-xs font-semibold text-gray-400 mb-1">Tu Nombre</label>
             <input
+              id="radar-nombre"
               type="text"
               bind:value={radarNombre}
               required
@@ -355,8 +356,9 @@ function handleSubmitRadar(e: Event) {
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-gray-400 mb-1">Origen</label>
+              <label for="radar-origen" class="block text-xs font-semibold text-gray-400 mb-1">Origen</label>
               <input
+                id="radar-origen"
                 type="text"
                 bind:value={radarOrigen}
                 required
@@ -365,8 +367,9 @@ function handleSubmitRadar(e: Event) {
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-gray-400 mb-1">Destino</label>
+              <label for="radar-destino" class="block text-xs font-semibold text-gray-400 mb-1">Destino</label>
               <input
+                id="radar-destino"
                 type="text"
                 bind:value={radarDestino}
                 required
@@ -377,8 +380,9 @@ function handleSubmitRadar(e: Event) {
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-gray-400 mb-1">Mes aproximado</label>
+              <label for="radar-mes" class="block text-xs font-semibold text-gray-400 mb-1">Mes aproximado</label>
               <select
+                id="radar-mes"
                 bind:value={radarMes}
                 required
                 class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-lumiCyan transition"
@@ -391,8 +395,9 @@ function handleSubmitRadar(e: Event) {
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-gray-400 mb-1">Correo Electrónico</label>
+              <label for="radar-contacto" class="block text-xs font-semibold text-gray-400 mb-1">Correo Electrónico</label>
               <input
+                id="radar-contacto"
                 type="email"
                 bind:value={radarContacto}
                 required
@@ -425,3 +430,4 @@ function handleSubmitRadar(e: Event) {
     <ModalOferta deal={ofertaSeleccionada} abierto={modalAbierto} cerrar={cerrarModal} />
   {/if}
 </div>
+
