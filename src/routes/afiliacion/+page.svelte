@@ -16,9 +16,9 @@
   let paisUpper = $state('MX');
   let mercado = $state(configMercado['MX']);
 
-  // ✅ Fix 404: Ruta corregida a /paises/xx
+  // ✅ Fix 404: Ruta corregida a /paises/xx con memoria inteligente y segura para SSR
   function volverAlPais() {
-    const paisGuardado = localStorage.getItem('lumivia_pais');
+    const paisGuardado = typeof window !== 'undefined' ? localStorage.getItem('lumivia_pais') : 'MX';
     const iso = paisGuardado ? paisGuardado.toUpperCase() : 'MX';
     goto(`/paises/${iso.toLowerCase()}`);
   }
@@ -52,7 +52,7 @@
 
   <Header {paisUpper} {mercado} />
 
-  <main class="flex-grow w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 relative z-10">
+  <main class="flex-grow w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12 md:pt-36 md:pb-20 relative z-10">
     <div class="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden">
       <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-lumiCyan to-transparent opacity-50"></div>
 
