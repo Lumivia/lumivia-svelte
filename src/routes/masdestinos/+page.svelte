@@ -4,7 +4,7 @@
     import type { PageData } from './$types';
     import { createClient } from '@supabase/supabase-js';
 
-    export let data: PageData;
+    const { data } = $props();
 
     const { pais, page, totalPages, deals, schemaJSON } = data;
 
