@@ -21,24 +21,32 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
     .filter((d) => d.destino && d.origen)
     .map((d) => ({
       ...d,
-      precioNum: Number(d.precio || d.price ?? Infinity),
+
+      // ❗ Corrección premium:
+      // NO mezclar || y ?? → ahora es determinístico, seguro y compatible con Rolldown
+      precioNum: Number(d.precio ?? d.price ?? Infinity),
+
       calidad: Number(d.calidad_oferta || 0),
       destinoUpper: (d.destino || '').trim().toUpperCase(),
       origenUpper: (d.origen || '').trim().toUpperCase(),
+
       esDirecto: d.tipo_vuelo === 'directo',
-      esDelPaisActual: d.origen?.toUpperCase().startsWith(paisActual.toUpperCase())
+
+      esDelPaisActual:
+        typeof d.origen === 'string' &&
+        d.origen.trim().toUpperCase().startsWith(paisActual.toUpperCase())
     }));
 
   // 2) Ordenar por relevancia
   limpias.sort((a, b) => {
     // A) Priorizar vuelos del país actual
     if (a.esDelPaisActual !== b.esDelPaisActual) {
-      return b.esDelPaisActual - a.esDelPaisActual;
+      return Number(b.esDelPaisActual) - Number(a.esDelPaisActual);
     }
 
     // B) Priorizar vuelos directos
     if (a.esDirecto !== b.esDirecto) {
-      return b.esDirecto - a.esDirecto;
+      return Number(b.esDirecto) - Number(a.esDirecto);
     }
 
     // C) Calidad
