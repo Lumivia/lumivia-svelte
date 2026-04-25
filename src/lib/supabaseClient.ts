@@ -1,15 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
+import { env } from '$env/dynamic/public'; // La forma correcta en SvelteKit
 
-// Cliente Supabase para el navegador (público)
-// Este cliente NO debe usarse en el servidor.
-// Usa claves públicas (anon key) y está optimizado para Cloudflare Pages.
-
+// Cliente público para el navegador
 export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!,
+  env.PUBLIC_SUPABASE_URL || '',
+  env.PUBLIC_SUPABASE_ANON_KEY || '',
   {
     auth: {
-      persistSession: false, // No guardamos sesiones en el navegador
+      persistSession: false, // Vital para SSR / Edge
       autoRefreshToken: false,
       detectSessionInUrl: false
     }
