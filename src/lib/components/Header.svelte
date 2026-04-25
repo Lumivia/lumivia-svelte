@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount } from 'svelte'; // 🔥 ELIMINAMOS onDestroy
 
   // Runes props
   const { paisUpper, mercado } = $props();
@@ -33,25 +33,24 @@
 
   onMount(() => {
     window.addEventListener('click', handleClickOutside);
-  });
-
-  onDestroy(() => {
-    window.removeEventListener('click', handleClickOutside);
+    
+    // 🔥 EL PARCHE MAESTRO: Retornar la función de limpieza aquí.
+    // Como onMount solo corre en el navegador, esto jamás crasheará el servidor.
+    return () => {
+      window.removeEventListener('click', handleClickOutside);
+    };
   });
 </script>
 
 <header class="bg-white/70 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-200/50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
     
-    <!-- Logo -->
     <div class="flex items-center">
       <a href="/" class="text-2xl font-extrabold tracking-tighter text-lumiDark">Lumivia</a>
     </div>
 
-    <!-- Navegación -->
     <div class="flex items-center gap-4">
 
-      <!-- Vuelos -->
       <a href="https://vuelos.lumivia.app/" target="_blank"
         class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-lumiDark transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +60,6 @@
         <span class="hidden sm:inline">Vuelos</span>
       </a>
 
-      <!-- Hoteles -->
       <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank"
         class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-lumiCyan transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,7 +71,6 @@
 
       <div class="h-4 w-px bg-gray-200 hidden sm:block"></div>
 
-      <!-- Selector de país -->
       <div id="selector-pais" class="relative inline-block text-left">
         
         <button
