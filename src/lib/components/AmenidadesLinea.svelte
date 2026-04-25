@@ -1,14 +1,14 @@
 <script lang="ts">
-  // Runes: reemplazo de export let
+  // Runes props
   const { deal, paisActual } = $props();
 
-  // Variables derivadas (reactivas)
-  $: vueloDirecto = deal?.tipo_vuelo === 'directo';
-  $: escalas = deal?.escalas ?? 0;
-  $: equipaje = deal?.equipaje ?? 'Sin equipaje';
-  $: aerolinea = deal?.aerolinea ?? deal?.airline ?? '';
-  $: duracion = deal?.duracion ?? deal?.duration ?? '';
-  $: clase = deal?.clase ?? deal?.fare_class ?? '';
+  // Reactividad derivada (Runes)
+  const vueloDirecto = $derived(deal?.tipo_vuelo === 'directo');
+  const escalas = $derived(deal?.escalas ?? 0);
+  const equipaje = $derived(deal?.equipaje ?? 'Sin equipaje');
+  const aerolinea = $derived(deal?.aerolinea ?? deal?.airline ?? '');
+  const duracion = $derived(deal?.duracion ?? deal?.duration ?? '');
+  const clase = $derived(deal?.clase ?? deal?.fare_class ?? '');
 </script>
 
 <div class="flex flex-wrap items-center gap-3 text-[11px] text-gray-500 font-medium">
