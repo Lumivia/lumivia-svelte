@@ -3,11 +3,15 @@
     import { goto } from '$app/navigation';
     import type { PageData } from './$types';
     import { createClient } from '@supabase/supabase-js';
+    import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+
+    // Si ya tienes estos en otro módulo, ajusta el import a tu ruta real
+    import { diccionarioInfalible, diccionarioDestinos, urlBaseAiralo } from '$lib/data/destinos';
 
     // Runes: props modernos
-    const { data } = $props();
+    const { data } = $props<{ data: PageData }>();
 
-    // ❗ Corrección Svelte 5: NO desestructurar directamente
+    // ❗ NO desestructurar directamente en Svelte 5 desde props reactivas
     let pais = data.pais;
     let page = data.page;
     let totalPages = data.totalPages;
@@ -15,7 +19,6 @@
     let schemaJSON = data.schemaJSON;
 
     // Supabase cliente
-    import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
     const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
     // Configuración de países
@@ -33,7 +36,7 @@
         CR: ['SJO', 'LIR']
     };
 
-    // ❗ Variables que cambian → mantener como let (no hace falta $state)
+    // ❗ Variables que cambian → mantener como let
     let paisActual = pais || 'MX';
     let monedaActual = configMercado[paisActual]?.moneda ?? 'MXN';
     let banderaActual = configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png';
@@ -72,12 +75,12 @@
     // ❗ Funciones de submit corregidas para Svelte 5
     function handleSubmitNewsletter(e: Event) {
         e.preventDefault();
-        enviarNewsletter(e as any);
+        enviarNewsletter(e as SubmitEvent);
     }
 
     function handleSubmitRadar(e: Event) {
         e.preventDefault();
-        enviarRadar(e as any);
+        enviarRadar(e as SubmitEvent);
     }
 
     // Helpers
@@ -163,7 +166,10 @@
 
     async function reportarCambioPrecio(idVuelo: number | string, event?: MouseEvent) {
         event?.stopPropagation();
-        const confirmar = typeof window !== 'undefined' ? window.confirm('¿El precio cambió? Gracias por avisar, lo verificaremos.') : false;
+        const confirmar =
+            typeof window !== 'undefined'
+                ? window.confirm('¿El precio cambió? Gracias por avisar, lo verificaremos.')
+                : false;
         if (!confirmar) return;
         try {
             const { error } = await supabase.rpc('incrementar_reporte_vuelo', { vuelo_id_param: idVuelo });
@@ -300,6 +306,7 @@
         }
     });
 </script>
+
 <svelte:head>
     <title>Lumivia | Catálogo de Oportunidades</title>
     <meta
@@ -312,8 +319,10 @@
         </script>
     {/if}
 </svelte:head>
-<div class="bg-gray-50 text-lumiDark antialiased selection:bg-lumiCyan selection:text-white relative overflow-x-hidden min-h-screen flex flex-col">
 
+<div
+    class="bg-gray-50 text-lumiDark antialiased selection:bg-lumiCyan selection:text-white relative overflow-x-hidden min-h-screen flex flex-col"
+>
     <!-- WhatsApp Floating -->
     <div class="fixed bottom-6 right-6 z-[90] flex flex-col items-end gap-3 group">
         <div
@@ -355,7 +364,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <button
-                    onclick={volverAlPais}
+                    on:click={volverAlPais}
                     class="text-gray-400 hover:text-lumiDark transition-colors cursor-pointer"
                     title="Volver al inicio"
                 >
@@ -417,7 +426,7 @@
                     >
                         <div class="py-1">
                             <button
-                                onclick={() => seleccionarPais('MX')}
+                                on:click={() => seleccionarPais('MX')}
                                 class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors"
                             >
                                 <img src="https://flagcdn.com/w20/mx.png" alt="MX" class="w-5 h-auto rounded-sm shadow-sm" />
@@ -425,7 +434,7 @@
                             </button>
 
                             <button
-                                onclick={() => seleccionarPais('CO')}
+                                on:click={() => seleccionarPais('CO')}
                                 class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors"
                             >
                                 <img src="https://flagcdn.com/w20/co.png" alt="CO" class="w-5 h-auto rounded-sm shadow-sm" />
@@ -433,7 +442,7 @@
                             </button>
 
                             <button
-                                onclick={() => seleccionarPais('CL')}
+                                on:click={() => seleccionarPais('CL')}
                                 class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors"
                             >
                                 <img src="https://flagcdn.com/w20/cl.png" alt="CL" class="w-5 h-auto rounded-sm shadow-sm" />
@@ -441,7 +450,7 @@
                             </button>
 
                             <button
-                                onclick={() => seleccionarPais('CR')}
+                                on:click={() => seleccionarPais('CR')}
                                 class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors"
                             >
                                 <img src="https://flagcdn.com/w20/cr.png" alt="CR" class="w-5 h-auto rounded-sm shadow-sm" />
@@ -455,7 +464,6 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-1">
-
         <!-- Título + Newsletter -->
         <div class="mb-12 text-center relative z-10">
             <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-6">
@@ -477,7 +485,7 @@
                         </svg>
                     </div>
 
-                    <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
+                    <form class="w-full flex flex-col sm:flex-row gap-2" on:submit={handleSubmitNewsletter}>
                         <input
                             type="email"
                             placeholder="Ingresa tu correo para recibir nuestra selección..."
@@ -510,6 +518,7 @@
                 {/if}
             </div>
         </div>
+
         <!-- GRID -->
         <div id="hook-deals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20">
             {#if deals.length === 0}
@@ -532,7 +541,7 @@
                     <article
                         id={`vuelo-hook-${deal.id}`}
                         class="card-minimal flex flex-col group cursor-pointer hover:shadow-xl transition-shadow duration-300 h-full bg-white rounded-2xl overflow-hidden border border-gray-100 {vuelosReportados.has(deal.id) ? 'opacity-30' : ''}"
-                        onclick={() => abrirModal(deal)}
+                        on:click={() => abrirModal(deal)}
                     >
                         <div class="relative h-56 overflow-hidden bg-gray-100 flex-shrink-0">
                             <img
@@ -566,7 +575,7 @@
                             {/if}
 
                             <button
-                                onclick={(e) => reportarCambioPrecio(deal.id, e)}
+                                on:click={(e) => reportarCambioPrecio(deal.id, e)}
                                 title="¿El precio subió? Repórtalo"
                                 class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 transition-colors z-10"
                             >
@@ -679,7 +688,7 @@
 
                                 <div class="flex items-center gap-3">
                                     <button
-                                        onclick={(e) => copiarUrlUnica(deal.id, e)}
+                                        on:click={(e) => copiarUrlUnica(deal.id, e)}
                                         title="Copiar enlace"
                                         class="text-gray-400 hover:text-lumiCyan transition-colors"
                                     >
@@ -703,6 +712,7 @@
                 {/each}
             {/if}
         </div>
+
         <!-- Bloque Radar -->
         <div
             class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 mb-10"
@@ -739,7 +749,7 @@
             </div>
 
             <div class="relative z-10 md:w-1/2 w-full bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
-                <form class="space-y-4" onsubmit={handleSubmitRadar}>
+                <form class="space-y-4" on:submit={handleSubmitRadar}>
                     <div>
                         <label class="block text-xs font-semibold text-gray-400 mb-1">Tu Nombre</label>
                         <input
@@ -831,96 +841,136 @@
                 </form>
             </div>
         </div>
-    <!-- MODAL COMPLETO -->
-    {#if modalAbierto && dealSeleccionado}
-        {@const imgModal = obtenerImagenDestino(dealSeleccionado.destino, dealSeleccionado.url_imagen)}
-        {@const { linkHotelFinal, urlDestinoAiralo, urlDestinoTour } = obtenerLinksExtras(dealSeleccionado)}
-        {@const esInternacional = esInternacionalDestino(dealSeleccionado.destino)}
 
-        <div
-            id="modal-paquete"
-            class="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-6 bg-black/60 backdrop-blur-sm"
-        >
+        <!-- MODAL COMPLETO -->
+        {#if modalAbierto && dealSeleccionado}
+            {@const imgModal = obtenerImagenDestino(dealSeleccionado.destino, dealSeleccionado.url_imagen)}
+            {@const { linkHotelFinal, urlDestinoAiralo, urlDestinoTour } = obtenerLinksExtras(dealSeleccionado)}
+            {@const esInternacional = esInternacionalDestino(dealSeleccionado.destino)}
+
             <div
-                id="modal-content"
-                class="relative w-full h-full md:h-auto md:max-h-[90vh] max-w-4xl bg-white md:rounded-3xl shadow-2xl flex flex-col md:flex-row transform scale-100 overflow-y-auto md:overflow-hidden"
+                id="modal-paquete"
+                class="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-6 bg-black/60 backdrop-blur-sm"
             >
-                <!-- Lado imagen -->
-                <div class="w-full md:w-5/12 relative h-64 md:h-auto bg-gray-100 flex-shrink-0">
-                    <img id="modal-img" src={imgModal} alt="Imagen destino" class="w-full h-full object-cover" />
+                <div
+                    id="modal-content"
+                    class="relative w-full h-full md:h-auto md:max-h-[90vh] max-w-4xl bg-white md:rounded-3xl shadow-2xl flex flex-col md:flex-row transform scale-100 overflow-y-auto md:overflow-hidden"
+                >
+                    <!-- Lado imagen -->
+                    <div class="w-full md:w-5/12 relative h-64 md:h-auto bg-gray-100 flex-shrink-0">
+                        <img id="modal-img" src={imgModal} alt="Imagen destino" class="w-full h-full object-cover" />
 
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
 
-                    <button
-                        onclick={cerrarModal}
-                        class="absolute top-4 right-4 md:hidden bg-black/30 backdrop-blur-md text-white p-2 rounded-full hover:bg-black/50 transition-colors z-20"
-                        aria-label="Cerrar modal"
-                    >
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-
-                    <div class="absolute bottom-6 left-6 right-6">
-                        <span
-                            id="modal-route"
-                            class="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/30 uppercase tracking-widest mb-2 inline-block"
+                        <button
+                            on:click={cerrarModal}
+                            class="absolute top-4 right-4 md:hidden bg-black/30 backdrop-blur-md text-white p-2 rounded-full hover:bg-black/50 transition-colors z-20"
+                            aria-label="Cerrar modal"
                         >
-                            {dealSeleccionado.origen || 'ORG'} → {dealSeleccionado.destino || 'DST'}
-                        </span>
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
 
-                        <h2 id="modal-title" class="text-3xl font-black text-white leading-tight">
-                            {dealSeleccionado.titulo_gancho || 'Oferta Especial'}
-                        </h2>
-                    </div>
-                </div>
-
-                <!-- Lado contenido -->
-                <div class="w-full md:w-7/12 flex flex-col bg-white relative">
-                    <button
-                        onclick={cerrarModal}
-                        class="absolute top-6 right-6 hidden md:block text-gray-400 hover:text-black transition-colors z-10"
-                        aria-label="Cerrar modal"
-                    >
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-
-                    <div class="p-6 md:px-8 md:pt-6 md:pb-2 flex-grow md:overflow-y-auto no-scrollbar">
-                        <div class="flex items-center gap-3 mb-6">
-                            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
-                                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
+                        <div class="absolute bottom-6 left-6 right-6">
+                            <span
+                                id="modal-route"
+                                class="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/30 uppercase tracking-widest mb-2 inline-block"
+                            >
+                                {dealSeleccionado.origen || 'ORG'} → {dealSeleccionado.destino || 'DST'}
                             </span>
 
-                            <h3 class="text-sm font-bold text-gray-900 uppercase tracking-widest">
-                                Análisis de Viaje
-                            </h3>
+                            <h2 id="modal-title" class="text-3xl font-black text-white leading-tight">
+                                {dealSeleccionado.titulo_gancho || 'Oferta Especial'}
+                            </h2>
                         </div>
+                    </div>
 
-                        <div id="modal-body" class="text-gray-600 text-sm leading-relaxed space-y-4 font-medium">
-                            {@html (dealSeleccionado.cuerpo_post || 'Hemos detectado esta tarifa excepcional. Verifica disponibilidad rápida antes de que cambien los precios.')
-                                .replace(/(👇\s*Comenta[\s\S]*)/gi, '')
-                                .replace(/\n/g, '<br>')}
-                        </div>
+                    <!-- Lado contenido -->
+                    <div class="w-full md:w-7/12 flex flex-col bg-white relative">
+                        <button
+                            on:click={cerrarModal}
+                            class="absolute top-6 right-6 hidden md:block text-gray-400 hover:text-black transition-colors z-10"
+                            aria-label="Cerrar modal"
+                        >
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
 
-                        <div id="modal-extras" class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {#if linkHotelFinal && linkHotelFinal !== 'Sin hotel sugerido'}
+                        <div class="p-6 md:px-8 md:pt-6 md:pb-2 flex-grow md:overflow-y-auto no-scrollbar">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
+                                    <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
+                                </span>
+
+                                <h3 class="text-sm font-bold text-gray-900 uppercase tracking-widest">
+                                    Análisis de Viaje
+                                </h3>
+                            </div>
+
+                            <div id="modal-body" class="text-gray-600 text-sm leading-relaxed space-y-4 font-medium">
+                                {@html (dealSeleccionado.cuerpo_post ||
+                                    'Hemos detectado esta tarifa excepcional. Verifica disponibilidad rápida antes de que cambien los precios.')
+                                    .replace(/(👇\s*Comenta[\s\S]*)/gi, '')
+                                    .replace(/\n/g, '<br>')}
+                            </div>
+
+                            <div id="modal-extras" class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {#if linkHotelFinal && linkHotelFinal !== 'Sin hotel sugerido'}
+                                    <a
+                                        href={linkHotelFinal}
+                                        target="_blank"
+                                        class="relative overflow-hidden rounded-2xl h-[72px] group block shadow-sm border border-gray-100"
+                                    >
+                                        <img
+                                            src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80"
+                                            alt="Hotel sugerido"
+                                            class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                        />
+
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-black/20"></div>
+
+                                        <div class="absolute bottom-3 left-3 right-3 flex justify-between items-end">
+                                            <div>
+                                                <p class="text-[9px] text-white/70 font-bold uppercase tracking-widest mb-0.5">
+                                                    Hospedaje
+                                                </p>
+
+                                                <p class="text-sm font-bold text-white leading-tight">
+                                                    Ver Hotel Sugerido
+                                                </p>
+                                            </div>
+
+                                            <div class="bg-white/20 backdrop-blur-md p-1.5 rounded-full text-white">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                                    />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </a>
+                                {/if}
+
                                 <a
-                                    href={linkHotelFinal}
+                                    href={urlDestinoTour}
                                     target="_blank"
                                     class="relative overflow-hidden rounded-2xl h-[72px] group block shadow-sm border border-gray-100"
                                 >
                                     <img
-                                        src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80"
-                                        alt="Hotel sugerido"
+                                        src="https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=400&q=80"
+                                        alt="Tours sugeridos"
                                         class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                                     />
 
@@ -929,11 +979,11 @@
                                     <div class="absolute bottom-3 left-3 right-3 flex justify-between items-end">
                                         <div>
                                             <p class="text-[9px] text-white/70 font-bold uppercase tracking-widest mb-0.5">
-                                                Hospedaje
+                                                Tours y Excursiones
                                             </p>
 
                                             <p class="text-sm font-bold text-white leading-tight">
-                                                Ver Hotel Sugerido
+                                                Ver Actividades Sugeridas
                                             </p>
                                         </div>
 
@@ -949,172 +999,135 @@
                                         </div>
                                     </div>
                                 </a>
-                            {/if}
+
+                                {#if esInternacional}
+                                    <a
+                                        href={urlDestinoAiralo}
+                                        target="_blank"
+                                        class="relative overflow-hidden rounded-2xl h-[72px] group block shadow-sm border border-gray-100"
+                                    >
+                                        <img
+                                            src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80"
+                                            alt="eSIM Airalo"
+                                            class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                        />
+
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-black/20"></div>
+
+                                        <div class="absolute bottom-3 left-3 right-3 flex justify-between items-end">
+                                            <div>
+                                                <p class="text-[9px] text-white/70 font-bold uppercase tracking-widest mb-0.5">
+                                                    eSIM Airalo (-15% OFF)
+                                                </p>
+
+                                                <p class="text-sm font-bold text-white leading-tight flex items-center gap-1">
+                                                    Cupón:
+                                                    <span class="bg-white text-lumiDark px-1 rounded text-xs">
+                                                        LUMIVIA
+                                                    </span>
+                                                </p>
+                                            </div>
+
+                                            <div class="bg-white/20 backdrop-blur-md p-1.5 rounded-full text-white">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M8.111 16.404a5.5 5.5 0 117.778 0M12 20h.01m-7.08-7.071a10 10 0 1114.142 0"
+                                                    />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </a>
+
+                                    <a
+                                        href="https://ektatraveling.tpo.li/5ArJqp2u"
+                                        target="_blank"
+                                        class="relative overflow-hidden rounded-2xl h-[72px] group block shadow-sm border border-gray-100"
+                                    >
+                                        <img
+                                            src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=400&q=80"
+                                            alt="Seguro de viaje Ekta"
+                                            class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                        />
+
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-black/20"></div>
+
+                                        <div class="absolute bottom-3 left-3 right-3 flex justify-between items-end">
+                                            <div>
+                                                <p class="text-[9px] text-white/70 font-bold uppercase tracking-widest mb-0.5">
+                                                    Asistencia Médica
+                                                </p>
+
+                                                <p class="text-sm font-bold text-white leading-tight">
+                                                    Seguro de Viaje Ekta
+                                                </p>
+                                            </div>
+
+                                            <div class="bg-white/20 backdrop-blur-md p-1.5 rounded-full text-white">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                                                    />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </a>
+                                {/if}
+                            </div>
+                        </div>
+
+                        <div class="p-6 md:px-8 md:py-5 border-t border-gray-100 bg-gray-50/50 flex-shrink-0">
+                            <div class="flex items-end justify-between mb-6">
+                                <div>
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                                        Inversión Vuelo
+                                    </p>
+
+                                    <p id="modal-price" class="text-4xl font-black text-lumiDark">
+                                        ${Number(dealSeleccionado.precio || 0).toLocaleString('en-US')}
+                                        <span class="text-sm font-semibold text-gray-500">
+                                            {(dealSeleccionado.moneda || dealSeleccionado.currency || monedaActual).toUpperCase()}
+                                        </span>
+                                    </p>
+                                </div>
+
+                                <div class="text-right">
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                                        Fechas
+                                    </p>
+
+                                    <p id="modal-dates" class="text-sm font-semibold text-gray-700">
+                                        {formatearFechaCorta(dealSeleccionado.fecha_salida)} -
+                                        {formatearFechaCorta(dealSeleccionado.fecha_regreso)}
+                                    </p>
+                                </div>
+                            </div>
 
                             <a
-                                href={urlDestinoTour}
+                                id="modal-link"
+                                href={dealSeleccionado.link_compra || 'https://vuelos.lumivia.app/'}
                                 target="_blank"
-                                class="relative overflow-hidden rounded-2xl h-[72px] group block shadow-sm border border-gray-100"
+                                class="block w-full text-center bg-lumiDark text-white py-4 rounded-2xl font-bold text-sm hover:bg-black transition-all shadow-lg active:scale-95 cursor-pointer border-none outline-none"
                             >
-                                <img
-                                    src="https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=400&q=80"
-                                    alt="Tours sugeridos"
-                                    class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                />
-
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-black/20"></div>
-
-                                <div class="absolute bottom-3 left-3 right-3 flex justify-between items-end">
-                                    <div>
-                                        <p class="text-[9px] text-white/70 font-bold uppercase tracking-widest mb-0.5">
-                                            Tours y Excursiones
-                                        </p>
-
-                                        <p class="text-sm font-bold text-white leading-tight">
-                                            Ver Actividades Sugeridas
-                                        </p>
-                                    </div>
-
-                                    <div class="bg-white/20 backdrop-blur-md p-1.5 rounded-full text-white">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                            />
-                                        </svg>
-                                    </div>
-                                </div>
+                                Reservar Vuelo
                             </a>
-
-                            {#if esInternacional}
-                                <a
-                                    href={urlDestinoAiralo}
-                                    target="_blank"
-                                    class="relative overflow-hidden rounded-2xl h-[72px] group block shadow-sm border border-gray-100"
-                                >
-                                    <img
-                                        src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80"
-                                        alt="eSIM Airalo"
-                                        class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                    />
-
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-black/20"></div>
-
-                                    <div class="absolute bottom-3 left-3 right-3 flex justify-between items-end">
-                                        <div>
-                                            <p class="text-[9px] text-white/70 font-bold uppercase tracking-widest mb-0.5">
-                                                eSIM Airalo (-15% OFF)
-                                            </p>
-
-                                            <p class="text-sm font-bold text-white leading-tight flex items-center gap-1">
-                                                Cupón:
-                                                <span class="bg-white text-lumiDark px-1 rounded text-xs">
-                                                    LUMIVIA
-                                                </span>
-                                            </p>
-                                        </div>
-
-                                        <div class="bg-white/20 backdrop-blur-md p-1.5 rounded-full text-white">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M8.111 16.404a5.5 5.5 0 117.778 0M12 20h.01m-7.08-7.071a10 10 0 1114.142 0"
-                                                />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </a>
-
-                                <a
-                                    href="https://ektatraveling.tpo.li/5ArJqp2u"
-                                    target="_blank"
-                                    class="relative overflow-hidden rounded-2xl h-[72px] group block shadow-sm border border-gray-100"
-                                >
-                                    <img
-                                        src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=400&q=80"
-                                        alt="Seguro de viaje Ekta"
-                                        class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                    />
-
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-black/20"></div>
-
-                                    <div class="absolute bottom-3 left-3 right-3 flex justify-between items-end">
-                                        <div>
-                                            <p class="text-[9px] text-white/70 font-bold uppercase tracking-widest mb-0.5">
-                                                Asistencia Médica
-                                            </p>
-
-                                            <p class="text-sm font-bold text-white leading-tight">
-                                                Seguro de Viaje Ekta
-                                            </p>
-                                        </div>
-
-                                        <div class="bg-white/20 backdrop-blur-md p-1.5 rounded-full text-white">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                                                />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </a>
-                            {/if}
                         </div>
-                    </div>
-
-                    <div class="p-6 md:px-8 md:py-5 border-t border-gray-100 bg-gray-50/50 flex-shrink-0">
-                        <div class="flex items-end justify-between mb-6">
-                            <div>
-                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
-                                    Inversión Vuelo
-                                </p>
-
-                                <p id="modal-price" class="text-4xl font-black text-lumiDark">
-                                    ${Number(dealSeleccionado.precio || 0).toLocaleString('en-US')}
-                                    <span class="text-sm font-semibold text-gray-500">
-                                        {(dealSeleccionado.moneda || dealSeleccionado.currency || monedaActual).toUpperCase()}
-                                    </span>
-                                </p>
-                            </div>
-
-                            <div class="text-right">
-                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
-                                    Fechas
-                                </p>
-
-                                <p id="modal-dates" class="text-sm font-semibold text-gray-700">
-                                    {formatearFechaCorta(dealSeleccionado.fecha_salida)} -
-                                    {formatearFechaCorta(dealSeleccionado.fecha_regreso)}
-                                </p>
-                            </div>
-                        </div>
-
-                        <a
-                            id="modal-link"
-                            href={dealSeleccionado.link_compra || 'https://vuelos.lumivia.app/'}
-                            target="_blank"
-                            class="block w-full text-center bg-lumiDark text-white py-4 rounded-2xl font-bold text-sm hover:bg-black transition-all shadow-lg active:scale-95 cursor-pointer border-none outline-none"
-                        >
-                            Reservar Vuelo
-                        </a>
                     </div>
                 </div>
             </div>
-        </div>
-    {/if}
+        {/if}
+
         <!-- Paginación -->
         {#if totalPages > 1}
             <nav class="flex items-center justify-center gap-2 mt-4">
                 <button
                     class="px-3 py-1 text-xs rounded-full border border-gray-200 text-gray-600 disabled:opacity-40"
-                    onclick={() => irAPagina(page - 1)}
+                    on:click={() => irAPagina(page - 1)}
                     disabled={page === 1}
                 >
                     Anterior
@@ -1125,7 +1138,7 @@
                         class="px-3 py-1 text-xs rounded-full border {i + 1 === page
                             ? 'bg-lumiCyan text-lumiDark border-lumiCyan'
                             : 'border-gray-200 text-gray-600'}"
-                        onclick={() => irAPagina(i + 1)}
+                        on:click={() => irAPagina(i + 1)}
                     >
                         {i + 1}
                     </button>
@@ -1133,7 +1146,7 @@
 
                 <button
                     class="px-3 py-1 text-xs rounded-full border border-gray-200 text-gray-600 disabled:opacity-40"
-                    onclick={() => irAPagina(page + 1)}
+                    on:click={() => irAPagina(page + 1)}
                     disabled={page === totalPages}
                 >
                     Siguiente
@@ -1162,6 +1175,4 @@
             </p>
         </div>
     </footer>
-
 </div>
-
