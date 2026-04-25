@@ -8,15 +8,15 @@
   import ExtrasOferta from '$lib/components/ExtrasOferta.svelte';
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
 
-  // Runes: reemplazo de export let
+  // Runes: props
   const { deal, abierto, cerrar } = $props();
 
-  // Estado interno
-  let imgFinal = '';
-  let fechasCortas = '';
-  let esims = [];
-  let tours = [];
-  let hoteles: any = null;
+  // Estado interno (Runes)
+  let imgFinal = $state('');
+  let fechasCortas = $state('');
+  let esims = $state([]);
+  let tours = $state([]);
+  let hoteles = $state(null);
 
   // Cerrar con tecla ESC
   function handleKey(e: KeyboardEvent) {
@@ -32,20 +32,26 @@
   });
 
   // Reactividad derivada del deal
-  $: if (deal) {
+  $effect(() => {
+    if (!deal) return;
+
     imgFinal = obtenerImagen(deal, 800);
-    fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`;
+    fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(
+      deal.fecha_regreso
+    )}`;
+
     esims = obtenerEsims(deal.destino);
     tours = obtenerTours(deal.destino);
     hoteles = obtenerHoteles(deal.destino, deal.fecha_salida, deal.fecha_regreso);
-  }
+  });
 </script>
 
 {#if abierto && deal}
   <!-- Overlay -->
   <div
     class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[999] transition-opacity"
-    on:click={() => cerrar()}
+    onclick={cerrar}
+    aria-label="Cerrar modal"
   ></div>
 
   <!-- Modal -->
@@ -56,12 +62,13 @@
   >
     <div
       class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto relative animate-fadeIn"
-      on:click|stopPropagation
+      onclick={(e) => e.stopPropagation()}
     >
       <!-- Botón cerrar -->
       <button
         class="absolute top-4 right-4 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow hover:bg-gray-100 transition"
-        on:click={cerrar}
+        onclick={cerrar}
+        aria-label="Cerrar modal"
       >
         <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -105,7 +112,7 @@
         </div>
 
         <!-- Extras (tours, hoteles, esims) -->
-        <ExtrasOferta {esims} {tours} {hoteles} />
+        <ExtrasOferta esims={esims} tours={tours} hoteles={hoteles} />
 
       </div>
     </div>
