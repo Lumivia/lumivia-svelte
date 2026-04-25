@@ -1,10 +1,11 @@
 <script lang="ts">
   import "../app.css"; // Activa TailwindCSS globalmente
-  const { data } = $props();
+  
+  // 🔥 SVELTE 5: Extraemos 'data' y el nuevo prop 'children'
+  let { data, children } = $props();
 </script>
 
 <svelte:head>
-  <!-- Google Tag Manager -->
   <script>
     (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -13,49 +14,43 @@
     })(window,document,'script','dataLayer','GTM-58WFMR24');
   </script>
 
-  <!-- SEO dinámico -->
-  <title>{data.title}</title>
-  <meta name="description" content={data.description} />
-  <link rel="canonical" href={data.canonicalURL} />
+  <title>{data?.title || 'Lumivia'}</title>
+  <meta name="description" content={data?.description || 'Plataforma inteligente de análisis de vuelos y alertas de viaje.'} />
+  
+  {#if data?.canonicalURL}
+    <link rel="canonical" href={data.canonicalURL} />
+  {/if}
 
-  {#if data.robots}
+  {#if data?.robots}
     <meta name="robots" content={data.robots} />
   {/if}
 
-  <!-- OpenGraph -->
   <meta property="og:type" content="website" />
-  <meta property="og:url" content={data.canonicalURL} />
-  <meta property="og:title" content={data.title} />
-  <meta property="og:description" content={data.description} />
+  <meta property="og:url" content={data?.canonicalURL || 'https://www.lumivia.app'} />
+  <meta property="og:title" content={data?.title || 'Lumivia'} />
+  <meta property="og:description" content={data?.description || 'Plataforma inteligente de análisis de vuelos y alertas de viaje.'} />
   <meta property="og:image" content="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1200&q=80" />
 
-  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content={data.title} />
-  <meta name="twitter:description" content={data.description} />
+  <meta name="twitter:title" content={data?.title || 'Lumivia'} />
+  <meta name="twitter:description" content={data?.description || 'Plataforma inteligente de análisis de vuelos y alertas de viaje.'} />
 
-<!-- Hreflangs dinámicos para MasDestinos -->
-<link rel="alternate" hreflang="es-mx" href="https://www.lumivia.app/masdestinos?pais=MX" />
-<link rel="alternate" hreflang="es-co" href="https://www.lumivia.app/masdestinos?pais=CO" />
-<link rel="alternate" hreflang="es-cl" href="https://www.lumivia.app/masdestinos?pais=CL" />
-<link rel="alternate" hreflang="es-cr" href="https://www.lumivia.app/masdestinos?pais=CR" />
-<link rel="alternate" hreflang="es" href="https://www.lumivia.app/masdestinos?pais=MX" />
-<link rel="alternate" hreflang="x-default" href="https://www.lumivia.app/masdestinos?pais=MX" />
+  <link rel="alternate" hreflang="es-mx" href="https://www.lumivia.app/masdestinos?pais=MX" />
+  <link rel="alternate" hreflang="es-co" href="https://www.lumivia.app/masdestinos?pais=CO" />
+  <link rel="alternate" hreflang="es-cl" href="https://www.lumivia.app/masdestinos?pais=CL" />
+  <link rel="alternate" hreflang="es-cr" href="https://www.lumivia.app/masdestinos?pais=CR" />
+  <link rel="alternate" hreflang="es" href="https://www.lumivia.app/masdestinos?pais=MX" />
+  <link rel="alternate" hreflang="x-default" href="https://www.lumivia.app/masdestinos?pais=MX" />
 
-
-  <!-- Icons -->
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/favicon.png" />
 
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  <!-- Schema AEO dinámico -->
-  {#if data.schemaAEO}
+  {#if data?.schemaAEO}
     {@html `<script type="application/ld+json">${data.schemaAEO}</script>`}
   {/if}
 
-  <!-- Schema TravelAgency -->
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -75,37 +70,7 @@
 
 <noscript>
   <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-58WFMR24"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe>
 </noscript>
 
-<slot />
-
-<style global>
-  .card-minimal {
-    background: #ffffff;
-    border: 1px solid #f3f4f6;
-    border-radius: 24px;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 20px -10px rgba(0, 0, 0, 0.05);
-    cursor: pointer;
-  }
-
-  .card-minimal:hover {
-    transform: translateY(-4px);
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
-  }
-
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-  .badge-vip-glass {
-    background: linear-gradient(135deg, rgba(194, 155, 87, 0.9) 0%, rgba(218, 186, 116, 0.95) 100%);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 4px 15px rgba(194, 155, 87, 0.4);
-  }
-</style>
+{@render children()}
