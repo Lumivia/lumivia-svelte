@@ -9,7 +9,10 @@ const config = {
     },
     kit: {
         adapter: adapter({
-            // Opcional: si quieres usar funciones de Cloudflare
+            // Activamos compatibilidad Node.js para Supabase en Cloudflare Workers
+            compatibilityFlags: ['nodejs_compat'],
+
+            // Tus rutas personalizadas (las dejo tal cual)
             routes: {
                 include: ['/*'],
                 exclude: ['<all>']
