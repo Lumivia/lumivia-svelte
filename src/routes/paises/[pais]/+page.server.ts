@@ -14,7 +14,8 @@ const mercadosPermitidos = {
 
 type CodigoPais = keyof typeof mercadosPermitidos;
 
-export const load: PageServerLoad = async ({ params, setHeaders }) => {
+// 🔥 CAMBIO: Extraemos 'fetch' de los argumentos del load
+export const load: PageServerLoad = async ({ params, setHeaders, fetch }) => {
   const paisParam = params.pais ?? '';
   const codigoPais = paisParam.toLowerCase();
 
@@ -24,7 +25,7 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 
   const paisUpper = codigoPais.toUpperCase();
 
-  // 2) Inicialización Segura de Supabase (DENTRO del load para el entorno Worker)
+  // 2) Inicialización Segura de Supabase
   const supabaseUrl = env.PUBLIC_SUPABASE_URL;
   const supabaseKey = env.PUBLIC_SUPABASE_ANON_KEY;
 
@@ -35,8 +36,10 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
     };
   }
 
+  // 🔥 CAMBIO VITAL: Pasamos el fetch de SvelteKit para que funcione en Cloudflare Edge
   const supabase = createClient(supabaseUrl, supabaseKey, {
-    auth: { persistSession: false, autoRefreshToken: false }
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch }
   });
 
   // 3) Configuración de Cache para Cloudflare Edge
@@ -44,7 +47,7 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
     'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60'
   });
 
-  // 4) Ejecución de Consultas (Paralelismo implícito por Supabase)
+  // 4) Ejecución de Consultas
   
   // 🔥 6 destacadas
   const { data: destacadas, error: err1 } = await supabase
@@ -77,7 +80,7 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
     url: `https://www.lumivia.app/paises/${codigoPais}`
   });
 
-  // 6) Retorno de Datos Garantizado (Evita fallos de hidratación)
+  // 6) Retorno de Datos Garantizado
   return {
     pais: codigoPais,
     paisUpper,
