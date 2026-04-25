@@ -4,7 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 
 // 🔥 Sincronización con el entorno de Cloudflare: Usamos dynamic para evitar llaves vacías en el SSR
 import { env } from '$env/dynamic/public';
-export const ssr = false;
 
 const mercadosPermitidos = {
   mx: { nombre: 'México', moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' },
