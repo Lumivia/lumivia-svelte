@@ -1,23 +1,18 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { formatearFechaCorta } from '$lib/utils/fechas';
   import { obtenerImagen } from '$lib/utils/imagenes';
   import { copiarUrlUnica } from '$lib/utils/clipboard';
   import { reportarCambioPrecio } from '$lib/utils/reportes';
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
 
-  // Runes props
-  const { deal, monedaActual, paisActual } = $props();
-
-  const dispatch = createEventDispatcher();
+  // 🔥 SVELTE 5: Recibimos la función onclick directamente como prop
+  const { deal, monedaActual, paisActual, onclick } = $props();
 
   // Reactividad derivada (Runes)
   const imgFinal = $derived(obtenerImagen(deal));
 
   const fechasCortas = $derived(
-    `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(
-      deal.fecha_regreso
-    )}`
+    `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`
   );
 
   const precio = $derived(
@@ -31,20 +26,15 @@
   const esVip = $derived(deal.tipo_vuelo === 'directo');
   const esHot = $derived(deal.calidad_oferta >= 9);
 
-  function abrir() {
-    dispatch('abrir', deal);
-  }
 </script>
 
-<!-- Card como botón estilizado (premium, accesible, moderno) -->
 <button
   type="button"
-  onclick={abrir}
+  {onclick} 
   class="card-minimal flex-none w-[85vw] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-center flex flex-col group hover:shadow-xl transition-shadow duration-300 bg-white rounded-2xl overflow-hidden text-left cursor-pointer"
   aria-label={`Ver oferta de ${deal.origen} a ${deal.destino}`}
 >
 
-  <!-- Imagen -->
   <div class="relative h-56 overflow-hidden bg-gray-100">
     <img
       src={imgFinal}
@@ -55,12 +45,10 @@
 
     <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-    <!-- Tiempo transcurrido -->
     <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-lumiDark text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm tracking-wide border border-white/50 uppercase flex items-center gap-1">
       ⏱️ {deal.tiempoTranscurrido}
     </div>
 
-    <!-- Badge VIP -->
     {#if esVip}
       <div class="absolute top-4 right-4 badge-vip-glass text-white text-[10px] font-black px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg">
         <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,7 +59,6 @@
       </div>
     {/if}
 
-    <!-- Reportar precio (ANTES era un <button> → AHORA es un div accesible) -->
     <div
       role="button"
       tabindex="0"
@@ -86,10 +73,8 @@
     </div>
   </div>
 
-  <!-- Contenido -->
   <div class="p-6 flex flex-col flex-grow bg-white relative">
 
-    <!-- Ruta + HOT -->
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-2">
         <div class="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest">
@@ -119,15 +104,12 @@
       </div>
     </div>
 
-    <!-- Título -->
     <h3 class="text-xl font-bold mb-4 text-lumiDark group-hover:text-lumiCyan transition-colors leading-snug line-clamp-2">
       {deal.titulo_gancho}
     </h3>
 
-    <!-- Amenidades -->
     <AmenidadesLinea {deal} {paisActual} />
 
-    <!-- Precio -->
     <div class="mt-auto pt-5 border-t border-gray-100 flex items-center justify-between">
       <div>
         <p class="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">Vuelo Id/Vt</p>
@@ -138,7 +120,6 @@
 
       <div class="flex items-center gap-3">
 
-        <!-- Copiar enlace (ANTES era un <button> → AHORA div accesible) -->
         <div
           role="button"
           tabindex="0"
