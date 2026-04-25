@@ -9,12 +9,12 @@
   import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
   import { supabase } from '$lib/supabaseClient';
 
-  // 🔥 SVELTE 5: Así se recibe 'data' del servidor (AQUÍ ESTABA EL COLAPSO)
+  // 🔥 SVELTE 5: Recepción segura de los datos del servidor
   let { data } = $props();
 
-  // 🔥 Variables derivadas de SEO correctas (El server solo manda mercado y schema)
-  const title = $derived(`Vuelos baratos desde ${data.mercado.nombre} - Lumivia`);
-  const description = $derived(`Ofertas destacadas y destinos populares desde ${data.mercado.nombre}.`);
+  // 🔥 Reactividad Defensiva: Usamos '?.' por si el SSR tarda milisegundos en hidratar
+  const title = $derived(`Vuelos baratos desde ${data.mercado?.nombre || 'tu país'} - Lumivia`);
+  const description = $derived(`Ofertas destacadas y destinos populares desde ${data.mercado?.nombre || 'tu país'}.`);
 
   function handleSubmitNewsletter(e: Event) {
     e.preventDefault();
@@ -56,7 +56,7 @@
   // PROCESAR OFERTAS
   // -----------------------------
   function procesarOfertasIniciales() {
-    // Leemos 'destacadas' y 'masDestinos' que son los verdaderos datos del server
+    // Leemos 'destacadas' y 'masDestinos' extraídos directamente del load() del servidor
     if (data.destacadas) {
       ofertasHook = data.destacadas.map((d: any) => ({
         ...d,
@@ -73,19 +73,23 @@
   }
 
   // -----------------------------
-  // CARRUSEL
+  // CARRUSEL (BLINDADO)
   // -----------------------------
   function iniciarCarrusel() {
     if (!scrollContainer) return;
 
     const intervalo = setInterval(() => {
-      if (!scrollContainer) return;
+      // Prevención de errores si las ofertas aún no cargan en el DOM
+      if (!scrollContainer || scrollContainer.children.length === 0) return;
+      
       const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
 
       if (scrollContainer.scrollLeft >= maxScroll - 10) {
         scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
       } else {
-        const avance = scrollContainer.children[0]?.clientWidth + 24 || 300;
+        // Medimos el primer hijo de forma segura
+        const primerHijo = scrollContainer.children[0] as HTMLElement;
+        const avance = (primerHijo?.clientWidth || 300) + 24;
         scrollContainer.scrollBy({ left: avance, behavior: 'smooth' });
       }
     }, 5000);
@@ -180,7 +184,7 @@
     procesarOfertasIniciales();
     poblarMeses();
     const stop = iniciarCarrusel();
-    return stop;
+    return stop; // Limpieza automática del intervalo al destruir el componente
   });
 </script>
 
@@ -261,7 +265,7 @@
           {#each ofertasHook as deal}
             <DealCard
               {deal}
-              monedaActual={data.mercado.moneda}
+              monedaActual={data.mercado?.moneda}
               paisActual={data.paisUpper}
               onclick={(e) => abrirModal(e.detail)}
             />
@@ -282,7 +286,7 @@
           {#each ofertasRadar as deal}
             <RadarItem
               {deal}
-              monedaActual={data.mercado.moneda}
+              monedaActual={data.mercado?.moneda}
               onclick={(e) => abrirModal(e.detail)}
             />
           {/each}
