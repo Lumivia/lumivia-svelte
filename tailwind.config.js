@@ -17,7 +17,6 @@ export default {
       }
     }
   },
-  plugins: [
-    require("@tailwindcss/line-clamp")
-  ]
+  // 🔥 Plugin obsoleto eliminado. Tailwind 3.4 ya lo tiene nativo.
+  plugins: []
 };
