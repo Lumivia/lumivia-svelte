@@ -1,4 +1,3 @@
-export const ssr = false;
 <script lang="ts">
   import { onMount } from 'svelte';
   import Header from '$lib/components/Header.svelte';
@@ -11,6 +10,7 @@ export const ssr = false;
   import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
   import { supabase } from '$lib/supabaseClient';
 
+export const ssr = false;
   // Runes props
   const datos = $derived(data);
   const {
