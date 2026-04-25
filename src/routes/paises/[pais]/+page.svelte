@@ -1,12 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   
-  // ⛔️ SOSPECHOSOS EN CUARENTENA:
-  // import Header from '$lib/components/Header.svelte';
+  // ✅ COMPONENTES LIBERADOS (Prueba Fase 3):
+  import Header from '$lib/components/Header.svelte';
+  import Footer from '$lib/components/Footer.svelte';
+
+  // ⛔️ COMPONENTES AÚN EN CUARENTENA:
   // import ModalOferta from '$lib/components/ModalOferta.svelte';
   // import DealCard from '$lib/components/DealCard.svelte';
   // import RadarItem from '$lib/components/RadarItem.svelte';
-  // import Footer from '$lib/components/Footer.svelte';
 
   import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
   import { supabase } from '$lib/supabaseClient';
@@ -97,8 +99,11 @@
   <meta name="description" content={description} />
 </svelte:head>
 
-<div class="bg-gray-50 text-lumiDark min-h-screen">
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+<div class="bg-gray-50 text-lumiDark min-h-screen flex flex-col">
+  
+  <Header paisUpper={data.paisUpper} mercado={data.mercado} />
+
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 w-full">
     <div class="text-center max-w-3xl mx-auto mb-10 relative z-10">
       <h1 class="text-4xl md:text-5xl font-black tracking-tighter mb-4 text-lumiDark leading-tight drop-shadow-sm mt-4">
         Viajes desde {data.mercado?.nombre}
@@ -118,4 +123,5 @@
 
     </main>
 
-  </div>
+  <Footer />
+</div>
