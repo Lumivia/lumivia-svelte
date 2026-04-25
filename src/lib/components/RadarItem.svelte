@@ -1,21 +1,16 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { formatearFechaCorta } from '$lib/utils/fechas';
   import { obtenerImagen } from '$lib/utils/imagenes';
   import { copiarUrlUnica } from '$lib/utils/clipboard';
 
-  // Runes props
-  const { deal, monedaActual } = $props();
-
-  const dispatch = createEventDispatcher();
+  // 🔥 SVELTE 5: Recibimos la función onclick directamente como prop
+  const { deal, monedaActual, onclick } = $props();
 
   // Reactividad derivada (Runes)
   const imgFinal = $derived(obtenerImagen(deal, 150));
 
   const fechasCortas = $derived(
-    `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(
-      deal.fecha_regreso
-    )}`
+    `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`
   );
 
   const precio = $derived(
@@ -27,22 +22,16 @@
   );
 
   const esHot = $derived(deal.calidad_oferta >= 9);
-
-  function abrir() {
-    dispatch('abrir', deal);
-  }
 </script>
 
 <li class="list-none">
-  <!-- Botón premium -->
   <button
     type="button"
-    onclick={abrir}
+    {onclick}
     class="w-full p-3 sm:px-6 sm:py-4 hover:bg-gray-50/80 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left cursor-pointer rounded-xl"
     aria-label={`Ver oferta de ${deal.origen} a ${deal.destino}`}
   >
 
-    <!-- Izquierda: Imagen + Título + Ruta -->
     <div class="flex items-center gap-4">
       <img
         src={imgFinal}
@@ -81,7 +70,6 @@
       </div>
     </div>
 
-    <!-- Derecha: Precio + Copiar + Explorar -->
     <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0">
 
       <div class="text-left sm:text-right mr-2">
@@ -91,7 +79,6 @@
         </p>
       </div>
 
-      <!-- Copiar enlace (ANTES era <button> → AHORA div accesible) -->
       <div
         role="button"
         tabindex="0"
