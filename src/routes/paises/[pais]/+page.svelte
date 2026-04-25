@@ -12,7 +12,7 @@
   // 🔥 SVELTE 5: Recepción segura de los datos del servidor
   let { data } = $props();
 
-  // 🔥 Reactividad Defensiva: Usamos '?.' por si el SSR tarda milisegundos en hidratar
+  // 🔥 Reactividad Defensiva
   const title = $derived(`Vuelos baratos desde ${data.mercado?.nombre || 'tu país'} - Lumivia`);
   const description = $derived(`Ofertas destacadas y destinos populares desde ${data.mercado?.nombre || 'tu país'}.`);
 
@@ -56,7 +56,6 @@
   // PROCESAR OFERTAS
   // -----------------------------
   function procesarOfertasIniciales() {
-    // Leemos 'destacadas' y 'masDestinos' extraídos directamente del load() del servidor
     if (data.destacadas) {
       ofertasHook = data.destacadas.map((d: any) => ({
         ...d,
@@ -79,7 +78,6 @@
     if (!scrollContainer) return;
 
     const intervalo = setInterval(() => {
-      // Prevención de errores si las ofertas aún no cargan en el DOM
       if (!scrollContainer || scrollContainer.children.length === 0) return;
       
       const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
@@ -87,7 +85,6 @@
       if (scrollContainer.scrollLeft >= maxScroll - 10) {
         scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
       } else {
-        // Medimos el primer hijo de forma segura
         const primerHijo = scrollContainer.children[0] as HTMLElement;
         const avance = (primerHijo?.clientWidth || 300) + 24;
         scrollContainer.scrollBy({ left: avance, behavior: 'smooth' });
@@ -184,7 +181,7 @@
     procesarOfertasIniciales();
     poblarMeses();
     const stop = iniciarCarrusel();
-    return stop; // Limpieza automática del intervalo al destruir el componente
+    return stop; 
   });
 </script>
 
@@ -267,7 +264,7 @@
               {deal}
               monedaActual={data.mercado?.moneda}
               paisActual={data.paisUpper}
-              onclick={(e) => abrirModal(e.detail)}
+              onclick={() => abrirModal(deal)}
             />
           {/each}
         {/if}
@@ -287,7 +284,7 @@
             <RadarItem
               {deal}
               monedaActual={data.mercado?.moneda}
-              onclick={(e) => abrirModal(e.detail)}
+              onclick={() => abrirModal(deal)}
             />
           {/each}
         {/if}
