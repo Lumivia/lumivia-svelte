@@ -6,29 +6,42 @@
   import { reportarCambioPrecio } from '$lib/utils/reportes';
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
 
-  // Runes: reemplazo de export let
+  // Runes props
   const { deal, monedaActual, paisActual } = $props();
 
   const dispatch = createEventDispatcher();
 
-  // Reactividad derivada
-  $: imgFinal = obtenerImagen(deal);
-  $: fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`;
-  $: precio = Number(deal.precio || deal.price || 0).toLocaleString('en-US');
-  $: monedaDeal = (deal.moneda || deal.currency || monedaActual).toUpperCase();
+  // Reactividad derivada (Runes)
+  const imgFinal = $derived(obtenerImagen(deal));
 
-  // Badges
-  $: esVip = deal.tipo_vuelo === 'directo';
-  $: esHot = deal.calidad_oferta >= 9;
+  const fechasCortas = $derived(
+    `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(
+      deal.fecha_regreso
+    )}`
+  );
+
+  const precio = $derived(
+    Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')
+  );
+
+  const monedaDeal = $derived(
+    (deal.moneda || deal.currency || monedaActual).toUpperCase()
+  );
+
+  const esVip = $derived(deal.tipo_vuelo === 'directo');
+  const esHot = $derived(deal.calidad_oferta >= 9);
 
   function abrir() {
     dispatch('abrir', deal);
   }
 </script>
 
-<article
-  class="card-minimal flex-none w-[85vw] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-center flex flex-col group cursor-pointer hover:shadow-xl transition-shadow duration-300"
-  on:click={abrir}
+<!-- Card como botón estilizado (premium, accesible, moderno) -->
+<button
+  type="button"
+  onclick={abrir}
+  class="card-minimal flex-none w-[85vw] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-center flex flex-col group hover:shadow-xl transition-shadow duration-300 bg-white rounded-2xl overflow-hidden text-left cursor-pointer"
+  aria-label={`Ver oferta de ${deal.origen} a ${deal.destino}`}
 >
 
   <!-- Imagen -->
@@ -60,7 +73,8 @@
 
     <!-- Reportar precio -->
     <button
-      on:click|stopPropagation={() => reportarCambioPrecio(deal.id)}
+      type="button"
+      onclick={(e) => { e.stopPropagation(); reportarCambioPrecio(deal.id); }}
       title="¿El precio subió? Repórtalo"
       class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 transition-colors z-10"
     >
@@ -123,7 +137,8 @@
 
       <div class="flex items-center gap-3">
         <button
-          on:click|stopPropagation={() => copiarUrlUnica(deal.id)}
+          type="button"
+          onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id); }}
           title="Copiar enlace"
           class="bg-gray-50 hover:bg-gray-200 text-gray-500 p-2 rounded-lg transition-colors shadow-sm"
         >
@@ -143,4 +158,4 @@
       </div>
     </div>
   </div>
-</article>
+</button>
