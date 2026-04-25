@@ -1,3 +1,4 @@
+export const ssr = false;
 <script lang="ts">
   import { onMount } from 'svelte';
   import Header from '$lib/components/Header.svelte';
