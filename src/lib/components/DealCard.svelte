@@ -71,18 +71,19 @@
       </div>
     {/if}
 
-    <!-- Reportar precio -->
-    <button
-      type="button"
+    <!-- Reportar precio (ANTES era un <button> → AHORA es un div accesible) -->
+    <div
+      role="button"
+      tabindex="0"
       onclick={(e) => { e.stopPropagation(); reportarCambioPrecio(deal.id); }}
       title="¿El precio subió? Repórtalo"
-      class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 transition-colors z-10"
+      class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 transition-colors z-10 cursor-pointer"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-1 6-1-1H11.5l-1-1H5v10m0 0h4"></path>
       </svg>
-    </button>
+    </div>
   </div>
 
   <!-- Contenido -->
@@ -136,17 +137,20 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <button
-          type="button"
+
+        <!-- Copiar enlace (ANTES era un <button> → AHORA div accesible) -->
+        <div
+          role="button"
+          tabindex="0"
           onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id); }}
           title="Copiar enlace"
-          class="bg-gray-50 hover:bg-gray-200 text-gray-500 p-2 rounded-lg transition-colors shadow-sm"
+          class="bg-gray-50 hover:bg-gray-200 text-gray-500 p-2 rounded-lg transition-colors shadow-sm cursor-pointer"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
           </svg>
-        </button>
+        </div>
 
         <span class="text-lumiCyan hover:text-lumiCyanDark font-semibold text-sm flex items-center gap-1 transition-colors">
           Explorar
