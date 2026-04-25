@@ -23,6 +23,16 @@
     description
   } = data;
 
+function handleSubmitNewsletter(e: Event) {
+  e.preventDefault();
+  enviarNewsletter();
+}
+
+function handleSubmitRadar(e: Event) {
+  e.preventDefault();
+  enviarRadar();
+}
+
   // -----------------------------
   // ESTADOS (RUNES)
   // -----------------------------
@@ -219,7 +229,7 @@
     <!-- NEWSLETTER -->
     <div class="max-w-xl mx-auto mb-16 relative z-20 group" id="newsletter-section">
       <div class="bg-white/80 backdrop-blur-xl p-1.5 rounded-full shadow-sm border border-gray-200 flex flex-col sm:flex-row items-center gap-2">
-        <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit|preventDefault={enviarNewsletter}>
+        <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
           <input
             type="email"
             bind:value={emailNewsletter}
@@ -332,7 +342,7 @@
       </div>
 
       <div class="relative z-10 md:w-1/2 w-full bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
-        <form class="space-y-4" onsubmit|preventDefault={enviarRadar}>
+        <form class="space-y-4" onsubmit={handleSubmitRadar}>
           <div>
             <label class="block text-xs font-semibold text-gray-400 mb-1">Tu Nombre</label>
             <input
