@@ -10,7 +10,6 @@
   import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
   import { supabase } from '$lib/supabaseClient';
 
-export const ssr = false;
   // Runes props
   const datos = $derived(data);
   const {
