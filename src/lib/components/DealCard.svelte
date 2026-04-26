@@ -45,11 +45,10 @@
     e.stopPropagation(); // Evita que se abra el modal
     await copiarUrlUnica(deal.id);
   }
-
 </script>
 
 <article
-  {onclick} 
+  onclick={onclick} 
   class="card-minimal flex-none w-[85vw] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-center flex flex-col group hover:shadow-xl transition-all duration-300 bg-white rounded-2xl overflow-hidden text-left cursor-pointer {reportado ? 'opacity-40 grayscale' : ''}"
   aria-label={`Ver oferta de ${deal.origen} a ${deal.destino}`}
 >
