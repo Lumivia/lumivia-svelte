@@ -9,12 +9,26 @@
   import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
   import { supabase } from '$lib/supabaseClient';
 
-  // 🔥 SVELTE 5: Recepción segura de los datos del servidor
   let { data } = $props();
 
-  // 🔥 Reactividad Defensiva
   const title = $derived(`Vuelos baratos desde ${data.mercado?.nombre || 'tu país'} - Lumivia`);
   const description = $derived(`Ofertas destacadas y destinos populares desde ${data.mercado?.nombre || 'tu país'}.`);
+
+  // 🔥 SVELTE 5: Al usar $derived, eliminamos la necesidad de la función "procesarOfertasIniciales"
+  // y reparamos el bug que congelaba la vista al cambiar de país. Menos código, cero bugs.
+  const ofertasHook = $derived(
+    (data.destacadas || []).map((d: any) => ({
+      ...d,
+      tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at)
+    }))
+  );
+
+  const ofertasRadar = $derived(
+    (data.masDestinos || []).map((d: any) => ({
+      ...d,
+      tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at)
+    }))
+  );
 
   function handleSubmitNewsletter(e: Event) {
     e.preventDefault();
@@ -26,23 +40,16 @@
     enviarRadar();
   }
 
-  // -----------------------------
-  // ESTADOS (RUNES)
-  // -----------------------------
-  let ofertasHook = $state<any[]>([]);
-  let ofertasRadar = $state<any[]>([]);
   let ofertaSeleccionada = $state<any | null>(null);
   let modalAbierto = $state(false);
 
   let scrollContainer = $state<HTMLElement | null>(null);
 
-  // Newsletter
   let emailNewsletter = $state('');
   let newsletterMensaje = $state('');
   let newsletterClase = $state('');
   let newsletterCargando = $state(false);
 
-  // Radar personalizado
   let radarNombre = $state('');
   let radarOrigen = $state('');
   let radarDestino = $state('');
@@ -52,28 +59,6 @@
   let radarCargando = $state(false);
   let meses = $state<string[]>([]);
 
-  // -----------------------------
-  // PROCESAR OFERTAS
-  // -----------------------------
-  function procesarOfertasIniciales() {
-    if (data.destacadas) {
-      ofertasHook = data.destacadas.map((d: any) => ({
-        ...d,
-        tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at)
-      }));
-    }
-
-    if (data.masDestinos) {
-      ofertasRadar = data.masDestinos.map((d: any) => ({
-        ...d,
-        tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at)
-      }));
-    }
-  }
-
-  // -----------------------------
-  // CARRUSEL (BLINDADO)
-  // -----------------------------
   function iniciarCarrusel() {
     if (!scrollContainer) return;
 
@@ -94,9 +79,6 @@
     return () => clearInterval(intervalo);
   }
 
-  // -----------------------------
-  // NEWSLETTER
-  // -----------------------------
   async function enviarNewsletter() {
     newsletterCargando = true;
     newsletterMensaje = '';
@@ -121,9 +103,6 @@
     }
   }
 
-  // -----------------------------
-  // RADAR PERSONALIZADO
-  // -----------------------------
   function poblarMeses() {
     const fechaActual = new Date();
     meses = [];
@@ -161,9 +140,6 @@
     }
   }
 
-  // -----------------------------
-  // MODAL
-  // -----------------------------
   function abrirModal(oferta: any) {
     ofertaSeleccionada = oferta;
     modalAbierto = true;
@@ -174,11 +150,7 @@
     ofertaSeleccionada = null;
   }
 
-  // -----------------------------
-  // INICIALIZACIÓN
-  // -----------------------------
   onMount(() => {
-    procesarOfertasIniciales();
     poblarMeses();
     const stop = iniciarCarrusel();
     return stop; 
@@ -195,10 +167,10 @@
   {/if}
 </svelte:head>
 
-<div class="bg-gray-50 text-lumiDark min-h-screen">
+<div class="bg-gray-50 text-lumiDark min-h-screen flex flex-col">
   <Header paisUpper={data.paisUpper} mercado={data.mercado} />
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full">
 
     <div class="text-center max-w-3xl mx-auto mb-10 relative z-10" id="hero-section">
       <h1 class="text-4xl md:text-5xl font-black tracking-tighter mb-4 text-lumiDark leading-tight drop-shadow-sm mt-4">
