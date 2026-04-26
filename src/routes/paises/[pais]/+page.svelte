@@ -5,8 +5,6 @@
   import DealCard from '$lib/components/DealCard.svelte';
   import RadarItem from '$lib/components/RadarItem.svelte';
   import Footer from '$lib/components/Footer.svelte';
-  
-  // ✅ El componente nuevo que creamos
   import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
 
   import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
@@ -17,7 +15,6 @@
   const title = $derived(`Vuelos baratos desde ${data.mercado?.nombre || 'tu país'} - Lumivia`);
   const description = $derived(`Ofertas destacadas y destinos populares desde ${data.mercado?.nombre || 'tu país'}.`);
 
-  // 🔥 SVELTE 5: Reactividad total, cura el bug de cambio de país
   const ofertasHook = $derived(
     (data.destacadas || []).map((d: any) => ({
       ...d,
@@ -201,20 +198,12 @@
             required
             class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none"
           />
-
-          <button
-            type="submit"
-            class="bg-lumiDark text-white hover:bg-black px-6 py-2 rounded-full font-bold transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto"
-            disabled={newsletterCargando}
-          >
+          <button type="submit" class="bg-lumiDark text-white hover:bg-black px-6 py-2 rounded-full font-bold transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto" disabled={newsletterCargando}>
             {newsletterCargando ? 'Guardando...' : 'Suscribirme Gratis'}
           </button>
         </form>
-
         {#if newsletterMensaje}
-          <p class="text-center text-sm font-bold mt-3 {newsletterClase}">
-            {newsletterMensaje}
-          </p>
+          <p class="text-center text-sm font-bold mt-3 {newsletterClase}">{newsletterMensaje}</p>
         {/if}
       </div>
     </div>
@@ -224,22 +213,12 @@
     </div>
 
     <div class="relative w-full mb-16 group">
-      <div
-        bind:this={scrollContainer}
-        class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth"
-      >
+      <div bind:this={scrollContainer} class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth">
         {#if ofertasHook.length === 0}
-          <div class="w-full text-center text-gray-400 py-10 font-medium animate-pulse">
-            Conectando con la base de datos...
-          </div>
+          <div class="w-full text-center text-gray-400 py-10 font-medium animate-pulse">Conectando con la base de datos...</div>
         {:else}
           {#each ofertasHook as deal}
-            <DealCard
-              {deal}
-              monedaActual={data.mercado?.moneda}
-              paisActual={data.paisUpper}
-              onclick={() => abrirModal(deal)}
-            />
+            <DealCard {deal} monedaActual={data.mercado?.moneda} paisActual={data.paisUpper} onclick={() => abrirModal(deal)} />
           {/each}
         {/if}
       </div>
@@ -255,11 +234,7 @@
           <li class="p-6 text-gray-400 text-center">No hay más destinos por ahora.</li>
         {:else}
           {#each ofertasRadar as deal}
-            <RadarItem
-              {deal}
-              monedaActual={data.mercado?.moneda}
-              onclick={() => abrirModal(deal)}
-            />
+            <RadarItem {deal} monedaActual={data.mercado?.moneda} onclick={() => abrirModal(deal)} />
           {/each}
         {/if}
       </ul>
@@ -267,7 +242,7 @@
 
     <div class="text-center mb-16 relative z-10" id="btn-radar-completo">
       <a
-        href="/paises/{data.pais}/masdestinos"
+        href="/masdestinos?pais={data.paisUpper || data.pais || 'MX'}"
         class="inline-flex items-center justify-center bg-white border border-gray-200 text-lumiDark hover:border-lumiCyan hover:text-lumiCyan px-8 py-3.5 rounded-full font-bold transition-all shadow-sm hover:shadow-md active:scale-95 text-sm group"
       >
         Explorar más destinos
@@ -277,17 +252,10 @@
     <div class="bg-lumiDark text-white border border-gray-800 rounded-3xl px-8 py-8 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 mb-20">
       <div class="relative z-10 text-center md:text-left flex-grow">
         <h3 class="text-2xl font-bold mb-2">¿Tienes un viaje específico en mente?</h3>
-        <p class="text-gray-400 text-sm font-light">
-          Explora nuestro buscador global y compara todas las aerolíneas en milisegundos.
-        </p>
+        <p class="text-gray-400 text-sm font-light">Explora nuestro buscador global y compara todas las aerolíneas en milisegundos.</p>
       </div>
-
       <div class="relative z-10 whitespace-nowrap">
-        <a
-          href="https://vuelos.lumivia.app/"
-          target="_blank"
-          class="inline-flex items-center justify-center bg-white text-lumiDark hover:bg-lumiCyan hover:text-white px-8 py-3 rounded-2xl font-extrabold transition-all shadow-[0_0_20px_rgba(0,210,255,0.3)] active:scale-95 text-sm uppercase tracking-wide"
-        >
+        <a href="https://vuelos.lumivia.app/" target="_blank" class="inline-flex items-center justify-center bg-white text-lumiDark hover:bg-lumiCyan hover:text-white px-8 py-3 rounded-2xl font-extrabold transition-all shadow-[0_0_20px_rgba(0,210,255,0.3)] active:scale-95 text-sm uppercase tracking-wide">
           Abrir Buscador
         </a>
       </div>
@@ -300,84 +268,42 @@
           Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos el momento perfecto.
         </p>
       </div>
-
       <div class="relative z-10 md:w-1/2 w-full bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
         <form class="space-y-4" onsubmit={handleSubmitRadar}>
           <div>
             <label for="radar-nombre" class="block text-xs font-semibold text-gray-400 mb-1">Tu Nombre</label>
-            <input
-              id="radar-nombre"
-              type="text"
-              bind:value={radarNombre}
-              required
-              class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition"
-            />
+            <input id="radar-nombre" type="text" bind:value={radarNombre} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
           </div>
-
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label for="radar-origen" class="block text-xs font-semibold text-gray-400 mb-1">Origen</label>
-              <input
-                id="radar-origen"
-                type="text"
-                bind:value={radarOrigen}
-                required
-                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition"
-              />
+              <input id="radar-origen" type="text" bind:value={radarOrigen} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
             </div>
-
             <div>
               <label for="radar-destino" class="block text-xs font-semibold text-gray-400 mb-1">Destino</label>
-              <input
-                id="radar-destino"
-                type="text"
-                bind:value={radarDestino}
-                required
-                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition"
-              />
+              <input id="radar-destino" type="text" bind:value={radarDestino} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
             </div>
           </div>
-
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label for="radar-mes" class="block text-xs font-semibold text-gray-400 mb-1">Mes aproximado</label>
-              <select
-                id="radar-mes"
-                bind:value={radarMes}
-                required
-                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-lumiCyan transition"
-              >
+              <select id="radar-mes" bind:value={radarMes} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-lumiCyan transition">
                 <option value="" disabled>Elige un mes...</option>
                 {#each meses as m}
                   <option value={m} class="bg-lumiDark text-white">{m}</option>
                 {/each}
               </select>
             </div>
-
             <div>
               <label for="radar-contacto" class="block text-xs font-semibold text-gray-400 mb-1">Correo Electrónico</label>
-              <input
-                id="radar-contacto"
-                type="email"
-                bind:value={radarContacto}
-                required
-                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition"
-              />
+              <input id="radar-contacto" type="email" bind:value={radarContacto} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
             </div>
           </div>
-
-          <button
-            type="submit"
-            class="w-full bg-lumiCyan hover:bg-lumiCyanDark text-lumiDark font-bold py-3 rounded-lg transition-colors shadow-lg mt-2"
-            disabled={radarCargando}
-          >
+          <button type="submit" class="w-full bg-lumiCyan hover:bg-lumiCyanDark text-lumiDark font-bold py-3 rounded-lg transition-colors shadow-lg mt-2" disabled={radarCargando}>
             {radarCargando ? 'Activando...' : 'Activar mi Radar 🎯'}
           </button>
-
           {#if radarExito}
-            <p class="text-emerald-400 text-sm font-semibold text-center mt-2">
-              ¡Radar activado! Revisa tu correo pronto.
-            </p>
+            <p class="text-emerald-400 text-sm font-semibold text-center mt-2">¡Radar activado! Revisa tu correo pronto.</p>
           {/if}
         </form>
       </div>
@@ -385,7 +311,6 @@
   </main>
 
   <WhatsAppButton pais={data.paisUpper || data.pais} />
-
   <Footer />
 
   {#if modalAbierto}
