@@ -1,7 +1,7 @@
 <script lang="ts">
   const { pais = 'MX' } = $props();
 
-  // Reemplaza con tus links reales
+  // Diccionario de Canales VIP
   const canales: Record<string, string> = {
     MX: 'https://whatsapp.com/channel/0029VbCPJ4i8V0tiCieX9s01',
     CO: 'https://whatsapp.com/channel/0029Vb6xYgGChq6URpySxr15',
