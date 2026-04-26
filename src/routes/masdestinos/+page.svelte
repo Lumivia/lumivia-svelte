@@ -7,7 +7,7 @@
   import Header from '$lib/components/Header.svelte';
   import ModalOferta from '$lib/components/ModalOferta.svelte';
   import Footer from '$lib/components/Footer.svelte';
-  import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; // ✅ Importamos el botón VIP
+  import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
 
   let { data } = $props<PageData>();
 
@@ -25,6 +25,7 @@
     CR: ['SJO', 'LIR']
   };
 
+  // 🔥 SVELTE 5: Reactividad inmediata al cambiar de país
   const paisActual = $derived(data.pais || 'MX');
   const monedaActual = $derived(configMercado[paisActual]?.moneda ?? 'MXN');
   const banderaActual = $derived(configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png');
@@ -210,7 +211,10 @@
 
   function cerrarModal() {
     modalAbierto = false;
-    dealSeleccionado = null;
+    // ✅ FIX: Limpiamos la selección después de un pequeño retraso para permitir la animación de cierre
+    setTimeout(() => {
+      dealSeleccionado = null;
+    }, 200); 
   }
 
   onMount(() => {
@@ -255,7 +259,7 @@
   {/if}
 </svelte:head>
 
-<div class="bg-gray-50 text-lumiDark min-h-screen flex flex-col">
+<div class="bg-gray-50 text-lumiDark min-h-screen flex flex-col relative">
 
   <header class="bg-white/70 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-200/50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -273,12 +277,12 @@
       </div>
 
       <div class="flex items-center gap-4">
-        <a href="https://vuelos.lumivia.app/" target="_blank" class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-lumiDark transition-colors hidden sm:flex">
+        <a href="https://vuelos.lumivia.app/" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-lumiDark transition-colors hidden sm:flex">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
           Vuelos
         </a>
 
-        <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-lumiCyan transition-colors hidden sm:flex">
+        <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-lumiCyan transition-colors hidden sm:flex">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
           Hoteles
         </a>
@@ -322,7 +326,7 @@
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full relative z-10">
     <div class="mb-12 text-center relative z-10">
       <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-6">
         Catálogo de Oportunidades
@@ -358,7 +362,7 @@
       </div>
     </div>
 
-    <div id="hook-deals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20">
+    <div id="hook-deals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20 relative z-10">
       {#if !data.deals || data.deals.length === 0}
         <div class="col-span-full text-center text-gray-400 py-20 font-medium">
           Aún no hay ofertas activas en la bóveda de {paisActual}.
@@ -463,7 +467,7 @@
       </div>
     {/if}
 
-    <section class="max-w-3xl mx-auto mb-24">
+    <section class="max-w-3xl mx-auto mb-24 relative z-10">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
         <h2 class="text-2xl font-black text-lumiDark mb-4 text-center">Radar Personal</h2>
         <p class="text-gray-500 text-center mb-8 text-sm leading-relaxed">Cuéntanos qué vuelo buscas y te avisamos cuando aparezca una ganga real.</p>
