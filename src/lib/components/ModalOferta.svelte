@@ -29,13 +29,27 @@
     return `${dia}${mes}`;
   }
 
+  // ✅ Diccionario de rutas nacionales para la inteligencia del modal
+  const destinosNacionales: Record<string, string[]> = {
+    MX: ['CUN', 'MID', 'SJD', 'PVR', 'PXM', 'OAX', 'TRC', 'CUU', 'MEX', 'GDL', 'MTY', 'TIJ'],
+    CO: ['CTG', 'SMR', 'ADZ', 'BGA', 'PEI', 'BOG', 'MDE', 'CLO'],
+    CL: ['CJC', 'PUQ', 'PMC', 'IQQ', 'SCL', 'LSC', 'ZCO', 'BBA'],
+    CR: ['SJO', 'LIR']
+  };
+
   // Reactividad Svelte 5
   const imgFinal = $derived(deal ? obtenerImagen(deal, 800) : '');
   const fechasCortas = $derived(deal ? `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}` : '');
   const monedaDeal = $derived(deal ? (deal.moneda || 'MXN').toUpperCase() : 'MXN');
   
-  // ✅ Constructor dinámico PERFECTO para vuelos.lumivia.app
-  // (Sin usar función anonima para que $derived evalue directamente)
+  // ✅ Detector de Vuelos Nacionales
+  const esNacional = $derived(() => {
+    if (!deal || !deal.pais || !deal.destino) return false;
+    const paisBase = deal.pais.toUpperCase();
+    const listaNacional = destinosNacionales[paisBase] || [];
+    return listaNacional.includes(deal.destino.toUpperCase());
+  });
+
   const linkVuelo = $derived.by(() => {
     if (!deal) return '#';
     // Si ya trae link y es el correcto, lo usamos
@@ -54,10 +68,13 @@
     return `https://vuelos.lumivia.app/?flightSearch=${searchParam}`;
   });
 
-  const esims = $derived(deal ? obtenerEsims(deal.destino) : []);
+  // ✅ Filtro Inteligente: Si es nacional, eSIM y Seguro se apagan (vacíos)
+  const esims = $derived(deal && !esNacional() ? obtenerEsims(deal.destino) : []);
+  const seguro = $derived(deal && !esNacional() ? obtenerSeguro(deal.destino) : null); 
+  
   const tours = $derived(deal ? obtenerTours(deal.destino, deal.fecha_salida, deal.fecha_regreso) : []);
   const hoteles = $derived(deal ? obtenerHoteles(deal.destino, deal.fecha_salida, deal.fecha_regreso, deal.url_hotel) : null);
-  const seguro = $derived(deal ? obtenerSeguro(deal.destino) : null); 
+  
 </script>
 
 {#if abierto && deal}
