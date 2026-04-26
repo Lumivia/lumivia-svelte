@@ -1,9 +1,10 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { createClient } from '@supabase/supabase-js';
-
-// 🔥 Sincronización con el entorno de Cloudflare: Usamos dynamic para evitar llaves vacías en el SSR
 import { env } from '$env/dynamic/public';
+
+// 🔥 IMPORTANTE: Importamos tu cerebro algorítmico (Ajusta la ruta si es diferente)
+import { curarOfertas } from '$lib/utils/curacion';
 
 const mercadosPermitidos = {
   mx: { nombre: 'México', moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' },
@@ -14,7 +15,6 @@ const mercadosPermitidos = {
 
 type CodigoPais = keyof typeof mercadosPermitidos;
 
-// 🔥 CAMBIO: Extraemos 'fetch' de los argumentos del load
 export const load: PageServerLoad = async ({ params, setHeaders, fetch }) => {
   const paisParam = params.pais ?? '';
   const codigoPais = paisParam.toLowerCase();
@@ -36,7 +36,6 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch }) => {
     };
   }
 
-  // 🔥 CAMBIO VITAL: Pasamos el fetch de SvelteKit para que funcione en Cloudflare Edge
   const supabase = createClient(supabaseUrl, supabaseKey, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: { fetch }
@@ -47,31 +46,22 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch }) => {
     'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60'
   });
 
-  // 4) Ejecución de Consultas
-  
-  // 🔥 6 destacadas
-  const { data: destacadas, error: err1 } = await supabase
+  // 4) Ejecución de Consultas: Extraemos un lote generoso (ej. 50 ofertas) 
+  // para que el algoritmo tenga de dónde escoger la verdadera "crema y nata".
+  const { data: ofertasCrudas, error: err } = await supabase
     .from('publicaciones_lumivia')
     .select('*')
     .eq('activo', true)
     .eq('pais_mercado', paisUpper)
     .order('created_at', { ascending: false })
-    .limit(6);
+    .limit(50);
 
-  if (err1) console.error('Error destacadas:', err1);
+  if (err) console.error('Error al extraer ofertas:', err);
 
-  // 🔥 8 adicionales (usando range para evitar solapamiento)
-  const { data: masDestinos, error: err2 } = await supabase
-    .from('publicaciones_lumivia')
-    .select('*')
-    .eq('activo', true)
-    .eq('pais_mercado', paisUpper)
-    .order('created_at', { ascending: false })
-    .range(6, 13);
+  // 5) 🔥 EL CEREBRO EN ACCIÓN: Curamos las ofertas usando tu algoritmo V12
+  const { hookDeals, radarDeals } = curarOfertas(ofertasCrudas || [], paisUpper);
 
-  if (err2) console.error('Error masDestinos:', err2);
-
-  // 5) Generación de Metadata / Schema
+  // 6) Generación de Metadata / Schema
   const schemaAEO = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'WebPage',
@@ -80,13 +70,13 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch }) => {
     url: `https://www.lumivia.app/paises/${codigoPais}`
   });
 
-  // 6) Retorno de Datos Garantizado
+  // 7) Retorno de Datos Garantizado
   return {
     pais: codigoPais,
     paisUpper,
     mercado,
-    destacadas: destacadas || [],
-    masDestinos: masDestinos || [],
+    destacadas: hookDeals,           // 👈 Ahora sí llevan orden algorítmico
+    masDestinos: radarDeals.slice(0, 8), // 👈 Tomamos las siguientes 8 para el radar
     schemaAEO
   };
 };
