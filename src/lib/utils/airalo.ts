@@ -1,88 +1,44 @@
 /**
- * Paquetes de eSIM de Airalo por destino.
- * Estos datos son estáticos y seguros para SSR.
+ * Motor Dinámico de eSIMs (Airalo)
+ * Configurado con ID de Partner y Cupón de Descuento.
  */
 
-type Esim = {
+export type Esim = {
   nombre: string;
   precio: string;
   data: string;
   validez: string;
   url: string;
   imagen: string;
+  cupon: string; // ✅ Campo obligatorio para destacar el DTO
 };
 
-const paquetesPorPais: Record<string, Esim[]> = {
-  // 🇪🇸 España
-  'MAD': [
-    {
-      nombre: 'HolaFly España',
-      precio: '€19',
-      data: '5 GB',
-      validez: '10 días',
-      url: 'https://airalo.tp.st/xxxxx',
-      imagen: 'https://images.airalo.com/esim/spain.png'
-    },
-    {
-      nombre: 'Eurolink',
-      precio: '€20',
-      data: '3 GB',
-      validez: '30 días',
-      url: 'https://airalo.tp.st/yyyyy',
-      imagen: 'https://images.airalo.com/esim/europe.png'
-    }
-  ],
-
-  // 🇺🇸 Estados Unidos
-  'MIA': [
-    {
-      nombre: 'USA eSIM',
-      precio: '$4.50',
-      data: '1 GB',
-      validez: '7 días',
-      url: 'https://airalo.tp.st/zzzzz',
-      imagen: 'https://images.airalo.com/esim/usa.png'
-    }
-  ],
-
-  // 🇯🇵 Japón
-  'NRT': [
-    {
-      nombre: 'Sakura Mobile',
-      precio: '$6',
-      data: '1 GB',
-      validez: '7 días',
-      url: 'https://airalo.tp.st/japan1',
-      imagen: 'https://images.airalo.com/esim/japan.png'
-    }
-  ]
-};
-
-// Paquetes globales (fallback)
-const paquetesGlobales: Esim[] = [
-  {
-    nombre: 'Discover Global',
-    precio: '$9',
-    data: '1 GB',
-    validez: '7 días',
-    url: 'https://airalo.tp.st/global1',
-    imagen: 'https://images.airalo.com/esim/global.png'
-  },
-  {
-    nombre: 'Discover Global+',
-    precio: '$16',
-    data: '3 GB',
-    validez: '30 días',
-    url: 'https://airalo.tp.st/global2',
-    imagen: 'https://images.airalo.com/esim/global.png'
-  }
-];
+// ✅ Tus credenciales recuperadas
+const AIRALO_ID = '7136059'; 
+const CUPON = 'LUMIVIA15';
 
 /**
- * Obtiene paquetes de eSIM según el destino.
- * Si no existe el destino, devuelve paquetes globales.
+ * Genera el enlace dinámico y la metadata de la eSIM.
  */
 export function obtenerEsims(destino: string): Esim[] {
-  const key = destino.trim().toUpperCase();
-  return paquetesPorPais[key] || paquetesGlobales;
+  if (!destino) return [];
+
+  const lugar = destino.trim().toUpperCase();
+  
+  // 🔗 Landing del país destino:
+  // Usamos el parámetro 'q' que Airalo reconoce para hacer el matching 
+  // automático con el país y aplicamos tu affiliate_id.
+  const urlFinal = `https://www.airalo.com/es/search?q=${encodeURIComponent(lugar)}&affiliate_id=${AIRALO_ID}`;
+
+  return [
+    {
+      nombre: `eSIM para ${lugar}`,
+      precio: 'Desde $4.50 USD',
+      data: 'Datos de alta velocidad',
+      validez: 'Planes de 7 a 30 días',
+      url: urlFinal,
+      cupon: CUPON, // ✅ Inyectamos el cupón para el componente
+      imagen: 'https://images.unsplash.com/photo-1520113412956-621360d2b7c4?auto=format&fit=crop&w=400&q=80'
+    }
+  ];
 }
