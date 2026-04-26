@@ -293,7 +293,7 @@
 
     <div class="text-center mb-16 relative z-10" id="btn-radar-completo">
       <a
-        href="/masdestinos/"
+        href="/paises/{data.pais}/masdestinos"
         class="inline-flex items-center justify-center bg-white border border-gray-200 text-lumiDark hover:border-lumiCyan hover:text-lumiCyan px-8 py-3.5 rounded-full font-bold transition-all shadow-sm hover:shadow-md active:scale-95 text-sm group"
       >
         Explorar más destinos
