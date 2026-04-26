@@ -8,6 +8,9 @@
   // 🔥 SVELTE 5: Recibimos la función onclick directamente como prop
   const { deal, monedaActual, paisActual, onclick } = $props();
 
+  // Estado local para opacar la tarjeta al instante al reportarla
+  let reportado = $state(false);
+
   // Reactividad derivada (Runes)
   const imgFinal = $derived(obtenerImagen(deal));
 
@@ -26,12 +29,28 @@
   const esVip = $derived(deal.tipo_vuelo === 'directo');
   const esHot = $derived(deal.calidad_oferta >= 9);
 
+  // Manejadores de clics internos
+  async function handleReportar(e: Event) {
+    e.stopPropagation(); // Evita que se abra el modal
+    if (reportado) return;
+    reportado = true;
+    try {
+      await reportarCambioPrecio(deal.id);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleCopiar(e: Event) {
+    e.stopPropagation(); // Evita que se abra el modal
+    await copiarUrlUnica(deal.id);
+  }
+
 </script>
 
-<button
-  type="button"
+<article
   {onclick} 
-  class="card-minimal flex-none w-[85vw] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-center flex flex-col group hover:shadow-xl transition-shadow duration-300 bg-white rounded-2xl overflow-hidden text-left cursor-pointer"
+  class="card-minimal flex-none w-[85vw] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-center flex flex-col group hover:shadow-xl transition-all duration-300 bg-white rounded-2xl overflow-hidden text-left cursor-pointer {reportado ? 'opacity-40 grayscale' : ''}"
   aria-label={`Ver oferta de ${deal.origen} a ${deal.destino}`}
 >
 
@@ -59,10 +78,9 @@
       </div>
     {/if}
 
-    <div
-      role="button"
-      tabindex="0"
-      onclick={(e) => { e.stopPropagation(); reportarCambioPrecio(deal.id); }}
+    <button
+      type="button"
+      onclick={handleReportar}
       title="¿El precio subió? Repórtalo"
       class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 transition-colors z-10 cursor-pointer"
     >
@@ -70,7 +88,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-1 6-1-1H11.5l-1-1H5v10m0 0h4"></path>
       </svg>
-    </div>
+    </button>
   </div>
 
   <div class="p-6 flex flex-col flex-grow bg-white relative">
@@ -119,11 +137,9 @@
       </div>
 
       <div class="flex items-center gap-3">
-
-        <div
-          role="button"
-          tabindex="0"
-          onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id); }}
+        <button
+          type="button"
+          onclick={handleCopiar}
           title="Copiar enlace"
           class="bg-gray-50 hover:bg-gray-200 text-gray-500 p-2 rounded-lg transition-colors shadow-sm cursor-pointer"
         >
@@ -131,7 +147,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
           </svg>
-        </div>
+        </button>
 
         <span class="text-lumiCyan hover:text-lumiCyanDark font-semibold text-sm flex items-center gap-1 transition-colors">
           Explorar
@@ -143,4 +159,4 @@
       </div>
     </div>
   </div>
-</button>
+</article>
