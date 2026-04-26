@@ -5,7 +5,7 @@
   import { obtenerEsims } from '$lib/utils/airalo';
   import { obtenerTours } from '$lib/utils/tours';
   import { obtenerHoteles } from '$lib/utils/hotel';
-  import { obtenerSeguro } from '$lib/utils/seguro'; // ✅ Añadido utilitario de Ekta
+  import { obtenerSeguro } from '$lib/utils/seguro'; 
   import ExtrasOferta from '$lib/components/ExtrasOferta.svelte';
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
 
@@ -20,26 +20,43 @@
     return () => window.removeEventListener('keydown', handleKey);
   });
 
+  // Utilidad interna para convertir "YYYY-MM-DD" a "DDMM" (Formato Aviasales)
+  function formatoAviasales(fechaIso: string) {
+    if (!fechaIso) return '';
+    const partes = fechaIso.split('T')[0].split('-'); // Asegurar que sea solo fecha
+    if (partes.length !== 3) return '';
+    const [, mes, dia] = partes;
+    return `${dia}${mes}`;
+  }
+
   // Reactividad Svelte 5
   const imgFinal = $derived(deal ? obtenerImagen(deal, 800) : '');
   const fechasCortas = $derived(deal ? `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}` : '');
   const monedaDeal = $derived(deal ? (deal.moneda || 'MXN').toUpperCase() : 'MXN');
   
-  // ✅ Constructor dinámico de tu White Label (vuelos.lumivia.app)
+  // ✅ Constructor dinámico PERFECTO para vuelos.lumivia.app
   const linkVuelo = $derived(() => {
     if (!deal) return '#';
-    // Si la BD ya trae un link de lumivia, lo usa directo
-    if (deal.url?.includes('lumivia.app')) return deal.url;
-    if (deal.url_vuelo?.includes('lumivia.app')) return deal.url_vuelo;
+    // Si ya trae link y es el correcto, lo usamos
+    if (deal.url?.includes('?flightSearch=')) return deal.url;
+    if (deal.url_vuelo?.includes('?flightSearch=')) return deal.url_vuelo;
 
-    // Si no, lo construye al vuelo inyectando los parámetros del cliente
-    return `https://vuelos.lumivia.app/search?origin=${deal.origen || ''}&destination=${deal.destino || ''}&depart_date=${deal.fecha_salida || ''}&return_date=${deal.fecha_regreso || ''}`;
+    const origen = (deal.origen || '').trim().toUpperCase();
+    const destino = (deal.destino || '').trim().toUpperCase();
+    const fechaIda = formatoAviasales(deal.fecha_salida);
+    const fechaVuelta = formatoAviasales(deal.fecha_regreso);
+    const pasajeros = '1'; // 1 adulto por defecto
+
+    // Armamos la estructura: Ej. GDL0111MUC15111
+    const searchParam = `${origen}${fechaIda}${destino}${fechaVuelta}${pasajeros}`;
+
+    return `https://vuelos.lumivia.app/?flightSearch=${searchParam}`;
   });
 
   const esims = $derived(deal ? obtenerEsims(deal.destino) : []);
   const tours = $derived(deal ? obtenerTours(deal.destino, deal.fecha_salida, deal.fecha_regreso) : []);
   const hoteles = $derived(deal ? obtenerHoteles(deal.destino, deal.fecha_salida, deal.fecha_regreso, deal.url_hotel) : null);
-  const seguro = $derived(deal ? obtenerSeguro(deal.destino) : null); // ✅ Ekta instanciado
+  const seguro = $derived(deal ? obtenerSeguro(deal.destino) : null); 
 </script>
 
 {#if abierto && deal}
