@@ -5,6 +5,9 @@
   import DealCard from '$lib/components/DealCard.svelte';
   import RadarItem from '$lib/components/RadarItem.svelte';
   import Footer from '$lib/components/Footer.svelte';
+  
+  // ✅ El componente nuevo que creamos
+  import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
 
   import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
   import { supabase } from '$lib/supabaseClient';
@@ -14,8 +17,7 @@
   const title = $derived(`Vuelos baratos desde ${data.mercado?.nombre || 'tu país'} - Lumivia`);
   const description = $derived(`Ofertas destacadas y destinos populares desde ${data.mercado?.nombre || 'tu país'}.`);
 
-  // 🔥 SVELTE 5: Al usar $derived, eliminamos la necesidad de la función "procesarOfertasIniciales"
-  // y reparamos el bug que congelaba la vista al cambiar de país. Menos código, cero bugs.
+  // 🔥 SVELTE 5: Reactividad total, cura el bug de cambio de país
   const ofertasHook = $derived(
     (data.destacadas || []).map((d: any) => ({
       ...d,
@@ -381,6 +383,8 @@
       </div>
     </div>
   </main>
+
+  <WhatsAppButton pais={data.paisUpper || data.pais} />
 
   <Footer />
 
