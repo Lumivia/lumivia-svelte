@@ -1,11 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { page } from '$app/stores';
   
   // Runes props
   const { paisUpper, mercado } = $props();
 
   // Estado reactivo (Runes)
   let dropdownAbierto = $state(false);
+
+  // Detectamos si el usuario está en la página de catálogo (masdestinos)
+  const esCatalogo = $derived($page.url.pathname.includes('masdestinos'));
 
   const paises = [
     { codigo: 'mx', nombre: 'México', moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' },
@@ -86,7 +90,7 @@
             <div class="py-1">
               {#each paises as p}
                 <a
-                  href={`/paises/${p.codigo}`}
+                  href={esCatalogo ? `/masdestinos?pais=${p.codigo.toUpperCase()}&page=1` : `/paises/${p.codigo}`}
                   onclick={() => { dropdownAbierto = false; }}
                   data-sveltekit-preload-data="hover"
                   class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors border-b border-gray-50 last:border-0"
