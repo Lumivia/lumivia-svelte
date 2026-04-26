@@ -35,7 +35,8 @@
   const monedaDeal = $derived(deal ? (deal.moneda || 'MXN').toUpperCase() : 'MXN');
   
   // ✅ Constructor dinámico PERFECTO para vuelos.lumivia.app
-  const linkVuelo = $derived(() => {
+  // (Sin usar función anonima para que $derived evalue directamente)
+  const linkVuelo = $derived.by(() => {
     if (!deal) return '#';
     // Si ya trae link y es el correcto, lo usamos
     if (deal.url?.includes('?flightSearch=')) return deal.url;
@@ -104,7 +105,7 @@
             </div>
           </div>
 
-          <a href={linkVuelo()} target="_blank" rel="noopener noreferrer" class="bg-lumiCyan hover:bg-lumiCyanDark text-lumiDark font-black px-6 py-3.5 rounded-xl transition-all shadow-md text-sm uppercase tracking-wide">
+          <a href={linkVuelo} target="_blank" rel="noopener noreferrer" class="bg-lumiCyan hover:bg-lumiCyanDark text-lumiDark font-black px-6 py-3.5 rounded-xl transition-all shadow-md text-sm uppercase tracking-wide">
             Ver Vuelo
           </a>
         </div>
