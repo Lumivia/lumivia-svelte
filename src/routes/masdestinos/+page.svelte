@@ -7,6 +7,7 @@
   import Header from '$lib/components/Header.svelte';
   import ModalOferta from '$lib/components/ModalOferta.svelte';
   import Footer from '$lib/components/Footer.svelte';
+  import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; // ✅ Importamos el botón VIP
 
   let { data } = $props<PageData>();
 
@@ -24,7 +25,6 @@
     CR: ['SJO', 'LIR']
   };
 
-  // 🔥 FIX SVELTE 5: Usamos $derived para que reaccionen al instante cuando el Dropdown cambia de país
   const paisActual = $derived(data.pais || 'MX');
   const monedaActual = $derived(configMercado[paisActual]?.moneda ?? 'MXN');
   const banderaActual = $derived(configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png');
@@ -71,7 +71,6 @@
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('lumivia_pais', codigoPais);
     }
-    // goto triggerea un update de 'data', lo cual dispara los $derived instantáneamente
     goto(`/paises/${codigoPais.toLowerCase()}/masdestinos?page=1`);
   }
 
@@ -506,6 +505,8 @@
       </div>
     </section>
   </main>
+
+  <WhatsAppButton pais={paisActual} />
 
   <Footer />
 
