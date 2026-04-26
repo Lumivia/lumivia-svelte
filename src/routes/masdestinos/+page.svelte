@@ -25,7 +25,6 @@
     CR: ['SJO', 'LIR']
   };
 
-  // 🔥 SVELTE 5: Reactividad inmediata al cambiar de país
   const paisActual = $derived(data.pais || 'MX');
   const monedaActual = $derived(configMercado[paisActual]?.moneda ?? 'MXN');
   const banderaActual = $derived(configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png');
@@ -48,7 +47,10 @@
   let nlEnviando = $state(false);
 
   let mesesDisponibles = $state<string[]>([]);
-  let vuelosReportados = new Set<number | string>();
+  
+  // ✅ FIX BANDERITA: La definimos como estado reactivo
+  let vuelosReportados = $state(new Set<number | string>());
+  
   const alaProhibida = '1436491865332-7a61a109cc05';
 
   function toggleDropdown() {
@@ -67,17 +69,18 @@
     goto('/paises/' + (paisGuardado?.toLowerCase() || 'mx'));
   }
 
+  // ✅ FIX RUTAS: Apuntamos correctamente al catálogo
   function seleccionarPais(codigoPais: string) {
     dropdownAbierto = false;
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('lumivia_pais', codigoPais);
     }
-    goto(`/paises/${codigoPais.toLowerCase()}/masdestinos?page=1`);
+    goto(`/masdestinos?pais=${codigoPais.toUpperCase()}&page=1`);
   }
 
   function irAPagina(n: number) {
     if (n < 1 || n > data.totalPages) return;
-    goto(`/paises/${paisActual.toLowerCase()}/masdestinos?page=${n}`);
+    goto(`/masdestinos?pais=${paisActual.toUpperCase()}&page=${n}`);
   }
 
   function calcularTiempoTranscurrido(fechaISO: string | null) {
@@ -188,10 +191,16 @@
     }
   }
 
+  // ✅ FIX BANDERITA: Forzamos a Svelte 5 a detectar el cambio clonando el Set
   async function reportarCambioPrecio(id: number | string, e?: Event) {
     if (e) e.stopPropagation();
     if (vuelosReportados.has(id)) return;
-    vuelosReportados.add(id);
+    
+    // Truco de reactividad
+    const nuevoSet = new Set(vuelosReportados);
+    nuevoSet.add(id);
+    vuelosReportados = nuevoSet;
+
     try { await supabase.from('reportes_precios').insert([{ deal_id: id }]); } catch (err) { console.error(err); }
   }
 
@@ -211,7 +220,6 @@
 
   function cerrarModal() {
     modalAbierto = false;
-    // ✅ FIX: Limpiamos la selección después de un pequeño retraso para permitir la animación de cierre
     setTimeout(() => {
       dealSeleccionado = null;
     }, 200); 
@@ -306,16 +314,16 @@
           {#if dropdownAbierto}
             <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-xl shadow-lg bg-white ring-1 ring-black/5 focus:outline-none z-50 overflow-hidden border border-gray-100 animate-fadeIn" role="menu">
               <div class="py-1">
-                <a href={`/paises/mx/masdestinos?page=1`} onclick={() => seleccionarPais('MX')} data-sveltekit-preload-data="hover" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors">
+                <a href={`/masdestinos?pais=MX&page=1`} onclick={() => seleccionarPais('MX')} data-sveltekit-preload-data="hover" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors">
                   <img src="https://flagcdn.com/w20/mx.png" alt="MX" class="w-5 h-auto rounded-sm shadow-sm" /> México (MXN)
                 </a>
-                <a href={`/paises/co/masdestinos?page=1`} onclick={() => seleccionarPais('CO')} data-sveltekit-preload-data="hover" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors">
+                <a href={`/masdestinos?pais=CO&page=1`} onclick={() => seleccionarPais('CO')} data-sveltekit-preload-data="hover" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors">
                   <img src="https://flagcdn.com/w20/co.png" alt="CO" class="w-5 h-auto rounded-sm shadow-sm" /> Colombia (COP)
                 </a>
-                <a href={`/paises/cl/masdestinos?page=1`} onclick={() => seleccionarPais('CL')} data-sveltekit-preload-data="hover" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors">
+                <a href={`/masdestinos?pais=CL&page=1`} onclick={() => seleccionarPais('CL')} data-sveltekit-preload-data="hover" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors">
                   <img src="https://flagcdn.com/w20/cl.png" alt="CL" class="w-5 h-auto rounded-sm shadow-sm" /> Chile (CLP)
                 </a>
-                <a href={`/paises/cr/masdestinos?page=1`} onclick={() => seleccionarPais('CR')} data-sveltekit-preload-data="hover" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors">
+                <a href={`/masdestinos?pais=CR&page=1`} onclick={() => seleccionarPais('CR')} data-sveltekit-preload-data="hover" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors">
                   <img src="https://flagcdn.com/w20/cr.png" alt="CR" class="w-5 h-auto rounded-sm shadow-sm" /> Costa Rica (USD)
                 </a>
               </div>
@@ -378,7 +386,7 @@
           {@const etiquetaHot = deal.calidad_oferta >= 9}
           {@const monedaDeal = (deal.moneda || deal.currency || monedaActual).toUpperCase()}
 
-          <article class="card-minimal flex flex-col group hover:shadow-xl transition-shadow duration-300 h-full bg-white rounded-2xl overflow-hidden border border-gray-100 {vuelosReportados.has(deal.id) ? 'opacity-30' : ''}">
+          <article class="card-minimal flex flex-col group hover:shadow-xl transition-shadow duration-300 h-full bg-white rounded-2xl overflow-hidden border border-gray-100 cursor-pointer {vuelosReportados.has(deal.id) ? 'opacity-30' : ''}" onclick={() => abrirModal(deal)}>
             <div class="relative h-56 overflow-hidden bg-gray-100 flex-shrink-0">
               <img src={imgFinal} alt={deal.titulo_gancho || 'Oferta Especial'} class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -443,7 +451,7 @@
                   <button type="button" onclick={(e) => copiarUrlUnica(deal.id, e)} title="Copiar enlace" class="text-gray-400 hover:text-lumiCyan transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                   </button>
-                  <button type="button" onclick={() => abrirModal(deal)} class="text-lumiCyan hover:text-lumiDark font-bold text-sm transition-colors cursor-pointer">
+                  <button type="button" onclick={(e) => { e.stopPropagation(); abrirModal(deal); }} class="text-lumiCyan hover:text-lumiDark font-bold text-sm transition-colors cursor-pointer">
                     Ver Oferta
                   </button>
                 </div>
@@ -455,7 +463,7 @@
     </div>
 
     {#if data.totalPages > 1}
-      <div class="flex justify-center items-center gap-3 mt-10 mb-20 relative z-10">
+      <div class="flex justify-center items-center gap-3 mt-10 mb-20">
         <button type="button" onclick={() => irAPagina(data.page - 1)} disabled={data.page <= 1} class="px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-sm">← Anterior</button>
         <div class="flex items-center gap-2">
           {#each Array(data.totalPages) as _, i}
@@ -467,7 +475,7 @@
       </div>
     {/if}
 
-    <section class="max-w-3xl mx-auto mb-24 relative z-10">
+    <section class="max-w-3xl mx-auto mb-24">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
         <h2 class="text-2xl font-black text-lumiDark mb-4 text-center">Radar Personal</h2>
         <p class="text-gray-500 text-center mb-8 text-sm leading-relaxed">Cuéntanos qué vuelo buscas y te avisamos cuando aparezca una ganga real.</p>
