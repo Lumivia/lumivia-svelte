@@ -8,7 +8,7 @@
   // Estado reactivo (Runes)
   let dropdownAbierto = $state(false);
 
-  // Detectamos si el usuario está en la página de catálogo (masdestinos)
+  // ✅ FIX 404: El Header detecta si estás en el catálogo
   const esCatalogo = $derived($page.url.pathname.includes('masdestinos'));
 
   const paises = [
