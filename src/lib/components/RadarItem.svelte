@@ -22,11 +22,16 @@
   );
 
   const esHot = $derived(deal.calidad_oferta >= 9);
+
+  // Función aislada para evitar que el clic se propague y abra el modal
+  async function handleCopiar(e: Event) {
+    e.stopPropagation();
+    await copiarUrlUnica(deal.id);
+  }
 </script>
 
 <li class="list-none">
-  <button
-    type="button"
+  <div
     {onclick}
     class="w-full p-3 sm:px-6 sm:py-4 hover:bg-gray-50/80 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left cursor-pointer rounded-xl"
     aria-label={`Ver oferta de ${deal.origen} a ${deal.destino}`}
@@ -79,10 +84,9 @@
         </p>
       </div>
 
-      <div
-        role="button"
-        tabindex="0"
-        onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id); }}
+      <button
+        type="button"
+        onclick={handleCopiar}
         title="Copiar enlace"
         class="bg-gray-50 hover:bg-gray-200 text-gray-500 p-2 rounded-lg transition-colors shadow-sm cursor-pointer"
       >
@@ -90,7 +94,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
         </svg>
-      </div>
+      </button>
 
       <span class="text-lumiCyan hover:text-lumiCyanDark font-semibold text-sm flex items-center gap-1 transition-colors">
         Explorar
@@ -100,5 +104,5 @@
         </svg>
       </span>
     </div>
-  </button>
+  </div>
 </li>
