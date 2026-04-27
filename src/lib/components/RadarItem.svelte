@@ -32,7 +32,10 @@
 
 <li class="list-none">
   <div
-    {onclick}
+    role="button"
+    tabindex="0"
+    onclick={onclick}
+    onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onclick(e); } }}
     class="w-full p-3 sm:px-6 sm:py-4 hover:bg-gray-50/80 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left cursor-pointer rounded-xl"
     aria-label={`Ver oferta de ${deal.origen} a ${deal.destino}`}
   >
@@ -89,6 +92,7 @@
         onclick={handleCopiar}
         title="Copiar enlace"
         class="bg-gray-50 hover:bg-gray-200 text-gray-500 p-2 rounded-lg transition-colors shadow-sm cursor-pointer"
+        aria-label="Copiar enlace de la oferta al portapapeles"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
