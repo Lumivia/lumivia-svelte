@@ -1,29 +1,33 @@
 import { createClient } from '@supabase/supabase-js';
+// ✅ Importamos las variables de entorno de forma segura al estilo SvelteKit
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
-// ⚠️ Idealmente mover a variables de entorno (.env)
-const SUPABASE_URL = 'https://khmkpkbhlzpvowesbkgu.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_uyjRiobM7d6m7IdMPUQi9Q_-RPZuIvt';
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
 /**
  * Registra un reporte de cambio de precio.
  * Funciona solo en navegador (SSR-safe).
+ * El frontend SOLO reporta. La inteligencia de borrar vive en la base de datos.
  */
-export async function reportarCambioPrecio(id: string) {
-  if (typeof window === 'undefined') return;
+export async function reportarCambioPrecio(id: string | number) {
+  if (typeof window === 'undefined') return false;
 
   try {
-    const { error } = await supabase
+    // 1. Insertar el reporte en la base de datos
+    const { error: insertError } = await supabase
       .from('reportes_cambio_precio')
       .insert([{ publicacion_id: id, origen: 'lumivia_web' }]);
 
-    if (error) {
-      console.error('Error al reportar cambio de precio:', error);
-    } else {
-      console.log('Reporte registrado para ID:', id);
-    }
+    if (insertError) throw insertError;
+
+    // 2. Feedback inmediato al usuario (CRO Premium)
+    alert('¡Gracias por tu reporte, partner! 🕵️‍♂️ Acabas de ayudarnos a auditar esta tarifa.');
+
+    return true;
+
   } catch (err) {
     console.error('Error inesperado al reportar precio:', err);
+    alert('Hubo un problema de conexión al enviar el reporte, pero lo intentaremos de nuevo.');
+    return false;
   }
 }
