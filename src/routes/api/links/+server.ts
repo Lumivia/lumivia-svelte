@@ -2,55 +2,49 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 // ==========================================
-// LUMIVIA - LINK INTEL ENGINE v2.0
-// Centralización de Credenciales y Lógica Dinámica
+// LUMIVIA - LINK INTEL ENGINE v4.0 (EXACT CANONICAL MODE)
+// Cero acortadores. Cero redirecciones sucias.
 // ==========================================
 
-// 🛡️ Credenciales Premium (Solo visibles en servidor, jamás en frontend)
-const AID_CIVITATIS = '112603';     // De tu image_10.png
-const AID_STAY22 = 'lumivia';       // De tu image_10.png
-const MARKER_EKTA = '708095';       // ID de Ekta
-const ID_AIRALO = '7136059';        // ID de Airalo
+const AID_CIVITATIS = '112603';
+const AID_STAY22 = 'lumivia';
+const MARKER_AIRALO = '7136059';
+const MARKER_EKTA = '708095';
 
-// Helper para asegurar formato fecha YYYY-MM-DD que requieren los partners
+// Formato obligatorio: YYYY-MM-DD
 const limpiarFechaISO = (iso: string | null) => iso ? iso.split('T')[0] : '';
 
 export const GET: RequestHandler = async ({ url }) => {
-    // 1. Extraer contexto de la oferta desde la URL del BFF
     const destinoRaw = url.searchParams.get('destino');
     const destino = (destinoRaw || '').toUpperCase().trim();
-    const salidaISO = url.searchParams.get('salida');
-    const regresoISO = url.searchParams.get('regreso');
+    
+    const fSalida = limpiarFechaISO(url.searchParams.get('salida'));
+    const fRegreso = limpiarFechaISO(url.searchParams.get('regreso'));
     const url_hotel_db = url.searchParams.get('url_hotel') || '';
 
-    // Asegurar fechas limpias YYYY-MM-DD
-    const fSalida = limpiarFechaISO(salidaISO);
-    const fRegreso = limpiarFechaISO(regresoISO);
+    // 1. AIRALO (Deep Link Canónico)
+    // El tráfico va directo a la web matriz con tu marker inyectado
+    const linkEsim = `https://www.airalo.com/es/?marker=${MARKER_AIRALO}`;
 
-    // Contexto de Búsqueda para motores de viaje
-    const searchParam = `${fSalida}/${fRegreso}/${destino}`;
+    // 2. EKTA (Deep Link Canónico)
+    const linkSeguro = `https://ektatraveling.com/es/?marker=${MARKER_EKTA}`;
 
-    // 2. CONSTRUCCIÓN DE ENLACES DINÁMICOS INTELIGENTES
-
-    // 2A) Motor de Conectividad (Airalo eSIM) con 0% Error 404
-    // Usamos el ID oficial 7136059 y pasamos el destino como subid
-    const linkEsim = `https://airalo.tp.st/${ID_AIRALO}?subid=${destino}`;
-
-    // 2B) Motor de Tours y Actividades (Civitatis) con Contexto Total
-    // Inyectamos destino, fechas limpias y tu AID 112603
-    const linkTours = `https://www.civitatis.com/es/buscar/?q=${encodeURIComponent(destino)}&fromDate=${fSalida}&toDate=${fRegreso}&aid=${AID_CIVITATIS}`;
-
-    // 2C) Motor de Seguros y Asistencia (EKTA) - Reemplaza Heymondo
-    const linkSeguro = `https://ektatraveling.tp.st/${MARKER_EKTA}?subid=${destino}`;
-
-    // 2D) Motor de Hoteles (Stay22 con Respaldo de DB)
-    let linkHotel = url_hotel_db;
-    if (!linkHotel || linkHotel === 'undefined' || linkHotel === 'null') {
-        // Si la DB no tiene hotel específico, abrimos el mapa de Stay22 con el destino y fechas
-        linkHotel = `https://www.stay22.com/allez/roam?aid=${AID_STAY22}&address=${encodeURIComponent(destino)}&checkin=${fSalida}&checkout=${fRegreso}`;
+    // 3. CIVITATIS (Búsqueda Perfecta de Fechas)
+    // Usando fromDate y toDate tal cual exige el core de Civitatis
+    let linkTours = `https://www.civitatis.com/es/buscar/?q=${encodeURIComponent(destino)}&aid=${AID_CIVITATIS}`;
+    if (fSalida && fRegreso) {
+        linkTours += `&fromDate=${fSalida}&toDate=${fRegreso}`;
     }
 
-    // 3. Retornar los enlaces blindados al frontend
+    // 4. STAY22 (Motor Principal de Hoteles)
+    let linkHotel = url_hotel_db;
+    if (!linkHotel || linkHotel === 'undefined' || linkHotel === 'null') {
+        linkHotel = `https://www.stay22.com/allez/roam?aid=${AID_STAY22}&address=${encodeURIComponent(destino)}`;
+        if (fSalida && fRegreso) {
+            linkHotel += `&checkin=${fSalida}&checkout=${fRegreso}`;
+        }
+    }
+
     return json({
         esim: linkEsim,
         tours: linkTours,
