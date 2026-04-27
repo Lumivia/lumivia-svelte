@@ -23,30 +23,27 @@
     return partes.length === 3 ? `${partes[2]}${partes[1]}` : '';
   }
 
+  // 🔥 FIX ABSOLUTO: Diccionario expandido con NOMBRES DE CIUDAD para evitar falsos internacionales
   const destinosNacionales: Record<string, string[]> = {
-    MX: ['CUN', 'MID', 'SJD', 'PVR', 'PXM', 'OAX', 'TRC', 'CUU', 'MEX', 'GDL', 'MTY', 'TIJ'],
-    CO: ['CTG', 'SMR', 'ADZ', 'BGA', 'PEI', 'BOG', 'MDE', 'CLO'],
-    CL: ['CJC', 'PUQ', 'PMC', 'IQQ', 'SCL', 'LSC', 'ZCO', 'BBA'],
-    CR: ['SJO', 'LIR']
+    MX: ['CUN', 'CANCÚN', 'CANCUN', 'MID', 'MÉRIDA', 'MERIDA', 'SJD', 'LOS CABOS', 'PVR', 'PUERTO VALLARTA', 'PXM', 'PUERTO ESCONDIDO', 'OAX', 'OAXACA', 'TRC', 'TORREÓN', 'TORREON', 'CUU', 'CHIHUAHUA', 'MEX', 'CIUDAD DE MÉXICO', 'CDMX', 'GDL', 'GUADALAJARA', 'MTY', 'MONTERREY', 'TIJ', 'TIJUANA'],
+    CO: ['CTG', 'CARTAGENA', 'SMR', 'SANTA MARTA', 'ADZ', 'SAN ANDRÉS', 'SAN ANDRES', 'BGA', 'BUCARAMANGA', 'PEI', 'PEREIRA', 'BOG', 'BOGOTÁ', 'BOGOTA', 'MDE', 'MEDELLÍN', 'MEDELLIN', 'CLO', 'CALI'],
+    CL: ['CJC', 'CALAMA', 'PUQ', 'PUNTA ARENAS', 'PMC', 'PUERTO MONTT', 'IQQ', 'IQUIQUE', 'SCL', 'SANTIAGO', 'LSC', 'LA SERENA', 'ZCO', 'TEMUCO', 'BBA', 'BALMACEDA'],
+    CR: ['SJO', 'SAN JOSÉ', 'SAN JOSE', 'LIR', 'LIBERIA']
   };
 
   const imgFinal = $derived(deal ? obtenerImagen(deal, 800) : '');
   const fechasCortas = $derived(deal ? `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}` : '');
   
-  // 🔥 FIX CRÍTICO DE MONEDA: Extracción blindada directo del título
   const monedaDeal = $derived.by(() => {
     if (deal?.moneda) return deal.moneda.toUpperCase();
     if (deal?.currency) return deal.currency.toUpperCase();
-    // Si la DB falla, escaneamos el título en busca de la moneda real
     if (deal?.titulo_gancho) {
       const match = deal.titulo_gancho.match(/(MXN|COP|CLP|USD)/i);
       if (match) return match[1].toUpperCase();
     }
-    return 'MXN'; // Último recurso
+    return 'MXN';
   });
 
-  // 🔥 FIX CRÍTICO DE CIVITATIS: Extracción del nombre real de la ciudad
-  // Ejemplo: "Viaje Sin Escalas: San Andrés desde $320,650 COP" -> "San Andrés"
   const ciudadExtraida = $derived.by(() => {
     if (!deal?.titulo_gancho) return deal?.destino || '';
     try {
@@ -58,18 +55,28 @@
     }
   });
   
+  // 🔥 FIX ABSOLUTO: Detección de mercado por moneda si falla el país
   const esNacional = $derived.by(() => {
     if (!deal?.destino) return false;
-    const paisOrigen = deal.pais ? deal.pais.toUpperCase() : 'MX'; 
-    const listaLocal = destinosNacionales[paisOrigen] || [];
+    let mercado = deal?.pais ? deal.pais.toUpperCase() : null;
+    
+    if (!mercado) {
+      const texto = (deal?.moneda || deal?.titulo_gancho || '').toUpperCase();
+      if (texto.includes('COP')) mercado = 'CO';
+      else if (texto.includes('CLP')) mercado = 'CL';
+      else if (texto.includes('USD')) mercado = 'CR';
+      else mercado = 'MX';
+    }
+    
+    const listaLocal = destinosNacionales[mercado] || [];
     return listaLocal.includes(deal.destino.toUpperCase());
   });
 
   $effect(() => {
     if (abierto && deal) {
       const params = new URLSearchParams({
-        destino: deal.destino, // IATA (ADZ)
-        ciudad: ciudadExtraida, // Ciudad Real (San Andrés)
+        destino: deal.destino, 
+        ciudad: ciudadExtraida, 
         salida: deal.fecha_salida,
         regreso: deal.fecha_regreso,
         url_hotel: deal.url_hotel || ''
@@ -147,7 +154,7 @@
             {#if links.esim && !esNacional}
               <a href={links.esim} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-emerald-400 hover:shadow-md transition-all group">
                 <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0">
-                  <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=150&q=80" alt="eSIM Airalo" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                  <img src="https://images.unsplash.com/photo-1523206489230-c012c64b2b48?auto=format&fit=crop&w=150&q=80" alt="eSIM Airalo" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-[11px] font-black text-lumiDark truncate">Internet eSIM</p>
