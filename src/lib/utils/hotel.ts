@@ -1,51 +1,40 @@
 /**
- * Generador de enlaces de hospedaje (Stay22).
- * Prioriza el enlace directo del deal o genera uno dinámico.
+ * Motor Dinámico de Hoteles (Stay22 / Booking)
+ * Lógica a prueba de balas para garantizar siempre un enlace válido.
  */
 
-type HotelLink = {
+export type Hotel = {
   url: string;
-  titulo: string;
-  descripcion: string;
 };
 
-/**
- * Obtiene el enlace de hoteles.
- * @param destino Código de aeropuerto o ciudad.
- * @param fechaSalida Fecha de inicio del viaje.
- * @param fechaRegreso Fecha de fin del viaje.
- * @param urlDirecta El campo 'url_hotel' proveniente de la base de datos.
- */
-export function obtenerHoteles(
-  destino: string,
-  fechaSalida?: string,
-  fechaRegreso?: string,
-  urlDirecta?: string
-): HotelLink {
-  const AID = 'lumivia'; // ✅ Tu ID de Stay22
-  const destinoClean = destino?.trim() || 'tu destino';
+const STAY22_AID = 'lumivia'; // ✅ Tu Affiliate ID de Stay22
 
-  // 1. Si existe URL directa en el deal, la usamos (Prioridad 1)
-  if (urlDirecta && urlDirecta.startsWith('http')) {
-    return {
-      url: urlDirecta,
-      titulo: `Hospedaje seleccionado en ${destinoClean}`,
-      descripcion: `Reserva el hotel recomendado para tu viaje a ${destinoClean}.`
-    };
+/**
+ * Obtiene el enlace de hotel priorizando la base de datos.
+ * Si falla, genera un Deep Link inteligente a Stay22.
+ */
+export function obtenerHoteles(destino: string, salida: string, regreso: string, url_hotel?: string): Hotel | null {
+  
+  // 1. Verificación a prueba de balas de la URL de la base de datos
+  if (url_hotel && typeof url_hotel === 'string' && url_hotel.trim() !== '') {
+    // Verificamos que al menos parezca un enlace real
+    if (url_hotel.startsWith('http://') || url_hotel.startsWith('https://')) {
+      return { url: url_hotel.trim() };
+    }
   }
 
-  // 2. Si no hay URL directa, construimos el mapa dinámico de Stay22 (Prioridad 2)
-  const base = 'https://www.stay22.com/allez/map';
-  const params = new URLSearchParams({
-    aid: AID,
-    address: destinoClean,
-    checkin: fechaSalida || '',
-    checkout: fechaRegreso || ''
-  });
+  // 2. Si no hay URL válida y no hay destino, abortamos (no mostramos tarjeta)
+  if (!destino) return null;
 
-  return {
-    url: `${base}?${params.toString()}`,
-    titulo: `Explorar hoteles en ${destinoClean}`,
-    descripcion: `Compara las mejores opciones de hospedaje para tus fechas en ${destinoClean}.`
-  };
+  // 3. Motor de Respaldo: Deep Link de Stay22
+  const ciudad = destino.trim().toUpperCase();
+  
+  // Limpiamos las fechas para asegurar formato YYYY-MM-DD
+  const ida = salida ? salida.split('T')[0] : '';
+  const vuelta = regreso ? regreso.split('T')[0] : '';
+
+  // Construimos la URL de Stay22 con el mapa interactivo
+  const urlFinal = `https://www.stay22.com/allez/roam?aid=${STAY22_AID}&address=${encodeURIComponent(ciudad)}&checkin=${ida}&checkout=${vuelta}`;
+
+  return { url: urlFinal };
 }
