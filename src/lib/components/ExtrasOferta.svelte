@@ -68,6 +68,6 @@
         <p class="text-[10px] text-gray-400 font-medium mt-0.5 tracking-wide">Cobertura 24/7</p>
       </div>
     </a>
-  {/if}
+  {=if}
 
 </div>
