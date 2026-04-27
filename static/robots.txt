@@ -1,30 +1,50 @@
 # ==========================================
 # LUMIVIA - BOTS & AI ENGINE OPTIMIZATION 
+# Arquitectura de Rastreo 2026
 # ==========================================
 
+# 1. MOTORES DE BÚSQUEDA TRADICIONALES
 User-agent: Googlebot
 Allow: /
+Disallow: /api/
+Disallow: /r/
 
 User-agent: Bingbot
 Allow: /
+Disallow: /api/
+Disallow: /r/
 
-# Agentes IA
-User-agent: GPTBot
-Allow: /
+# 2. AGENTES IA RAG (Búsqueda en Tiempo Real y Recomendación)
+# Vitales para aparecer en Perplexity, ChatGPT y Apple Intelligence
 User-agent: ChatGPT-User
 Allow: /
 User-agent: PerplexityBot
 Allow: /
-User-agent: Google-Extended
+User-agent: Applebot-Extended
 Allow: /
 User-agent: ClaudeBot
 Allow: /
+
+# 3. AGENTES DE ENTRENAMIENTO IA (LLMs)
+User-agent: GPTBot
+Allow: /
+User-agent: Google-Extended
+Allow: /
 User-agent: anthropic-ai
 Allow: /
-
-# Regla Global
-User-agent: *
+User-agent: Meta-ExternalAgent
+Allow: /
+User-agent: Omgilibot
 Allow: /
 
-# EL SITEMAP CORRECTO (Con WWW y tu nombre de archivo exacto)
+# 4. REGLA GLOBAL Y BÚNKER DE SEGURIDAD
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /r/
+# Prevención contra scrapers maliciosos buscando configuraciones
+Disallow: /*.json$
+Disallow: /*.env$
+
+# 5. SITEMAP DE ÍNDICE GLOBAL
 Sitemap: https://www.lumivia.app/sitemap.xml
