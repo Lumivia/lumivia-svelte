@@ -20,16 +20,14 @@
     return () => window.removeEventListener('keydown', handleKey);
   });
 
-  // Utilidad interna para convertir "YYYY-MM-DD" a "DDMM" (Formato Aviasales)
   function formatoAviasales(fechaIso: string) {
     if (!fechaIso) return '';
-    const partes = fechaIso.split('T')[0].split('-'); // Asegurar que sea solo fecha
+    const partes = fechaIso.split('T')[0].split('-');
     if (partes.length !== 3) return '';
     const [, mes, dia] = partes;
     return `${dia}${mes}`;
   }
 
-  // ✅ Diccionario de rutas nacionales para la inteligencia del modal
   const destinosNacionales: Record<string, string[]> = {
     MX: ['CUN', 'MID', 'SJD', 'PVR', 'PXM', 'OAX', 'TRC', 'CUU', 'MEX', 'GDL', 'MTY', 'TIJ'],
     CO: ['CTG', 'SMR', 'ADZ', 'BGA', 'PEI', 'BOG', 'MDE', 'CLO'],
@@ -37,12 +35,10 @@
     CR: ['SJO', 'LIR']
   };
 
-  // Reactividad Svelte 5
   const imgFinal = $derived(deal ? obtenerImagen(deal, 800) : '');
   const fechasCortas = $derived(deal ? `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}` : '');
   const monedaDeal = $derived(deal ? (deal.moneda || 'MXN').toUpperCase() : 'MXN');
   
-  // ✅ Detector de Vuelos Nacionales
   const esNacional = $derived(() => {
     if (!deal || !deal.pais || !deal.destino) return false;
     const paisBase = deal.pais.toUpperCase();
@@ -52,29 +48,21 @@
 
   const linkVuelo = $derived.by(() => {
     if (!deal) return '#';
-    // Si ya trae link y es el correcto, lo usamos
     if (deal.url?.includes('?flightSearch=')) return deal.url;
     if (deal.url_vuelo?.includes('?flightSearch=')) return deal.url_vuelo;
-
     const origen = (deal.origen || '').trim().toUpperCase();
     const destino = (deal.destino || '').trim().toUpperCase();
     const fechaIda = formatoAviasales(deal.fecha_salida);
     const fechaVuelta = formatoAviasales(deal.fecha_regreso);
-    const pasajeros = '1'; // 1 adulto por defecto
-
-    // Armamos la estructura: Ej. GDL0111MUC15111
+    const pasajeros = '1';
     const searchParam = `${origen}${fechaIda}${destino}${fechaVuelta}${pasajeros}`;
-
     return `https://vuelos.lumivia.app/?flightSearch=${searchParam}`;
   });
 
-  // ✅ Filtro Inteligente: Si es nacional, eSIM y Seguro se apagan (vacíos)
   const esims = $derived(deal && !esNacional() ? obtenerEsims(deal.destino) : []);
   const seguro = $derived(deal && !esNacional() ? obtenerSeguro(deal.destino) : null); 
-  
   const tours = $derived(deal ? obtenerTours(deal.destino, deal.fecha_salida, deal.fecha_regreso) : []);
   const hoteles = $derived(deal ? obtenerHoteles(deal.destino, deal.fecha_salida, deal.fecha_regreso, deal.url_hotel) : null);
-  
 </script>
 
 {#if abierto && deal}
@@ -108,12 +96,17 @@
         </div>
 
         {#if deal.cuerpo_post || deal.descripcion}
-          <div class="text-sm text-gray-600 leading-relaxed font-medium">
+          <div class="text-sm text-gray-600 leading-relaxed font-medium whitespace-pre-line text-justify">
             {@html deal.cuerpo_post || deal.descripcion}
           </div>
         {/if}
 
-        <div class="flex items-center justify-between border-y border-gray-100 py-5">
+        <div class="pt-4">
+          <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Mejora tu experiencia</h3>
+          <ExtrasOferta {esims} {tours} {hoteles} {seguro} />
+        </div>
+
+        <div class="flex items-center justify-between border-t border-gray-100 pt-6 mt-2">
           <div>
             <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Precio final</p>
             <div class="text-3xl font-black text-lumiDark leading-none">
@@ -122,14 +115,9 @@
             </div>
           </div>
 
-          <a href={linkVuelo} target="_blank" rel="noopener noreferrer" class="bg-lumiCyan hover:bg-lumiCyanDark text-lumiDark font-black px-6 py-3.5 rounded-xl transition-all shadow-md text-sm uppercase tracking-wide">
+          <a href={linkVuelo} target="_blank" rel="noopener noreferrer" class="bg-lumiCyan hover:bg-lumiCyanDark text-lumiDark font-black px-8 py-3.5 rounded-xl transition-all shadow-md text-sm uppercase tracking-wide">
             Ver Vuelo
           </a>
-        </div>
-
-        <div class="pt-2">
-          <h3 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">Mejora tu experiencia</h3>
-          <ExtrasOferta {esims} {tours} {hoteles} {seguro} />
         </div>
 
       </div>
