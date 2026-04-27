@@ -37,7 +37,6 @@
   const imgFinal = $derived(deal ? obtenerImagen(deal, 800) : '');
   const fechasCortas = $derived(deal ? `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}` : '');
   
-  // 🔥 FIX CRÍTICO: Detección inteligente de moneda basada en el país si no viene en DB
   const monedaDeal = $derived.by(() => {
     if (!deal) return 'MXN';
     if (deal.moneda) return deal.moneda.toUpperCase();
@@ -46,10 +45,12 @@
     return 'MXN';
   });
   
-  const esNacional = $derived(() => {
-    if (!deal?.pais || !deal?.destino) return false;
-    return (destinosNacionales[deal.pais.toUpperCase()] || []).includes(deal.destino.toUpperCase());
-  });
+  // 🔥 FIX CRÍTICO: Lógica booleana estricta para identificar vuelos nacionales
+  const esNacional = $derived(
+    deal?.pais && deal?.destino
+      ? (destinosNacionales[deal.pais.toUpperCase()] || []).includes(deal.destino.toUpperCase())
+      : false
+  );
 
   $effect(() => {
     if (abierto && deal) {
@@ -75,11 +76,12 @@
     return `https://vuelos.lumivia.app/?flightSearch=${searchParam}`;
   });
 
+  // 🔥 FIX CRÍTICO: Regex universal para destruir cualquier "Comenta la palabra X..."
   const cuerpoPostLimpiado = $derived(() => {
     if (!deal || (!deal.cuerpo_post && !deal.descripcion)) return "";
     let original = deal.cuerpo_post || deal.descripcion;
-    const regexRedes = /(👉 )?Comenta la palabra DIRECTO y te mando.*?reserva para esta experiencia\./gis;
-    return original.replace(regexRedes, "");
+    const regexRedes = /(👉|👇|✨)?\s*Comenta la palabra.*?(\.|\n|$)/gis;
+    return original.replace(regexRedes, "").trim();
   });
 </script>
 
@@ -112,13 +114,13 @@
         </div>
 
         <div class="text-[13px] text-gray-600 leading-relaxed font-medium whitespace-pre-line text-justify mb-6">
-          {@html cuerpoPostLimpiado()}
+          {@html cuerpoPostLimpiado}
         </div>
 
         <div class="mt-auto">
           <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Complementos de Viaje</h4>
           
-          {#if links.esim && !esNacional()}
+          {#if links.esim && !esNacional}
             <div class="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 mb-3">
               <p class="text-[11px] text-emerald-900 leading-relaxed">
                 ✨ <strong>Beneficio Lumivia en Airalo:</strong> Usa el código <strong class="text-emerald-600">LUMIVIA</strong> para 15% OFF (nuevos usuarios) o <strong class="text-emerald-600">LUMIVIA10</strong> para 10% OFF (recurrentes).
@@ -128,10 +130,10 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             
-            {#if links.esim && !esNacional()}
+            {#if links.esim && !esNacional}
               <a href={links.esim} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-emerald-400 hover:shadow-md transition-all group">
                 <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0">
-                  <img src="https://images.unsplash.com/photo-1601972602237-8c79232a5568?auto=format&fit=crop&w=150&q=80" alt="eSIM Airalo" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                  <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=150&q=80" alt="eSIM Airalo" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-[11px] font-black text-lumiDark truncate">Internet eSIM</p>
@@ -164,7 +166,7 @@
               </a>
             {/if}
 
-            {#if links.seguro && !esNacional()}
+            {#if links.seguro && !esNacional}
               <a href={links.seguro} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-rose-500 hover:shadow-md transition-all group">
                 <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0">
                   <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=150&q=80" alt="Seguro Viaje" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
