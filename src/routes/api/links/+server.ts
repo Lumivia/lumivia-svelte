@@ -2,15 +2,15 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 // ==========================================
-# LUMIVIA - LINK INTEL ENGINE v2.0
-# Centralización de Credenciales y Lógica Dinámica
-# ==========================================
+// LUMIVIA - LINK INTEL ENGINE v2.0
+// Centralización de Credenciales y Lógica Dinámica
+// ==========================================
 
 // 🛡️ Credenciales Premium (Solo visibles en servidor, jamás en frontend)
 const AID_CIVITATIS = '112603';     // De tu image_10.png
 const AID_STAY22 = 'lumivia';       // De tu image_10.png
-const MARKER_EKTA = '708095';       // ID de Ekta que me diste
-const ID_AIRALO = '7136059';        // ID de Airalo de tu image_11.png
+const MARKER_EKTA = '708095';       // ID de Ekta
+const ID_AIRALO = '7136059';        // ID de Airalo
 
 // Helper para asegurar formato fecha YYYY-MM-DD que requieren los partners
 const limpiarFechaISO = (iso: string | null) => iso ? iso.split('T')[0] : '';
