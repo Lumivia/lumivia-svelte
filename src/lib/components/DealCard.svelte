@@ -47,8 +47,11 @@
   }
 </script>
 
-<article
+<div
+  role="button"
+  tabindex="0"
   onclick={onclick} 
+  onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onclick(e); } }}
   class="card-minimal flex-none w-[85vw] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-center flex flex-col group hover:shadow-xl transition-all duration-300 bg-white rounded-2xl overflow-hidden text-left cursor-pointer {reportado ? 'opacity-40 grayscale' : ''}"
   aria-label={`Ver oferta de ${deal.origen} a ${deal.destino}`}
 >
@@ -158,4 +161,4 @@
       </div>
     </div>
   </div>
-</article>
+</div>
