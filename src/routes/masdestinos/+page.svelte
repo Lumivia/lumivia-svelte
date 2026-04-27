@@ -48,7 +48,7 @@
 
   let mesesDisponibles = $state<string[]>([]);
   
-  // ✅ FIX BANDERITA: La definimos como estado reactivo
+  // Reactividad para los reportes visuales locales
   let vuelosReportados = $state(new Set<number | string>());
   
   const alaProhibida = '1436491865332-7a61a109cc05';
@@ -65,14 +65,13 @@
   }
 
   function volverAlPais() {
-    const paisGuardado = typeof localStorage !== 'undefined' ? localStorage.getItem('lumivia_pais') : null;
+    const paisGuardado = typeof window !== 'undefined' ? localStorage.getItem('lumivia_pais') : null;
     goto('/paises/' + (paisGuardado?.toLowerCase() || 'mx'));
   }
 
-  // ✅ FIX RUTAS: Apuntamos correctamente al catálogo
   function seleccionarPais(codigoPais: string) {
     dropdownAbierto = false;
-    if (typeof localStorage !== 'undefined') {
+    if (typeof window !== 'undefined') {
       localStorage.setItem('lumivia_pais', codigoPais);
     }
     goto(`/masdestinos?pais=${codigoPais.toUpperCase()}&page=1`);
@@ -191,17 +190,21 @@
     }
   }
 
-  // ✅ FIX BANDERITA: Forzamos a Svelte 5 a detectar el cambio clonando el Set
+  // 🔥 FIX BÚNKER DE SEGURIDAD: Usamos el RPC maestro para delegar el chequeo de IP a Supabase
   async function reportarCambioPrecio(id: number | string, e?: Event) {
     if (e) e.stopPropagation();
     if (vuelosReportados.has(id)) return;
     
-    // Truco de reactividad
     const nuevoSet = new Set(vuelosReportados);
     nuevoSet.add(id);
     vuelosReportados = nuevoSet;
 
-    try { await supabase.from('reportes_precios').insert([{ deal_id: id }]); } catch (err) { console.error(err); }
+    try { 
+      const { error } = await supabase.rpc('incrementar_reporte', { p_deal_id: id.toString() });
+      if (error) throw error;
+    } catch (err) { 
+      console.error('Error al reportar:', err); 
+    }
   }
 
   async function copiarUrlUnica(id: number | string, e?: Event) {
@@ -209,7 +212,7 @@
     const url = `${window.location.origin}/r/${id}`;
     try {
       await navigator.clipboard.writeText(url);
-      alert('Enlace copiado al portapapeles');
+      alert('¡Enlace copiado! Listo para compartir.');
     } catch (err) { console.error(err); }
   }
 
@@ -226,7 +229,9 @@
   }
 
   onMount(() => {
-    window.addEventListener('click', handleClickOutside);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('click', handleClickOutside);
+    }
 
     const fechaActual = new Date();
     const meses: string[] = [];
@@ -237,7 +242,7 @@
     }
     mesesDisponibles = meses;
 
-    if (typeof localStorage !== 'undefined') {
+    if (typeof window !== 'undefined') {
       let paisLocal = localStorage.getItem('lumivia_pais');
       if (!paisLocal) {
         fetch('https://1.1.1.1/cdn-cgi/trace')
@@ -254,7 +259,9 @@
     }
 
     return () => {
-      window.removeEventListener('click', handleClickOutside);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('click', handleClickOutside);
+      }
     };
   });
 </script>
@@ -386,7 +393,14 @@
           {@const etiquetaHot = deal.calidad_oferta >= 9}
           {@const monedaDeal = (deal.moneda || deal.currency || monedaActual).toUpperCase()}
 
-          <article class="card-minimal flex flex-col group hover:shadow-xl transition-shadow duration-300 h-full bg-white rounded-2xl overflow-hidden border border-gray-100 cursor-pointer {vuelosReportados.has(deal.id) ? 'opacity-30' : ''}" onclick={() => abrirModal(deal)}>
+          <div 
+            role="button" 
+            tabindex="0" 
+            aria-label="Ver detalles de la oferta {deal.titulo_gancho}"
+            class="card-minimal flex flex-col group hover:shadow-xl transition-shadow duration-300 h-full bg-white rounded-2xl overflow-hidden border border-gray-100 cursor-pointer {vuelosReportados.has(deal.id) ? 'opacity-30' : ''}" 
+            onclick={() => abrirModal(deal)}
+            onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
+          >
             <div class="relative h-56 overflow-hidden bg-gray-100 flex-shrink-0">
               <img src={imgFinal} alt={deal.titulo_gancho || 'Oferta Especial'} class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -401,7 +415,7 @@
                 </div>
               {/if}
 
-              <button type="button" onclick={(e) => reportarCambioPrecio(deal.id, e)} title="¿El precio subió? Repórtalo" class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 transition-colors z-10">
+              <button type="button" onclick={(e) => { e.stopPropagation(); reportarCambioPrecio(deal.id, e); }} title="¿El precio subió? Repórtalo" class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 transition-colors z-10">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-1 6-1-1H11.5l-1-1H5v10m0 0h4"/></svg>
               </button>
             </div>
@@ -448,7 +462,7 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                  <button type="button" onclick={(e) => copiarUrlUnica(deal.id, e)} title="Copiar enlace" class="text-gray-400 hover:text-lumiCyan transition-colors">
+                  <button type="button" onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id, e); }} title="Copiar enlace" class="text-gray-400 hover:text-lumiCyan transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                   </button>
                   <button type="button" onclick={(e) => { e.stopPropagation(); abrirModal(deal); }} class="text-lumiCyan hover:text-lumiDark font-bold text-sm transition-colors cursor-pointer">
@@ -457,7 +471,7 @@
                 </div>
               </div>
             </div>
-          </article>
+          </div>
         {/each}
       {/if}
     </div>
