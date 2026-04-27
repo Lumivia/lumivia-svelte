@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { obtenerImagen } from '$lib/utils/imagenes';
   import { formatearFechaCorta } from '$lib/utils/fechas';
-  import ExtrasOferta from '$lib/components/ExtrasOferta.svelte';
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
 
   const { deal, abierto, cerrar } = $props();
@@ -67,12 +66,6 @@
     return `https://vuelos.lumivia.app/?flightSearch=${searchParam}`;
   });
 
-  // Mapeo dinámico hacia ExtrasOferta
-  const esims = $derived(deal && !esNacional() && links.esim ? [{ url: links.esim, cupon: 'LUMIVIA' }] : []);
-  const tours = $derived(deal && links.tours ? [{ url: links.tours }] : []);
-  const hoteles = $derived(links.hotel ? { url: links.hotel } : null);
-  const seguro = $derived(deal && !esNacional() && links.seguro ? { url: links.seguro } : null);
-
   const cuerpoPostLimpiado = $derived(() => {
     if (!deal || (!deal.cuerpo_post && !deal.descripcion)) return "";
     let original = deal.cuerpo_post || deal.descripcion;
@@ -82,13 +75,13 @@
 </script>
 
 {#if abierto && deal}
-  <div class="fixed inset-0 bg-lumiDark/60 backdrop-blur-sm z-[999]" onclick={cerrar} role="button" tabindex="0" onkeydown={handleKey}></div>
+  <div class="fixed inset-0 bg-lumiDark/60 backdrop-blur-sm z-[999]" onclick={cerrar} role="button" tabindex="0" onkeydown={handleKey} aria-label="Cerrar modal"></div>
 
   <div class="fixed inset-0 z-[1000] flex items-center justify-center p-4 pointer-events-none">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto relative animate-fadeIn pointer-events-auto border border-gray-100" onclick={(e) => e.stopPropagation()} role="document">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto relative animate-fadeIn pointer-events-auto border border-gray-100">
       
-      <button class="absolute top-4 right-4 bg-white/50 backdrop-blur-md p-2 rounded-full shadow-sm z-20" onclick={cerrar}>
-        <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+      <button class="absolute top-4 right-4 bg-white/50 backdrop-blur-md hover:bg-white p-2 rounded-full shadow-sm z-20 transition-colors" onclick={cerrar} aria-label="Cerrar ventana de oferta">
+        <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
 
       <div class="h-56 w-full overflow-hidden relative">
@@ -112,9 +105,64 @@
           {@html cuerpoPostLimpiado()}
         </div>
 
-        <div class="pt-4 border-t border-gray-50">
-          <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Mejora tu experiencia</h3>
-          <ExtrasOferta {esims} {tours} {hoteles} {seguro} />
+        <div class="pt-6 border-t border-gray-100 mt-6">
+          <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Mejora tu experiencia</h4>
+          <div class="grid grid-cols-2 gap-4">
+            
+            {#if links.esim && !esNacional()}
+              <a href={links.esim} target="_blank" rel="noopener noreferrer" class="group block bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:border-lumiCyan transition-all hover:shadow-lg">
+                <div class="relative h-24 overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80&fm=webp" alt="Conectividad Global" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"/>
+                  <div class="absolute top-2 right-2 bg-lumiCyan text-white text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-wider shadow-md">LUMIVIA</div>
+                </div>
+                <div class="p-4">
+                  <p class="text-sm font-bold text-lumiDark mb-1">Conectividad eSIM</p>
+                  <p class="text-xs text-emerald-500 font-semibold">Código: LUMIVIA (15% OFF)</p>
+                </div>
+              </a>
+            {/if}
+
+            {#if links.tours}
+              <a href={links.tours} target="_blank" rel="noopener noreferrer" class="group block bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:border-blue-500 transition-all hover:shadow-lg">
+                <div class="relative h-24 overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1520638029751-2402746991e2?auto=format&fit=crop&w=400&q=80&fm=webp" alt="Tours y Actividades" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"/>
+                  <div class="absolute top-2 right-2 bg-blue-600 text-white text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-wider shadow-md">TOURS</div>
+                </div>
+                <div class="p-4">
+                  <p class="text-sm font-bold text-lumiDark mb-1">Actividades &amp; Tours</p>
+                  <p class="text-xs text-gray-500">Mejores precios en español</p>
+                </div>
+              </a>
+            {/if}
+
+            {#if links.hotel}
+              <a href={links.hotel} target="_blank" rel="noopener noreferrer" class="group block bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:border-amber-500 transition-all hover:shadow-lg col-span-2">
+                <div class="relative h-24 overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1517840901100-8179e982acb7?auto=format&fit=crop&w=400&q=80&fm=webp" alt="Reserva Hotel" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"/>
+                  <div class="absolute top-2 right-2 bg-amber-600 text-white text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-wider shadow-md">HOTEL</div>
+                </div>
+                <div class="p-4 flex flex-col justify-center">
+                  <p class="text-sm font-bold text-lumiDark mb-1">Hospedaje de Diseño</p>
+                  <p class="text-xs text-gray-500">Zonas recomendadas y tarifas exclusivas</p>
+                </div>
+              </a>
+            {/if}
+
+            {#if links.seguro && !esNacional()}
+              <a href={links.seguro} target="_blank" rel="noopener noreferrer" class="group block bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:border-rose-500 transition-all hover:shadow-lg col-span-2">
+                <div class="p-4 flex items-center gap-4">
+                  <div class="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100 p-2 flex items-center justify-center">
+                    <svg class="w-10 h-10 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9s2.015-9 4.5-9y"/></svg>
+                  </div>
+                  <div>
+                    <p class="text-sm font-bold text-lumiDark mb-1 group-hover:text-rose-600 transition-colors">Seguro de Viaje Global</p>
+                    <p class="text-xs text-gray-500">Soporte médico 24/7 y cancelación (Socio EKTA)</p>
+                  </div>
+                  <svg class="w-5 h-5 text-gray-300 ml-auto group-hover:text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </div>
+              </a>
+            {/if}
+          </div>
         </div>
 
         <div class="flex items-center justify-between border-t border-gray-100 pt-6 mt-2">
