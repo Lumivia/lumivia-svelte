@@ -1,27 +1,16 @@
 import { supabase } from '$lib/supabaseClient';
 
 /**
- * Genera o recupera una huella digital anónima del navegador.
+ * Llama al motor de la base de datos para registrar un reporte.
+ * La IP se detecta automáticamente en el servidor (Supabase).
  */
-function obtenerFingerprint(): string {
-  let fp = localStorage.getItem('lumivia_fp');
-  if (!fp) {
-    fp = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-    localStorage.setItem('lumivia_fp', fp);
-  }
-  return fp;
-}
-
 export async function reportarCambioPrecio(id: string | number) {
   if (typeof window === 'undefined') return false;
 
   try {
-    const fingerprint = obtenerFingerprint();
-
-    // Enviamos el ID del vuelo y la huella digital del usuario
+    // Solo mandamos el ID. La base de datos identifica quién eres y si ya votaste.
     const { error } = await supabase.rpc('incrementar_reporte', { 
-      p_deal_id: id.toString(),
-      p_fingerprint: fingerprint
+      p_deal_id: id.toString()
     });
 
     if (error) throw error;
@@ -30,8 +19,8 @@ export async function reportarCambioPrecio(id: string | number) {
     return true;
 
   } catch (err) {
-    console.error('Error al ejecutar el RPC de reportes:', err);
-    alert('Hubo un problema al enviar el reporte. Quizá ya lo habías reportado.');
+    console.error('Error al ejecutar el reporte:', err);
+    alert('Hubo un problema. Quizá ya habías reportado esta oferta.');
     return false;
   }
 }
