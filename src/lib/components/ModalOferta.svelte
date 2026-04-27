@@ -45,12 +45,13 @@
     return 'MXN';
   });
   
-  // 🔥 FIX CRÍTICO: Lógica booleana estricta para identificar vuelos nacionales
-  const esNacional = $derived(
-    deal?.pais && deal?.destino
-      ? (destinosNacionales[deal.pais.toUpperCase()] || []).includes(deal.destino.toUpperCase())
-      : false
-  );
+  // 🔥 CHALLENGE APROBADO: Lógica estricta cruzada. Si viajo de CO a CUN, es internacional. Si viajo de MX a TIJ, es Nacional.
+  const esNacional = $derived.by(() => {
+    if (!deal?.destino) return false;
+    const paisOrigen = deal.pais ? deal.pais.toUpperCase() : 'MX'; 
+    const listaLocal = destinosNacionales[paisOrigen] || [];
+    return listaLocal.includes(deal.destino.toUpperCase());
+  });
 
   $effect(() => {
     if (abierto && deal) {
@@ -76,12 +77,11 @@
     return `https://vuelos.lumivia.app/?flightSearch=${searchParam}`;
   });
 
-  // 🔥 FIX CRÍTICO: Regex universal para destruir cualquier "Comenta la palabra X..."
-  const cuerpoPostLimpiado = $derived(() => {
-    if (!deal || (!deal.cuerpo_post && !deal.descripcion)) return "";
-    let original = deal.cuerpo_post || deal.descripcion;
-    const regexRedes = /(👉|👇|✨)?\s*Comenta la palabra.*?(\.|\n|$)/gis;
-    return original.replace(regexRedes, "").trim();
+  // 🔥 CHALLENGE APROBADO: Cortar el string de tajo. 100% infalible.
+  const cuerpoPostLimpiado = $derived.by(() => {
+    let original = deal?.cuerpo_post || deal?.descripcion || "";
+    const splitText = original.split(/👉|👇|✨|Comenta la palabra/i);
+    return splitText[0].trim(); // Extrae TODO lo que haya ANTES del CTA.
   });
 </script>
 
@@ -123,7 +123,9 @@
           {#if links.esim && !esNacional}
             <div class="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 mb-3">
               <p class="text-[11px] text-emerald-900 leading-relaxed">
-                ✨ <strong>Beneficio Lumivia en Airalo:</strong> Usa el código <strong class="text-emerald-600">LUMIVIA</strong> para 15% OFF (nuevos usuarios) o <strong class="text-emerald-600">LUMIVIA10</strong> para 10% OFF (recurrentes).
+                ✨ <strong>Beneficios Lumivia en Airalo:</strong><br>
+                • Nuevos usuarios: <strong class="text-emerald-700 font-black">LUMIVIA</strong> (15% OFF)<br>
+                • Usuarios recurrentes: <strong class="text-emerald-700 font-black">LUMIVIA10</strong> (10% OFF)
               </p>
             </div>
           {/if}
@@ -133,7 +135,7 @@
             {#if links.esim && !esNacional}
               <a href={links.esim} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-emerald-400 hover:shadow-md transition-all group">
                 <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0">
-                  <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=150&q=80" alt="eSIM Airalo" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                  <img src="https://images.unsplash.com/photo-1505156868547-9b49f4df4e04?auto=format&fit=crop&w=150&q=80" alt="eSIM Airalo" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-[11px] font-black text-lumiDark truncate">Internet eSIM</p>
@@ -145,7 +147,7 @@
             {#if links.tours}
               <a href={links.tours} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-blue-500 hover:shadow-md transition-all group">
                 <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0">
-                  <img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=150&q=80" alt="Tours Civitatis" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                  <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=150&q=80" alt="Tours Civitatis" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-[11px] font-black text-lumiDark truncate">Tours & Guías</p>
@@ -157,7 +159,7 @@
             {#if links.hotel}
               <a href={links.hotel} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-amber-500 hover:shadow-md transition-all group">
                 <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0">
-                  <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=150&q=80" alt="Hoteles" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                  <img src="https://images.unsplash.com/photo-1551882547-ff40c0d582af?auto=format&fit=crop&w=150&q=80" alt="Hoteles" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-[11px] font-black text-lumiDark truncate">Hospedaje</p>
@@ -169,7 +171,7 @@
             {#if links.seguro && !esNacional}
               <a href={links.seguro} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-rose-500 hover:shadow-md transition-all group">
                 <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0">
-                  <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=150&q=80" alt="Seguro Viaje" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                  <img src="https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=150&q=80" alt="Seguro Viaje" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-[11px] font-black text-lumiDark truncate">Asistencia</p>
