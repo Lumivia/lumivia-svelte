@@ -2,8 +2,6 @@ import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/public';
-
-// 🔥 IMPORTANTE: Importamos tu cerebro algorítmico (Ajusta la ruta si es diferente)
 import { curarOfertas } from '$lib/utils/curacion';
 
 const mercadosPermitidos = {
@@ -15,7 +13,7 @@ const mercadosPermitidos = {
 
 type CodigoPais = keyof typeof mercadosPermitidos;
 
-export const load: PageServerLoad = async ({ params, setHeaders, fetch }) => {
+export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform }) => {
   const paisParam = params.pais ?? '';
   const codigoPais = paisParam.toLowerCase();
 
@@ -24,16 +22,30 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch }) => {
   if (!mercado) throw redirect(302, '/');
 
   const paisUpper = codigoPais.toUpperCase();
+  
+  // 🔥 CLAVE KV: Usamos una llave única por país (ej: cache_mx, cache_co)
+  const cacheKey = `lumivia_cache_${codigoPais}`;
 
-  // 2) Inicialización Segura de Supabase
+  // 2) INTENTO DE LECTURA DESDE CLOUDFLARE EDGE
+  try {
+    if (platform?.env?.KV_CACHE) {
+      const cached = await platform.env.KV_CACHE.get(cacheKey, 'json');
+      if (cached) {
+        // Si hay caché, devolvemos inmediatamente. 
+        // Añadimos una bandera 'cached: true' para monitoreo interno.
+        return { ...cached, fromCache: true };
+      }
+    }
+  } catch (e) {
+    console.error("Error leyendo KV Cache:", e);
+  }
+
+  // 3) INICIALIZACIÓN DE SUPABASE (Solo si el caché falló)
   const supabaseUrl = env.PUBLIC_SUPABASE_URL;
   const supabaseKey = env.PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    console.error("🔥 Error Crítico: Llaves de Supabase no detectadas en el servidor.");
-    return {
-      pais: codigoPais, paisUpper, mercado, destacadas: [], masDestinos: [], schemaAEO: null
-    };
+    return { pais: codigoPais, paisUpper, mercado, destacadas: [], masDestinos: [], schemaAEO: null };
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey, {
@@ -41,13 +53,7 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch }) => {
     global: { fetch }
   });
 
-  // 3) Configuración de Cache para Cloudflare Edge
-  setHeaders({
-    'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60'
-  });
-
-  // 4) Ejecución de Consultas: Extraemos un lote generoso (ej. 50 ofertas) 
-  // para que el algoritmo tenga de dónde escoger la verdadera "crema y nata".
+  // 4) EXTRACCIÓN DE DATOS FRESCOS
   const { data: ofertasCrudas, error: err } = await supabase
     .from('publicaciones_lumivia')
     .select('*')
@@ -58,10 +64,9 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch }) => {
 
   if (err) console.error('Error al extraer ofertas:', err);
 
-  // 5) 🔥 EL CEREBRO EN ACCIÓN: Curamos las ofertas usando tu algoritmo V12
+  // 5) EL CEREBRO: Curación y procesamiento
   const { hookDeals, radarDeals } = curarOfertas(ofertasCrudas || [], paisUpper);
 
-  // 6) Generación de Metadata / Schema
   const schemaAEO = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'WebPage',
@@ -70,13 +75,31 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch }) => {
     url: `https://www.lumivia.app/paises/${codigoPais}`
   });
 
-  // 7) Retorno de Datos Garantizado
-  return {
+  // 6) PREPARACIÓN DE RESPUESTA
+  const responseData = {
     pais: codigoPais,
     paisUpper,
     mercado,
-    destacadas: hookDeals,           // 👈 Ahora sí llevan orden algorítmico
-    masDestinos: radarDeals.slice(0, 8), // 👈 Tomamos las siguientes 8 para el radar
+    destacadas: hookDeals,
+    masDestinos: radarDeals.slice(0, 8),
     schemaAEO
   };
+
+  // 7) GUARDADO EN CACHÉ (TTL de 5 minutos = 300 segundos)
+  try {
+    if (platform?.env?.KV_CACHE && hookDeals.length > 0) {
+      await platform.env.KV_CACHE.put(cacheKey, JSON.stringify(responseData), { 
+        expirationTtl: 300 
+      });
+    }
+  } catch (e) {
+    console.error("Error guardando en KV Cache:", e);
+  }
+
+  // 8) Configuración de headers para el navegador (Cache de 5 min)
+  setHeaders({
+    'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60'
+  });
+
+  return { ...responseData, fromCache: false };
 };
