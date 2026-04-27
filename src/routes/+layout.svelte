@@ -42,8 +42,8 @@
   <link rel="alternate" hreflang="es" href="https://www.lumivia.app/masdestinos?pais=MX" />
   <link rel="alternate" hreflang="x-default" href="https://www.lumivia.app/masdestinos?pais=MX" />
 
-  <link rel="icon" type="image/png" href="/favicon.png" />
-  <link rel="apple-touch-icon" href="/favicon.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
+  <link rel="apple-touch-icon" href="/favicon.svg?v=2" />
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
@@ -57,7 +57,7 @@
       "@type": "TravelAgency",
       "name": "Lumivia",
       "url": "https://lumivia.app/",
-      "logo": "https://lumivia.app/favicon.png",
+      "logo": "https://lumivia.app/favicon.svg?v=2",
       "description": "Plataforma inteligente de análisis de vuelos y ofertas curadas de viaje.",
       "potentialAction": {
         "@type": "SearchAction",
