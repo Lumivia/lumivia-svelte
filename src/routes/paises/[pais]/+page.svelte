@@ -14,7 +14,7 @@
   let { data } = $props();
 
   const title = $derived(`Vuelos baratos desde ${data.mercado?.nombre || 'tu país'} - Lumivia`);
-  const description = $derived(`Ofertas destacadas y destinos populares desde ${data.mercado?.nombre || 'tu país'}.`);
+  const description = $derived(`Ofertas destacadas y destinos populares desde ${data.mercado?.nombre || 'tu país'}. Planifica tu próxima gran historia con nuestra bóveda secreta.`);
 
   const ofertasHook = $derived(
     (data.destacadas || []).map((d: any) => ({
@@ -44,6 +44,7 @@
   let modalAbierto = $state(false);
 
   let scrollContainer = $state<HTMLElement | null>(null);
+  let pausarCarrusel = $state(false);
 
   let emailNewsletter = $state('');
   let newsletterMensaje = $state('');
@@ -59,11 +60,12 @@
   let radarCargando = $state(false);
   let meses = $state<string[]>([]);
 
+  // 🔥 UX MEJORADA: Carrusel inteligente que no molesta al usuario
   function iniciarCarrusel() {
     if (!scrollContainer) return;
 
     const intervalo = setInterval(() => {
-      if (!scrollContainer || scrollContainer.children.length === 0) return;
+      if (!scrollContainer || scrollContainer.children.length === 0 || pausarCarrusel) return;
       
       const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
 
@@ -147,7 +149,9 @@
 
   function cerrarModal() {
     modalAbierto = false;
-    ofertaSeleccionada = null;
+    setTimeout(() => {
+      ofertaSeleccionada = null;
+    }, 200);
   }
 
   onMount(() => {
@@ -160,12 +164,10 @@
 <svelte:head>
   <title>{title}</title>
   <meta name="description" content={description} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
   <meta name="robots" content="index, follow" />
-
-  {#if data.schemaAEO}
-    {@html `<script type="application/ld+json">${data.schemaAEO}</script>`}
-  {/if}
-</svelte:head>
+  </svelte:head>
 
 <div class="bg-gray-50 text-lumiDark min-h-screen flex flex-col">
   <Header paisUpper={data.paisUpper} mercado={data.mercado} />
@@ -196,6 +198,7 @@
             type="email"
             bind:value={emailNewsletter}
             placeholder="Recibe nuestra selección del día..."
+            aria-label="Correo electrónico para suscribirse"
             required
             class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none"
           />
@@ -224,6 +227,10 @@
     <div class="relative w-full mb-16 group">
       <div
         bind:this={scrollContainer}
+        onmouseenter={() => pausarCarrusel = true}
+        onmouseleave={() => pausarCarrusel = false}
+        ontouchstart={() => pausarCarrusel = true}
+        ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)}
         class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth"
       >
         {#if ofertasHook.length === 0}
