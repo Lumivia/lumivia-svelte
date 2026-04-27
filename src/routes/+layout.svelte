@@ -14,8 +14,8 @@
     })(window,document,'script','dataLayer','GTM-58WFMR24');
   </script>
 
-  <title>{data?.title || 'Lumivia'}</title>
-  <meta name="description" content={data?.description || 'Plataforma inteligente de análisis de vuelos y alertas de viaje.'} />
+  <title>{data?.title || 'Lumivia | Tu Concierge de Viajes Premium'}</title>
+  <meta name="description" content={data?.description || 'Descubre ofertas curadas de vuelos, hoteles y experiencias únicas. La bóveda secreta de viajes de Lumivia.'} />
   
   {#if data?.canonicalURL}
     <link rel="canonical" href={data.canonicalURL} />
@@ -27,13 +27,13 @@
 
   <meta property="og:type" content="website" />
   <meta property="og:url" content={data?.canonicalURL || 'https://www.lumivia.app'} />
-  <meta property="og:title" content={data?.title || 'Lumivia'} />
-  <meta property="og:description" content={data?.description || 'Plataforma inteligente de análisis de vuelos y alertas de viaje.'} />
+  <meta property="og:title" content={data?.title || 'Lumivia | Tu Concierge de Viajes Premium'} />
+  <meta property="og:description" content={data?.description || 'Descubre ofertas curadas de vuelos, hoteles y experiencias únicas. La bóveda secreta de viajes de Lumivia.'} />
   <meta property="og:image" content="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1200&q=80" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={data?.title || 'Lumivia'} />
-  <meta name="twitter:description" content={data?.description || 'Plataforma inteligente de análisis de vuelos y alertas de viaje.'} />
+  <meta name="twitter:description" content={data?.description || 'La bóveda secreta de viajes de Lumivia.'} />
 
   <link rel="alternate" hreflang="es-mx" href="https://www.lumivia.app/masdestinos?pais=MX" />
   <link rel="alternate" hreflang="es-co" href="https://www.lumivia.app/masdestinos?pais=CO" />
@@ -47,8 +47,8 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  {#if data?.schemaAEO}
-    {@html `<script type="application/ld+json">${data.schemaAEO}</script>`}
+  {#if data?.schemaAEO || data?.schemaJSON}
+    {@html `<script type="application/ld+json">${data.schemaAEO || data.schemaJSON}</script>`}
   {/if}
 
   <script type="application/ld+json">
@@ -58,7 +58,7 @@
       "name": "Lumivia",
       "url": "https://lumivia.app/",
       "logo": "https://lumivia.app/favicon.png",
-      "description": "Plataforma inteligente de análisis de vuelos y alertas de viaje.",
+      "description": "Plataforma inteligente de análisis de vuelos y ofertas curadas de viaje.",
       "potentialAction": {
         "@type": "SearchAction",
         "target": "https://vuelos.lumivia.app/?q={search_term_string}",
