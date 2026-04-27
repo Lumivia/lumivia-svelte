@@ -64,15 +64,11 @@
   const tours = $derived(deal ? obtenerTours(deal.destino, deal.fecha_salida, deal.fecha_regreso) : []);
   const hoteles = $derived(deal ? obtenerHoteles(deal.destino, deal.fecha_salida, deal.fecha_regreso, deal.url_hotel) : null);
 
-  // ✅ derived rune para limpiar el texto de redes sociales
+  // Limpiamos el texto de redes sociales
   const cuerpoPostLimpiado = $derived(() => {
     if (!deal || (!deal.cuerpo_post && !deal.descripcion)) return "";
     let original = deal.cuerpo_post || deal.descripcion;
-    
-    // ✅ FIX: Patrón para capturar la frase de redes sociales: Comenta la palabra DIRECTO...
-    // Eliminamos esta frase amontonada de la web
     const regexRedes = /(👉 )?Comenta la palabra DIRECTO y te mando.*?reserva para esta experiencia\./gis;
-    
     return original.replace(regexRedes, "");
   });
 </script>
@@ -135,4 +131,9 @@
       </div>
     </div>
   </div>
-{
+{/if}
+
+<style>
+  .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: scale(0.98) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+</style>
