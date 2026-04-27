@@ -1,32 +1,27 @@
-import { createClient } from '@supabase/supabase-js';
-// ✅ Importamos las variables de entorno de forma segura al estilo SvelteKit
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
-
-const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
+// ✅ Usamos tu cliente maestro de siempre
+import { supabase } from '$lib/supabaseClient';
 
 /**
- * Registra un reporte de cambio de precio.
- * Funciona solo en navegador (SSR-safe).
- * El frontend SOLO reporta. La inteligencia de borrar vive en la base de datos.
+ * Llama al motor de la base de datos para registrar un reporte.
+ * Todo el trabajo pesado (sumar y borrar) lo hace el RPC en Supabase.
  */
 export async function reportarCambioPrecio(id: string | number) {
   if (typeof window === 'undefined') return false;
 
   try {
-    // 1. Insertar el reporte en la base de datos
-    const { error: insertError } = await supabase
-      .from('reportes_cambio_precio')
-      .insert([{ publicacion_id: id, origen: 'lumivia_web' }]);
+    // 1. Disparamos la función RPC que acabamos de crear en Supabase
+    // Le pasamos el ID convertido a string por seguridad
+    const { error } = await supabase.rpc('incrementar_reporte', { deal_id: id.toString() });
 
-    if (insertError) throw insertError;
+    if (error) throw error;
 
-    // 2. Feedback inmediato al usuario (CRO Premium)
-    alert('¡Gracias por tu reporte, partner! 🕵️‍♂️ Acabas de ayudarnos a auditar esta tarifa.');
+    // 2. Feedback premium y agradecimiento al cliente
+    alert('¡Gracias por tu reporte, partner! 🕵️‍♂️ Acabas de ayudarnos a limpiar nuestra bóveda.');
 
     return true;
 
   } catch (err) {
-    console.error('Error inesperado al reportar precio:', err);
+    console.error('Error al ejecutar el RPC de reportes:', err);
     alert('Hubo un problema de conexión al enviar el reporte, pero lo intentaremos de nuevo.');
     return false;
   }
