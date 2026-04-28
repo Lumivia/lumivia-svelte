@@ -30,7 +30,6 @@
     CR: ['SJO', 'SAN JOSE', 'LIR', 'LIBERIA']
   };
 
-  // 🛡️ BLINDAJE: Safe cast a string antes de normalizar
   const normalizar = (texto: any) => {
     if (!texto) return '';
     return String(texto).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
@@ -102,10 +101,13 @@
     return `https://vuelos.lumivia.app/?flightSearch=${searchParam}`;
   });
 
+  // 🔥 FIX PARÉNTESIS COLGANTE
   const cuerpoPostLimpiado = $derived.by(() => {
     let original = String(deal?.cuerpo_post || deal?.descripcion || "");
     const splitText = original.split(/👉|👇|✨|Comenta la palabra/i);
-    return splitText[0].trim(); 
+    let limpiado = splitText[0].trim(); 
+    // Elimina caracteres huérfanos al final del texto cortado
+    return limpiado.replace(/[\(\[\{\-\:\s]+$/, '');
   });
 </script>
 
