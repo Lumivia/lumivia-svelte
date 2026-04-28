@@ -159,7 +159,7 @@
             {#if links.esim && !esNacional}
               <a href={links.esim} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-emerald-400 hover:shadow-md transition-all group">
                 <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0">
-                  <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=150&q=80" alt="eSIM Airalo" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                  <img src="https://images.unsplash.com/photo-1488509082528-cefbba5ad692?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="eSIM Airalo" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-[11px] font-black text-lumiDark truncate">Internet eSIM</p>
