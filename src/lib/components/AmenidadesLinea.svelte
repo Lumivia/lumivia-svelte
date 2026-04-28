@@ -1,11 +1,10 @@
 <script lang="ts">
-  // 🔥 SVELTE 5: Props y Reactividad (Intactos, ya estaban perfectos)
+  // 🔥 SVELTE 5: Props y Reactividad Purificada (Opción Nuclear)
   const { deal, paisActual } = $props();
 
   const vueloDirecto = $derived(deal?.tipo_vuelo === 'directo');
   const escalas = $derived(deal?.escalas ?? 0);
   const equipaje = $derived(deal?.equipaje ?? 'Mochila personal');
-  const aerolinea = $derived(deal?.aerolinea ?? deal?.airline ?? '');
   const duracion = $derived(deal?.duracion ?? deal?.duration ?? '');
   const clase = $derived(deal?.clase ?? deal?.fare_class ?? '');
 </script>
@@ -36,15 +35,6 @@
     </svg>
     <span class="truncate max-w-[120px]" title={equipaje}>{equipaje}</span>
   </div>
-
-  {#if aerolinea}
-    <div class="flex items-center gap-1.5">
-      <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-      </svg>
-      <span class="truncate max-w-[110px]" title={aerolinea}>{aerolinea}</span>
-    </div>
-  {/if}
 
   {#if duracion}
     <div class="flex items-center gap-1.5">
