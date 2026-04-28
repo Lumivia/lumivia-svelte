@@ -1,13 +1,13 @@
 /**
- * Curación de ofertas Lumivia (Premium + Frescura)
+ * Curación de ofertas Lumivia (Motor Híbrido 2026)
  *
  * - Separa ofertas en:
  * - hookDeals -> carrusel principal (máximo 10)
  * - radarDeals -> lista secundaria
  *
- * - ESTRATEGIA: Reserva 2 slots para las ofertas más recientes (de hoy/ayer).
- * - Ordena el resto por relevancia, calidad, precio y fecha.
- * - Evita duplicados por destino.
+ * - ESTRATEGIA: Reserva 3 slots (30%) VIP para frescura absoluta del país actual.
+ * - El resto (70%) compite a muerte por Calidad y Precio (Factor WOW).
+ * - Cero duplicados de destinos.
  */
 
 export function curarOfertas(ofertas: any[], paisActual: string) {
@@ -15,7 +15,7 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
     return { hookDeals: [], radarDeals: [] };
   }
 
-  // 1) Normalizar datos y agregar timestamp para precisión milimétrica
+  // 1) Normalizar datos y agregar timestamp 
   const limpias = ofertas
     .filter((d) => d.destino && d.origen)
     .map((d) => ({
@@ -34,22 +34,23 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
   const destinosVistos = new Set<string>();
   const hookDeals: any[] = [];
 
-  // 2) ESTRATEGIA DE FRESCURA: Las 2 más recientes tienen pase VIP
-  // Ordenamos temporalmente solo por fecha (más reciente a más antigua)
-  const porFecha = [...limpias].sort((a, b) => b.timestamp - a.timestamp);
+  // Separamos las ofertas que sí son del mercado actual
+  const ofertasPais = limpias.filter(d => d.esDelPaisActual);
+
+  // 2) ESTRATEGIA DE FRESCURA PURA: 3 Slots VIP
+  // Ordenamos temporalmente solo por fecha
+  const porFecha = [...ofertasPais].sort((a, b) => b.timestamp - a.timestamp);
 
   for (const d of porFecha) {
-    if (hookDeals.length >= 2) break; // Solo 2 slots de frescura
+    if (hookDeals.length >= 3) break; 
     
-    // Si es del país y no hemos puesto este destino, la inyectamos al inicio
-    if (d.esDelPaisActual && !destinosVistos.has(d.destinoUpper)) {
+    if (!destinosVistos.has(d.destinoUpper)) {
       hookDeals.push(d);
       destinosVistos.add(d.destinoUpper);
     }
   }
 
-  // 3) ORDENAMIENTO PREMIUM: El resto compite por Calidad y Precio
-  // Filtramos las que ya entraron por frescura para que no compitan doble
+  // 3) EL FACTOR WOW: El resto compite por Calidad y Precio
   const restoOfertas = limpias.filter(d => !destinosVistos.has(d.destinoUpper));
 
   restoOfertas.sort((a, b) => {
