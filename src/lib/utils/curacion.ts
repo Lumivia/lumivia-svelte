@@ -5,7 +5,7 @@
  * - hookDeals -> carrusel principal (máximo 10)
  * - radarDeals -> lista secundaria
  *
- * - ESTRATEGIA: Reserva 3 slots (30%) VIP para frescura absoluta del país actual.
+ * - ESTRATEGIA: Reserva 3 slots (30%) VIP para frescura absoluta del país actual (máximo 72 hrs).
  * - El resto (70%) compite a muerte por Calidad y Precio (Factor WOW).
  * - Cero duplicados de destinos.
  */
@@ -37,9 +37,13 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
   // Separamos las ofertas que sí son del mercado actual
   const ofertasPais = limpias.filter(d => d.esDelPaisActual);
 
-  // 2) ESTRATEGIA DE FRESCURA PURA: 3 Slots VIP
-  // Ordenamos temporalmente solo por fecha
-  const porFecha = [...ofertasPais].sort((a, b) => b.timestamp - a.timestamp);
+  // 2) ESTRATEGIA DE FRESCURA PURA: 3 Slots VIP (Máximo 72 horas)
+  const limiteFrescura = Date.now() - (3 * 24 * 60 * 60 * 1000);
+
+  // Filtramos estrictamente las que pasen la barrera de tiempo y ordenamos
+  const porFecha = [...ofertasPais]
+    .filter(d => d.timestamp >= limiteFrescura)
+    .sort((a, b) => b.timestamp - a.timestamp);
 
   for (const d of porFecha) {
     if (hookDeals.length >= 3) break; 
