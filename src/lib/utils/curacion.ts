@@ -5,8 +5,8 @@
  * - hookDeals -> carrusel principal (máximo 10)
  * - radarDeals -> lista secundaria
  *
- * - ESTRATEGIA: Reserva 3 slots (30%) VIP para frescura absoluta del país actual (máximo 72 hrs).
- * - El resto (70%) compite a muerte por Calidad y Precio (Factor WOW).
+ * - ESTRATEGIA: Reserva 3 slots (30%) VIP para Frescura + Meritocracia (< 72 hrs ordenado por Calidad/Precio).
+ * - El resto (70%) compite a muerte por Calidad y Precio (Factor WOW histórico).
  * - Cero duplicados de destinos.
  */
 
@@ -25,9 +25,10 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
       destinoUpper: (d.destino || '').trim().toUpperCase(),
       origenUpper: (d.origen || '').trim().toUpperCase(),
       esDirecto: d.tipo_vuelo === 'directo',
-      esDelPaisActual:
-        typeof d.origen === 'string' &&
-        d.origen.trim().toUpperCase().startsWith(paisActual.toUpperCase()),
+      // 🔥 Validación correcta de mercado
+      esDelPaisActual: d.pais_mercado 
+        ? String(d.pais_mercado).toUpperCase() === paisActual.toUpperCase() 
+        : true,
       timestamp: new Date(d.created_at).getTime()
     }));
 
@@ -37,48 +38,43 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
   // Separamos las ofertas que sí son del mercado actual
   const ofertasPais = limpias.filter(d => d.esDelPaisActual);
 
-  // 2) ESTRATEGIA DE FRESCURA PURA: 3 Slots VIP (Máximo 72 horas)
+  // 2) ESTRATEGIA VIP: Frescura + Meritocracia (Máximo 72 horas)
   const limiteFrescura = Date.now() - (3 * 24 * 60 * 60 * 1000);
 
-  // Filtramos estrictamente las que pasen la barrera de tiempo y ordenamos
-  const porFecha = [...ofertasPais]
-    .filter(d => d.timestamp >= limiteFrescura)
-    .sort((a, b) => b.timestamp - a.timestamp);
+  // Filtramos la barrera de tiempo y ordenamos por FACTOR WOW interno
+  const ofertasFrescas = [...ofertasPais].filter(d => d.timestamp >= limiteFrescura);
+  
+  ofertasFrescas.sort((a, b) => {
+    // 1ro: La de mayor calidad gana
+    if (a.calidad !== b.calidad) return b.calidad - a.calidad;
+    // 2do: Si empatan en calidad, la más barata gana
+    if (a.precioNum !== b.precioNum) return a.precioNum - b.precioNum;
+    // 3ro: Si empatan en todo, la más reciente gana
+    return b.timestamp - a.timestamp;
+  });
 
-  for (const d of porFecha) {
+  for (const d of ofertasFrescas) {
     if (hookDeals.length >= 3) break; 
     
+    // Mantenemos la elegancia visual
     if (!destinosVistos.has(d.destinoUpper)) {
       hookDeals.push(d);
       destinosVistos.add(d.destinoUpper);
     }
   }
 
-  // 3) EL FACTOR WOW: El resto compite por Calidad y Precio
+  // 3) EL FACTOR WOW HISTÓRICO: El resto compite por Calidad y Precio general
   const restoOfertas = limpias.filter(d => !destinosVistos.has(d.destinoUpper));
 
   restoOfertas.sort((a, b) => {
-    // A) Priorizar vuelos del país actual
     if (a.esDelPaisActual !== b.esDelPaisActual) {
       return Number(b.esDelPaisActual) - Number(a.esDelPaisActual);
     }
-
-    // B) Priorizar vuelos directos
     if (a.esDirecto !== b.esDirecto) {
       return Number(b.esDirecto) - Number(a.esDirecto);
     }
-
-    // C) Calidad
-    if (a.calidad !== b.calidad) {
-      return b.calidad - a.calidad;
-    }
-
-    // D) Precio (más barato primero)
-    if (a.precioNum !== b.precioNum) {
-      return a.precioNum - b.precioNum;
-    }
-
-    // E) Desempate por fecha
+    if (a.calidad !== b.calidad) return b.calidad - a.calidad;
+    if (a.precioNum !== b.precioNum) return a.precioNum - b.precioNum;
     return b.timestamp - a.timestamp;
   });
 
