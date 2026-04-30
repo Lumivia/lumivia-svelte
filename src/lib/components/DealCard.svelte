@@ -10,14 +10,19 @@
   let reportado = $state(false);
 
   const imgOriginal = $derived(obtenerImagen(deal));
+  const fallbackPremium = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
   
-  // 🔥 BLINDAJE TITANIO: 3 Niveles de cascada con filtro anti-basura ("null", undefined)
+  // 🔥 BLINDAJE TITANIO MEJORADO: Destruye las URLs falsas que genera la base de datos
+  const urlEsValida = (url: any) => {
+    if (!url) return false;
+    const s = String(url);
+    return s.startsWith('http') && !s.includes('null') && !s.includes('undefined') && !s.includes('REVISION_MANUAL');
+  };
+
   const imgFinal = $derived(
-    (imgOriginal && String(imgOriginal).startsWith('http') && String(imgOriginal) !== 'null') 
-      ? imgOriginal :
-    (deal?.imagen_fallback && String(deal?.imagen_fallback).startsWith('http') && String(deal?.imagen_fallback) !== 'null') 
-      ? deal.imagen_fallback :
-    'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80' // Tu genérica premium
+    urlEsValida(imgOriginal) ? imgOriginal :
+    urlEsValida(deal?.imagen_fallback) ? deal?.imagen_fallback :
+    fallbackPremium
   );
 
   const fechasCortas = $derived(
@@ -69,6 +74,7 @@
       alt={deal?.titulo_gancho || 'Oferta'}
       loading="lazy"
       class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out"
+      onerror={(e) => { e.currentTarget.src = fallbackPremium; }}
     />
 
     <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
