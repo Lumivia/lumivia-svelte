@@ -20,6 +20,13 @@
     CR: { moneda: 'USD', bandera: 'https://flagcdn.com/w20/cr.png' }
   };
 
+  const destinosNacionales: Record<string, string[]> = {
+    MX: ['CUN', 'MID', 'SJD', 'PVR', 'PXM', 'OAX', 'TRC', 'CUU', 'MEX', 'GDL', 'MTY', 'TIJ'],
+    CO: ['CTG', 'SMR', 'ADZ', 'BGA', 'PEI', 'BOG', 'MDE', 'CLO'],
+    CL: ['CJC', 'PUQ', 'PMC', 'IQQ', 'SCL', 'LSC', 'ZCO', 'BBA'],
+    CR: ['SJO', 'LIR']
+  };
+
   const paisActual = $derived(data.pais || 'MX');
   const monedaActual = $derived(configMercado[paisActual]?.moneda ?? 'MXN');
   const banderaActual = $derived(configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png');
@@ -44,8 +51,13 @@
   let mesesDisponibles = $state<string[]>([]);
   let vuelosReportados = $state(new Set<number | string>());
 
-  // 🔥 EL ESCUDO DE TITANIO (Se declara una vez y protege toda la cuadrícula)
+  // 🔥 EL ESCUDO DE TITANIO
   const fallbackPremium = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
+  
+  function handleImageError(e: Event) {
+    (e.target as HTMLImageElement).src = fallbackPremium;
+  }
+
   const urlEsValida = (url: any) => {
     if (!url) return false;
     const s = String(url);
@@ -252,7 +264,7 @@
             onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
           >
             <div class="relative h-56 overflow-hidden bg-gray-100 shrink-0">
-              <img src={imgFinal} alt={deal.titulo_gancho || 'Oferta Especial'} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={(e) => { e.currentTarget.src = fallbackPremium; }} />
+              <img src={imgFinal} alt={deal.titulo_gancho || 'Oferta Especial'} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
               <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
 
               <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-lumiDark text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm tracking-wide border border-white/50 uppercase flex items-center gap-1">
@@ -329,7 +341,46 @@
     {/if}
 
     <section class="max-w-3xl mx-auto mb-24">
-      </section>
+      <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+        <h2 class="text-2xl font-black text-lumiDark mb-4 text-center">Radar Personal</h2>
+        <p class="text-gray-500 text-center mb-8 text-sm leading-relaxed">Cuéntanos qué vuelo buscas y te avisamos cuando aparezca una ganga real.</p>
+        <form class="space-y-6" onsubmit={handleSubmitRadar}>
+          <div>
+            <label for="radar-nombre" class="block text-xs font-semibold text-gray-400 mb-1">Tu Nombre</label>
+            <input id="radar-nombre" type="text" bind:value={leadNombre} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm" placeholder="Ej. Ana" />
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label for="radar-origen" class="block text-xs font-semibold text-gray-400 mb-1">Origen</label>
+              <input id="radar-origen" type="text" bind:value={leadOrigen} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm" placeholder="Ej. MEX" />
+            </div>
+            <div>
+              <label for="radar-destino" class="block text-xs font-semibold text-gray-400 mb-1">Destino</label>
+              <input id="radar-destino" type="text" bind:value={leadDestino} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm" placeholder="Ej. JFK" />
+            </div>
+          </div>
+          <div>
+            <label for="radar-mes" class="block text-xs font-semibold text-gray-400 mb-1">Mes aproximado</label>
+            <select id="radar-mes" bind:value={leadMes} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm bg-white">
+              <option value="" disabled>Selecciona un mes</option>
+              {#each mesesDisponibles as mes}
+                <option value={mes}>{mes}</option>
+              {/each}
+            </select>
+          </div>
+          <div>
+            <label for="radar-contacto" class="block text-xs font-semibold text-gray-400 mb-1">Correo Electrónico</label>
+            <input id="radar-contacto" type="email" bind:value={leadContacto} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm" placeholder="ejemplo@correo.com" />
+          </div>
+          <button type="submit" class="w-full bg-lumiCyan text-white font-bold py-3 rounded-xl hover:bg-lumiDark transition-all active:scale-95 shadow-md" disabled={radarEnviando}>
+            {radarEnviando ? 'Enviando...' : 'Activar Radar'}
+          </button>
+          {#if radarExito}
+            <p class="text-center text-emerald-500 font-bold text-sm mt-4">¡Radar activado! Te avisaremos cuando aparezca una ganga.</p>
+          {/if}
+        </form>
+      </div>
+    </section>
   </main>
 
   <WhatsAppButton pais={paisActual} />
