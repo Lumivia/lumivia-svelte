@@ -31,8 +31,6 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     if (platform?.env?.KV_CACHE) {
       const cached = await platform.env.KV_CACHE.get(cacheKey, 'json');
       if (cached) {
-        // Si hay caché, devolvemos inmediatamente. 
-        // Añadimos una bandera 'cached: true' para monitoreo interno.
         return { ...cached, fromCache: true };
       }
     }
@@ -64,8 +62,41 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
 
   if (err) console.error('Error al extraer ofertas:', err);
 
-  // 5) EL CEREBRO: Curación y procesamiento
-  const { hookDeals, radarDeals } = curarOfertas(ofertasCrudas || [], paisUpper);
+  let ofertasEnriquecidas = ofertasCrudas || [];
+
+  // 🔥 4.5) EL BISTURÍ: ENRIQUECIMIENTO DE DATOS (JOIN EN MEMORIA)
+  if (ofertasEnriquecidas.length > 0) {
+    // 1. Sacamos todos los códigos IATA únicos de esta tanda (orígenes y destinos)
+    const codigosIata = [...new Set([
+      ...ofertasEnriquecidas.map(o => o.origen),
+      ...ofertasEnriquecidas.map(o => o.destino)
+    ])];
+
+    // 2. Traemos el diccionario solo para esos códigos (Rapidísimo)
+    const { data: diccionario } = await supabase
+      .from('diccionario_destinos')
+      .select('iata_code, nombre_hotel, imagen_url_verificada')
+      .in('iata_code', codigosIata);
+
+    // 3. Creamos un mapa de búsqueda instantánea
+    const mapaDestinos = (diccionario || []).reduce((acc, curr) => {
+      acc[curr.iata_code] = curr;
+      return acc;
+    }, {} as Record<string, any>);
+
+    // 4. Inyectamos los nombres e imágenes a cada oferta antes de curarla
+    ofertasEnriquecidas = ofertasEnriquecidas.map(oferta => ({
+      ...oferta,
+      // Si encuentra el nombre en el diccionario lo pone, si no, deja el IATA como fallback de emergencia
+      origen_nombre: mapaDestinos[oferta.origen]?.nombre_hotel || oferta.origen,
+      destino_nombre: mapaDestinos[oferta.destino]?.nombre_hotel || oferta.destino,
+      // Guardamos la imagen verificada del destino
+      imagen_fallback: mapaDestinos[oferta.destino]?.imagen_url_verificada || null
+    }));
+  }
+
+  // 5) EL CEREBRO: Curación y procesamiento (Ahora usa las enriquecidas)
+  const { hookDeals, radarDeals } = curarOfertas(ofertasEnriquecidas, paisUpper);
 
   const schemaAEO = JSON.stringify({
     '@context': 'https://schema.org',
@@ -85,7 +116,7 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     schemaAEO
   };
 
-  // 7) GUARDADO EN CACHÉ (TTL de 5 minutos = 300 segundos)
+  // 7) GUARDADO EN CACHÉ
   try {
     if (platform?.env?.KV_CACHE && hookDeals.length > 0) {
       await platform.env.KV_CACHE.put(cacheKey, JSON.stringify(responseData), { 
@@ -96,7 +127,7 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     console.error("Error guardando en KV Cache:", e);
   }
 
-  // 8) Configuración de headers para el navegador (Cache de 5 min)
+  // 8) Configuración de headers
   setHeaders({
     'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60'
   });
