@@ -10,10 +10,14 @@
   let reportado = $state(false);
 
   const imgOriginal = $derived(obtenerImagen(deal));
+  
+  // 🔥 BLINDAJE TITANIO: 3 Niveles de cascada con filtro anti-basura ("null", undefined)
   const imgFinal = $derived(
-    (imgOriginal && String(imgOriginal).startsWith('http')) ? imgOriginal :
-    (deal?.imagen_fallback && String(deal?.imagen_fallback).startsWith('http')) ? deal.imagen_fallback :
-    'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80'
+    (imgOriginal && String(imgOriginal).startsWith('http') && String(imgOriginal) !== 'null') 
+      ? imgOriginal :
+    (deal?.imagen_fallback && String(deal?.imagen_fallback).startsWith('http') && String(deal?.imagen_fallback) !== 'null') 
+      ? deal.imagen_fallback :
+    'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80' // Tu genérica premium
   );
 
   const fechasCortas = $derived(
