@@ -7,9 +7,6 @@
   const equipaje = $derived(deal?.equipaje ?? 'Mochila personal');
   const duracion = $derived(deal?.duracion ?? deal?.duration ?? '');
   const clase = $derived(deal?.clase ?? deal?.fare_class ?? '');
-  
-  // 🔥 Evaluamos si la oferta es HOT para inyectar el gatillo de urgencia
-  const esHot = $derived((deal?.calidad_oferta ?? 0) >= 9);
 </script>
 
 <div class="flex items-center flex-wrap gap-2 text-[10.5px] sm:text-[11px] font-bold text-gray-500 mb-5 uppercase tracking-widest leading-relaxed">
@@ -58,15 +55,5 @@
     </svg>
     Impuestos Inc.
   </span>
-
-  {#if esHot}
-    <span class="text-gray-300">•</span>
-    <span class="flex items-center gap-1.5 text-amber-500 font-extrabold">
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-      </svg>
-      Tarifa Volátil
-    </span>
-  {/if}
 
 </div>
