@@ -93,15 +93,12 @@
 
   <div class="p-6 flex flex-col flex-grow bg-white relative">
     
-    <div class="flex items-center justify-between gap-2 mb-3">
-      <div class="flex-1 min-w-0 text-[12px] sm:text-[13px] font-black text-lumiDark uppercase tracking-widest flex items-center">
-        <span class="truncate">{origenSeguro}</span>
-        <span class="shrink-0 mx-2 text-[10px] font-bold text-gray-300">➔</span>
-        <span class="truncate">{destinoSeguro}</span>
+    <div class="flex items-start justify-between gap-3 mb-3">
+      <div class="text-[11px] sm:text-[12px] font-black text-lumiDark uppercase tracking-widest leading-snug break-words">
+        {origenSeguro} <span class="text-gray-300 font-bold mx-1.5 text-[10px] align-middle">➔</span> {destinoSeguro}
       </div>
 
-      <div class="shrink-0 text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1 text-right">
-        <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+      <div class="shrink-0 text-[9.5px] font-extrabold text-gray-400 uppercase tracking-widest text-right mt-[2px]">
         {fechasCortas}
       </div>
     </div>
