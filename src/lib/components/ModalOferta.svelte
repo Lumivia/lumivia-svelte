@@ -39,9 +39,18 @@
     MX: 'MXN', CO: 'COP', CL: 'CLP', CR: 'USD'
   };
 
-  // 🔥 MAGIA LIMPIA
+  // Todo el blindaje ahora vive en `obtenerImagen`
   const imgFinal = $derived(obtenerImagen(deal));
-  
+  const fallbackPremium = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
+
+  // Salvavidas visual HTML en caso de que la red falle
+  function handleImageError(e: Event) {
+    const target = e.target as HTMLImageElement;
+    if (target.src !== fallbackPremium) {
+      target.src = fallbackPremium;
+    }
+  }
+
   const fechasCortas = $derived(deal ? `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}` : '');
   
   const monedaDeal = $derived.by(() => {
@@ -122,7 +131,7 @@
       </button>
 
       <div class="h-48 sm:h-56 w-full overflow-hidden relative flex-shrink-0">
-        <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" />
+        <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" onerror={handleImageError} />
         <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
       </div>
 
