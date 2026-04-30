@@ -9,8 +9,16 @@
 
   let reportado = $state(false);
 
-  // 🛡️ BLINDAJE EXTREMO: Conversión forzada a String para evitar Crash 500
-  const imgFinal = $derived(obtenerImagen(deal));
+  // 🔥 CIRUGÍA 1: El Fallback Maestro de la Imagen
+  // Primero intentamos la función original, si devuelve vacío o error, usamos el fallback del servidor.
+  const imgOriginal = obtenerImagen(deal);
+  const imgFinal = $derived(
+    imgOriginal && imgOriginal !== '' 
+      ? imgOriginal 
+      : deal?.imagen_fallback 
+        ? deal.imagen_fallback 
+        : 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80' // Placeholder de avión si todo falla
+  );
 
   const fechasCortas = $derived(
     `${formatearFechaCorta(deal?.fecha_salida)} - ${formatearFechaCorta(deal?.fecha_regreso)}`
@@ -24,8 +32,10 @@
     String(deal?.moneda || deal?.currency || monedaActual || 'MXN').toUpperCase()
   );
 
-  const origenSeguro = $derived(String(deal?.origen || '').toUpperCase());
-  const destinoSeguro = $derived(String(deal?.destino || '').toUpperCase());
+  // 🔥 CIRUGÍA 2: Nombres Humanizados
+  // Usamos el nombre que vino del servidor. Si por algo no llegó, caemos de vuelta al IATA.
+  const origenSeguro = $derived(String(deal?.origen_nombre || deal?.origen || '').toUpperCase());
+  const destinoSeguro = $derived(String(deal?.destino_nombre || deal?.destino || '').toUpperCase());
 
   const esVip = $derived(deal?.tipo_vuelo === 'directo');
   const esHot = $derived((deal?.calidad_oferta ?? 0) >= 9);
