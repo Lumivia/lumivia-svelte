@@ -44,6 +44,16 @@
   let mesesDisponibles = $state<string[]>([]);
   let vuelosReportados = $state(new Set<number | string>());
 
+  // 🔥 EL SALVAVIDAS VISUAL TIPADO (Evita el crash de compilación)
+  const fallbackPremium = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
+  
+  function handleImgError(e: Event) {
+    const target = e.target as HTMLImageElement;
+    if (target.src !== fallbackPremium) {
+      target.src = fallbackPremium;
+    }
+  }
+
   function toggleDropdown() { dropdownAbierto = !dropdownAbierto; }
   function handleClickOutside(event: MouseEvent) {
     const target = event.target as HTMLElement;
@@ -242,7 +252,7 @@
             onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
           >
             <div class="relative h-56 overflow-hidden bg-gray-100 shrink-0">
-              <img src={imgFinal} alt={deal.titulo_gancho || 'Oferta Especial'} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" />
+              <img src={imgFinal} alt={deal.titulo_gancho || 'Oferta Especial'} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImgError} />
               <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
 
               <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-lumiDark text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm tracking-wide border border-white/50 uppercase flex items-center gap-1">
