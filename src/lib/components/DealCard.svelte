@@ -9,17 +9,8 @@
 
   let reportado = $state(false);
 
-  // Todo el blindaje ahora vive en `obtenerImagen`
+  // Todo el blindaje ahora vive en `obtenerImagen` y no crashea Svelte
   const imgFinal = $derived(obtenerImagen(deal));
-  const fallbackPremium = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
-  
-  // Salvavidas visual HTML en caso de que la red falle
-  function handleImageError(e: Event) {
-    const target = e.target as HTMLImageElement;
-    if (target.src !== fallbackPremium) {
-      target.src = fallbackPremium;
-    }
-  }
 
   const fechasCortas = $derived(
     `${formatearFechaCorta(deal?.fecha_salida)} - ${formatearFechaCorta(deal?.fecha_regreso)}`
@@ -59,7 +50,7 @@
   role="button"
   tabindex="0"
   onclick={onclick} 
-  onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onclick(e); } }}
+  onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if(onclick) onclick(e); } }}
   class="card-minimal flex-none w-[85vw] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-center flex flex-col group/card hover:shadow-2xl transition-all duration-300 bg-white rounded-2xl overflow-hidden text-left cursor-pointer border border-gray-100 {reportado ? 'opacity-40 grayscale' : ''}"
   aria-label={`Ver oferta de ${origenSeguro} a ${destinoSeguro}`}
 >
@@ -70,7 +61,6 @@
       alt={deal?.titulo_gancho || 'Oferta'}
       loading="lazy"
       class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out"
-      onerror={handleImageError}
     />
 
     <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
