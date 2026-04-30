@@ -9,10 +9,8 @@
 
   let reportado = $state(false);
 
-  // 🔥 1. REACTIVIDAD ABSOLUTA: Esto evita el "fantasma" del país anterior
+  // REACTIVIDAD ABSOLUTA
   const imgOriginal = $derived(obtenerImagen(deal));
-  
-  // 🔥 2. BLINDAJE DE URL: Solo acepta links reales, si no, usa el genérico
   const imgFinal = $derived(
     (imgOriginal && String(imgOriginal).startsWith('http')) ? imgOriginal :
     (deal?.imagen_fallback && String(deal?.imagen_fallback).startsWith('http')) ? deal.imagen_fallback :
@@ -129,9 +127,17 @@
         </p>
       </div>
       <div class="flex items-center gap-3">
-        <button type="button" onclick={handleCopiar} class="bg-gray-50 hover:bg-gray-200 p-2 rounded-lg text-gray-500 cursor-pointer">
-          Copiar
+        <button type="button" onclick={handleCopiar} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan transition-colors p-2 hover:bg-gray-50 rounded-full cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+          </svg>
         </button>
+        <span class="text-lumiCyan hover:text-lumiDark font-extrabold text-sm transition-colors cursor-pointer flex items-center gap-1">
+          Ver Vuelo
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </span>
       </div>
     </div>
   </div>
