@@ -39,26 +39,9 @@
     MX: 'MXN', CO: 'COP', CL: 'CLP', CR: 'USD'
   };
 
-  // 🔥 EL ESCUDO DE TITANIO PARA EL MODAL
-  const imgOriginal = $derived(deal ? obtenerImagen(deal, 800) : '');
-  const fallbackPremium = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
+  // 🔥 MAGIA LIMPIA
+  const imgFinal = $derived(obtenerImagen(deal));
   
-  function handleImageError(e: Event) {
-    (e.target as HTMLImageElement).src = fallbackPremium;
-  }
-
-  const urlEsValida = (url: any) => {
-    if (!url) return false;
-    const s = String(url);
-    return s.startsWith('http') && !s.includes('null') && !s.includes('undefined') && !s.includes('REVISION_MANUAL');
-  };
-
-  const imgFinal = $derived(
-    urlEsValida(imgOriginal) ? imgOriginal :
-    urlEsValida(deal?.imagen_fallback) ? deal?.imagen_fallback :
-    fallbackPremium
-  );
-
   const fechasCortas = $derived(deal ? `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}` : '');
   
   const monedaDeal = $derived.by(() => {
@@ -139,7 +122,7 @@
       </button>
 
       <div class="h-48 sm:h-56 w-full overflow-hidden relative flex-shrink-0">
-        <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" onerror={handleImageError} />
+        <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" />
         <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
       </div>
 
