@@ -53,11 +53,14 @@
     const paisGuardado = typeof window !== 'undefined' ? localStorage.getItem('lumivia_pais') : null;
     goto('/paises/' + (paisGuardado?.toLowerCase() || 'mx'));
   }
+  
+  // 🔥 ROUTING CORRECTO Y PURO DE SVELTEKIT
   function seleccionarPais(codigoPais: string) {
     dropdownAbierto = false;
     if (typeof window !== 'undefined') localStorage.setItem('lumivia_pais', codigoPais);
     goto(`/masdestinos?pais=${codigoPais.toUpperCase()}&page=1`);
   }
+
   function irAPagina(n: number) {
     if (n < 1 || n > data.totalPages) return;
     goto(`/masdestinos?pais=${paisActual.toUpperCase()}&page=${n}`);
@@ -79,9 +82,10 @@
 
   function formatearFechaCorta(fechaCadena: string | null) {
     if (!fechaCadena) return '';
-    if (!fechaCadena.includes('-')) return fechaCadena;
-    const partes = fechaCadena.split('-');
-    if (partes.length !== 3) return fechaCadena;
+    const str = String(fechaCadena);
+    if (!str.includes('-')) return str;
+    const partes = str.split('-');
+    if (partes.length !== 3) return str;
     const año = parseInt(partes[0]);
     const mes = parseInt(partes[1]) - 1;
     const dia = parseInt(partes[2]);
@@ -191,10 +195,10 @@
           {#if dropdownAbierto}
             <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-xl shadow-lg bg-white ring-1 ring-black/5 focus:outline-none z-50 overflow-hidden border border-gray-100 animate-fadeIn" role="menu">
               <div class="py-1">
-                <a href={`/masdestinos?pais=MX&page=1`} onclick={() => seleccionarPais('MX')} data-sveltekit-preload-data="hover" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors"><img src="https://flagcdn.com/w20/mx.png" alt="MX" class="w-5 h-auto rounded-sm shadow-sm" /> México (MXN)</a>
-                <a href={`/masdestinos?pais=CO&page=1`} onclick={() => seleccionarPais('CO')} data-sveltekit-preload-data="hover" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors"><img src="https://flagcdn.com/w20/co.png" alt="CO" class="w-5 h-auto rounded-sm shadow-sm" /> Colombia (COP)</a>
-                <a href={`/masdestinos?pais=CL&page=1`} onclick={() => seleccionarPais('CL')} data-sveltekit-preload-data="hover" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors"><img src="https://flagcdn.com/w20/cl.png" alt="CL" class="w-5 h-auto rounded-sm shadow-sm" /> Chile (CLP)</a>
-                <a href={`/masdestinos?pais=CR&page=1`} onclick={() => seleccionarPais('CR')} data-sveltekit-preload-data="hover" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors"><img src="https://flagcdn.com/w20/cr.png" alt="CR" class="w-5 h-auto rounded-sm shadow-sm" /> Costa Rica (USD)</a>
+                <button type="button" onclick={() => seleccionarPais('MX')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/mx.png" alt="MX" class="w-5 h-auto rounded-sm shadow-sm" /> México (MXN)</button>
+                <button type="button" onclick={() => seleccionarPais('CO')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/co.png" alt="CO" class="w-5 h-auto rounded-sm shadow-sm" /> Colombia (COP)</button>
+                <button type="button" onclick={() => seleccionarPais('CL')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/cl.png" alt="CL" class="w-5 h-auto rounded-sm shadow-sm" /> Chile (CLP)</button>
+                <button type="button" onclick={() => seleccionarPais('CR')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/cr.png" alt="CR" class="w-5 h-auto rounded-sm shadow-sm" /> Costa Rica (USD)</button>
               </div>
             </div>
           {/if}
