@@ -5,13 +5,14 @@
 
   const { deal, monedaActual, onclick } = $props();
 
-  // 🔥 REACTIVIDAD Y BLINDAJE DE IMAGEN PARA LA LISTA
+  // 🔥 BLINDAJE TITANIO PARA LA IMAGEN DE LA LISTA
   const imgOriginal = $derived(obtenerImagen(deal, 150));
-  
   const imgFinal = $derived(
-    (imgOriginal && String(imgOriginal).startsWith('http')) ? imgOriginal :
-    (deal?.imagen_fallback && String(deal?.imagen_fallback).startsWith('http')) ? deal.imagen_fallback :
-    'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=150&q=80'
+    (imgOriginal && String(imgOriginal).startsWith('http') && String(imgOriginal) !== 'null') 
+      ? imgOriginal :
+    (deal?.imagen_fallback && String(deal?.imagen_fallback).startsWith('http') && String(deal?.imagen_fallback) !== 'null') 
+      ? deal.imagen_fallback :
+    'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=150&q=80' // Genérica premium en miniatura
   );
 
   const fechasCortas = $derived(
@@ -26,10 +27,8 @@
     (deal.moneda || deal.currency || monedaActual).toUpperCase()
   );
 
-  const origenSeguro = $derived(deal.origen_nombre || deal.origen || '');
-  const destinoSeguro = $derived(deal.destino_nombre || deal.destino || '');
-
-  const esHot = $derived(deal.calidad_oferta >= 9);
+  const origenSeguro = $derived(String(deal.origen_nombre || deal.origen || '').toUpperCase());
+  const destinoSeguro = $derived(String(deal.destino_nombre || deal.destino || '').toUpperCase());
 
   async function handleCopiar(e: Event) {
     e.stopPropagation();
@@ -37,13 +36,13 @@
   }
 </script>
 
-<li class="list-none">
+<li class="list-none border-b border-gray-50 last:border-0">
   <div
     role="button"
     tabindex="0"
     onclick={onclick}
     onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onclick(e); } }}
-    class="w-full p-3 sm:px-6 sm:py-4 hover:bg-gray-50/80 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left cursor-pointer rounded-xl"
+    class="w-full p-4 sm:px-6 sm:py-5 hover:bg-gray-50/80 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left cursor-pointer group/item"
     aria-label={`Ver oferta de ${origenSeguro} a ${destinoSeguro}`}
   >
 
@@ -51,67 +50,61 @@
       <img
         src={imgFinal}
         loading="lazy"
-        class="h-12 w-12 shrink-0 rounded-lg object-cover shadow-sm border border-gray-200 hidden sm:block"
+        class="h-14 w-14 shrink-0 rounded-xl object-cover shadow-sm border border-gray-200 hidden sm:block transform group-hover/item:scale-105 transition-transform duration-500 ease-out"
         alt={deal.titulo_gancho || destinoSeguro}
       />
 
       <div class="min-w-0 flex-1">
-        <h4 class="font-bold text-lumiDark text-base flex items-center flex-wrap gap-1">
-          <span class="truncate block">{deal.titulo_gancho || `Oferta a ${destinoSeguro}`}</span>
-          {#if esHot}
-            <span class="text-red-500 font-bold ml-1 shrink-0" title="Alta Demanda">🔥</span>
-          {/if}
+        <h4 class="font-bold text-gray-800 text-base group-hover/item:text-lumiDark transition-colors line-clamp-1">
+          {deal.titulo_gancho || `Oferta a ${destinoSeguro}`}
         </h4>
 
-        <div class="flex flex-wrap items-center text-xs text-gray-500 mt-1 font-medium gap-2">
-          <div class="flex items-center min-w-0">
+        <div class="flex flex-wrap items-center text-xs mt-1.5 gap-2.5">
+          <div class="flex items-center text-[10.5px] font-black text-lumiDark uppercase tracking-widest break-words leading-snug">
             {#if origenSeguro}
-              <span class="font-bold text-gray-400 truncate max-w-[100px] sm:max-w-[150px]">{origenSeguro}</span>
-              <span class="mx-1 text-gray-300 shrink-0">➔</span>
+              <span>{origenSeguro}</span>
+              <span class="mx-1.5 text-[9px] font-bold text-gray-300 align-middle">➔</span>
             {/if}
-            <span class="font-bold text-gray-400 truncate max-w-[100px] sm:max-w-[150px]">{destinoSeguro}</span>
+            <span class="text-lumiCyan">{destinoSeguro}</span>
           </div>
 
-          <div class="flex items-center text-gray-400 text-[11px] font-bold shrink-0">
-            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            </svg>
+          <span class="text-gray-200 font-normal hidden sm:inline">|</span>
+
+          <div class="text-[9.5px] font-extrabold text-gray-400 uppercase tracking-widest mt-[1px]">
             {fechasCortas}
           </div>
-
-          <span class="hidden sm:inline text-gray-400 text-[10px] shrink-0">• Verificado</span>
         </div>
       </div>
     </div>
 
-    <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0 shrink-0">
-      <div class="text-left sm:text-right mr-2">
-        <p class="text-lg font-extrabold text-lumiDark">
+    <div class="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto mt-2 sm:mt-0 shrink-0">
+      <div class="text-left sm:text-right">
+        <p class="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-0.5 sm:hidden">Precio por persona</p>
+        <p class="text-xl font-black text-lumiDark leading-none tracking-tight">
           ${precio}
-          <span class="text-xs font-normal text-gray-400">{monedaDeal}</span>
+          <span class="text-xs font-semibold text-gray-400 ml-0.5">{monedaDeal}</span>
         </p>
       </div>
 
-      <button
-        type="button"
-        onclick={handleCopiar}
-        title="Copiar enlace"
-        class="bg-gray-50 hover:bg-gray-200 text-gray-500 p-2 rounded-lg transition-colors shadow-sm cursor-pointer shrink-0"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
-        </svg>
-      </button>
+      <div class="flex items-center gap-1.5">
+        <button
+          type="button"
+          onclick={handleCopiar}
+          title="Compartir enlace"
+          class="text-gray-400 hover:text-lumiCyan hover:bg-lumiCyan/10 p-2.5 rounded-full transition-colors cursor-pointer shrink-0"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+          </svg>
+        </button>
 
-      <span class="text-lumiCyan hover:text-lumiCyanDark font-semibold text-sm flex items-center gap-1 transition-colors shrink-0">
-        Explorar
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 5l7 7-7 7"></path>
-        </svg>
-      </span>
+        <span class="text-lumiCyan group-hover/item:text-lumiDark font-extrabold text-[11px] sm:text-xs flex items-center gap-1 transition-colors uppercase tracking-wider shrink-0 cursor-pointer">
+          Ver Vuelo
+          <svg class="w-4 h-4 transition-transform group-hover/item:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+          </svg>
+        </span>
+      </div>
     </div>
   </div>
 </li>
