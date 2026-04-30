@@ -98,7 +98,7 @@
       </button>
 
       <div class="h-48 sm:h-56 w-full overflow-hidden relative flex-shrink-0">
-        <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" />
+        <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';" />
         <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
       </div>
 
