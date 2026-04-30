@@ -20,13 +20,6 @@
     CR: { moneda: 'USD', bandera: 'https://flagcdn.com/w20/cr.png' }
   };
 
-  const destinosNacionales: Record<string, string[]> = {
-    MX: ['CUN', 'MID', 'SJD', 'PVR', 'PXM', 'OAX', 'TRC', 'CUU', 'MEX', 'GDL', 'MTY', 'TIJ'],
-    CO: ['CTG', 'SMR', 'ADZ', 'BGA', 'PEI', 'BOG', 'MDE', 'CLO'],
-    CL: ['CJC', 'PUQ', 'PMC', 'IQQ', 'SCL', 'LSC', 'ZCO', 'BBA'],
-    CR: ['SJO', 'LIR']
-  };
-
   const paisActual = $derived(data.pais || 'MX');
   const monedaActual = $derived(configMercado[paisActual]?.moneda ?? 'MXN');
   const banderaActual = $derived(configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png');
@@ -50,19 +43,6 @@
 
   let mesesDisponibles = $state<string[]>([]);
   let vuelosReportados = $state(new Set<number | string>());
-
-  // 🔥 EL ESCUDO DE TITANIO
-  const fallbackPremium = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
-  
-  function handleImageError(e: Event) {
-    (e.target as HTMLImageElement).src = fallbackPremium;
-  }
-
-  const urlEsValida = (url: any) => {
-    if (!url) return false;
-    const s = String(url);
-    return s.startsWith('http') && !s.includes('null') && !s.includes('undefined') && !s.includes('REVISION_MANUAL');
-  };
 
   function toggleDropdown() { dropdownAbierto = !dropdownAbierto; }
   function handleClickOutside(event: MouseEvent) {
@@ -183,7 +163,6 @@
 </svelte:head>
 
 <div class="bg-gray-50 text-lumiDark min-h-screen flex flex-col relative">
-
   <header class="bg-white/70 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-200/50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-4">
@@ -246,8 +225,7 @@
         <div class="col-span-full text-center text-gray-400 py-20 font-medium">Aún no hay ofertas activas en la bóveda de {paisActual}.</div>
       {:else}
         {#each data.deals as deal (deal.id)}
-          {@const imgOriginal = obtenerImagen(deal)}
-          {@const imgFinal = urlEsValida(imgOriginal) ? imgOriginal : urlEsValida(deal.imagen_fallback) ? deal.imagen_fallback : fallbackPremium}
+          {@const imgFinal = obtenerImagen(deal)}
           {@const tiempoTranscurrido = calcularTiempoTranscurrido(deal.created_at)}
           {@const fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`}
           {@const esVip = deal.tipo_vuelo === 'directo'}
@@ -264,7 +242,7 @@
             onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
           >
             <div class="relative h-56 overflow-hidden bg-gray-100 shrink-0">
-              <img src={imgFinal} alt={deal.titulo_gancho || 'Oferta Especial'} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
+              <img src={imgFinal} alt={deal.titulo_gancho || 'Oferta Especial'} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" />
               <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
 
               <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-lumiDark text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm tracking-wide border border-white/50 uppercase flex items-center gap-1">
