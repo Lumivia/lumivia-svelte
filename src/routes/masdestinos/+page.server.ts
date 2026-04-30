@@ -5,7 +5,6 @@ import { env } from '$env/dynamic/public';
 const PAGE_SIZE = 18;
 const BASE_URL = 'https://www.lumivia.app/masdestinos';
 
-// Agregamos 'platform' a los parámetros para acceder a Cloudflare KV
 export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
     const pageParam = Number(url.searchParams.get('page') ?? '1');
     const pageFromQuery = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
@@ -22,7 +21,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
     if (vueloId) canonicalURL = `${BASE_URL}?vuelo=${vueloId}`;
     if (!vueloId && pageFromQuery > 1) canonicalURL = `${BASE_URL}?pais=${paisQuery}&page=${pageFromQuery}`;
 
-    // 🔥 CLAVE KV: Generamos un nombre único dependiendo de lo que el cliente pida
+    // 🔥 CLAVE KV: Generamos un nombre único
     const cacheKey = vueloId 
         ? `lumivia_vuelo_${vueloId}` 
         : `lumivia_catalogo_${paisQuery}_p${pageFromQuery}`;
@@ -40,7 +39,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
         console.error("Error leyendo KV Cache:", e);
     }
 
-    // 2) INICIALIZACIÓN DE SUPABASE (Solo se ejecuta si el caché falló o expiró)
+    // 2) INICIALIZACIÓN DE SUPABASE
     const supabaseUrl = env.PUBLIC_SUPABASE_URL || '';
     const supabaseKey = env.PUBLIC_SUPABASE_ANON_KEY || '';
 
@@ -48,7 +47,10 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
         auth: { persistSession: false, autoRefreshToken: false }
     });
 
-    let responseData;
+    let ofertasCrudas: any[] = [];
+    let total = 0;
+    let totalPages = 1;
+    let paisMercadoResult = paisQuery;
 
     // 3A) LÓGICA: Vuelo Único
     if (vueloId && !Number.isNaN(vueloId)) {
@@ -59,10 +61,10 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
             .eq('id', vueloId)
             .limit(1);
 
-        if (error || !data || data.length === 0) {
-            responseData = { pais: paisQuery, page: 1, pageSize: PAGE_SIZE, total: 0, totalPages: 1, deals: [], schemaJSON, canonicalURL };
-        } else {
-            responseData = { pais: data[0].pais_mercado || paisQuery, page: 1, pageSize: PAGE_SIZE, total: 1, totalPages: 1, deals: [data[0]], schemaJSON, canonicalURL };
+        if (!error && data && data.length > 0) {
+            ofertasCrudas = data;
+            paisMercadoResult = data[0].pais_mercado || paisQuery;
+            total = 1;
         }
     } 
     // 3B) LÓGICA: Catálogo Paginado
@@ -79,18 +81,55 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
             .order('created_at', { ascending: false })
             .range(from, to);
 
-        if (error) {
-            responseData = { pais: paisQuery, page, pageSize: PAGE_SIZE, total: 0, totalPages: 1, deals: [], schemaJSON, canonicalURL };
-        } else {
-            const total = count ?? 0;
-            const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-            responseData = { pais: paisQuery, page, pageSize: PAGE_SIZE, total, totalPages, deals: deals ?? [], schemaJSON, canonicalURL };
+        if (!error && deals) {
+            ofertasCrudas = deals;
+            total = count ?? 0;
+            totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
         }
     }
 
-    // 4) GUARDADO EN CACHÉ (TTL de 5 minutos = 300 segundos)
+    // 🔥 3.5) EL BISTURÍ: ENRIQUECIMIENTO DE DATOS (JOIN EN MEMORIA)
+    if (ofertasCrudas.length > 0) {
+        // Extraemos IATAs únicos
+        const codigosIata = [...new Set([
+            ...ofertasCrudas.map(o => o.origen),
+            ...ofertasCrudas.map(o => o.destino)
+        ])];
+
+        // Consultamos el diccionario
+        const { data: diccionario } = await supabase
+            .from('diccionario_destinos')
+            .select('iata_code, nombre_hotel, imagen_url_verificada')
+            .in('iata_code', codigosIata);
+
+        // Creamos mapa ultrarrápido
+        const mapaDestinos = (diccionario || []).reduce((acc, curr) => {
+            acc[curr.iata_code] = curr;
+            return acc;
+        }, {} as Record<string, any>);
+
+        // Inyectamos nombres e imágenes
+        ofertasCrudas = ofertasCrudas.map(oferta => ({
+            ...oferta,
+            origen_nombre: mapaDestinos[oferta.origen]?.nombre_hotel || oferta.origen,
+            destino_nombre: mapaDestinos[oferta.destino]?.nombre_hotel || oferta.destino,
+            imagen_fallback: mapaDestinos[oferta.destino]?.imagen_url_verificada || null
+        }));
+    }
+
+    const responseData = { 
+        pais: paisMercadoResult, 
+        page: pageFromQuery, 
+        pageSize: PAGE_SIZE, 
+        total, 
+        totalPages, 
+        deals: ofertasCrudas, 
+        schemaJSON, 
+        canonicalURL 
+    };
+
+    // 4) GUARDADO EN CACHÉ
     try {
-        // Solo guardamos en caché si realmente encontramos ofertas, para no cachear pantallas en blanco
         if (platform?.env?.KV_CACHE && responseData.deals.length > 0) {
             await platform.env.KV_CACHE.put(cacheKey, JSON.stringify(responseData), { 
                 expirationTtl: 300 
@@ -101,6 +140,6 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
         console.error("Error guardando en KV Cache:", e);
     }
 
-    // 5) Retornamos los datos frescos a la web
+    // 5) Retornamos los datos frescos
     return { ...responseData, fromCache: false };
 };
