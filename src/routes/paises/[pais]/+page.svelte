@@ -238,7 +238,7 @@
             Conectando con la base de datos...
           </div>
         {:else}
-          {#each ofertasHook as deal}
+          {#each ofertasHook as deal (deal.id)}
             <DealCard
               {deal}
               monedaActual={data.mercado?.moneda}
@@ -259,7 +259,7 @@
         {#if ofertasRadar.length === 0}
           <li class="p-6 text-gray-400 text-center">No hay más destinos por ahora.</li>
         {:else}
-          {#each ofertasRadar as deal}
+          {#each ofertasRadar as deal (deal.id)}
             <RadarItem
               {deal}
               monedaActual={data.mercado?.moneda}
