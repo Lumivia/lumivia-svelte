@@ -55,7 +55,7 @@
   tabindex="0"
   onclick={onclick} 
   onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onclick(e); } }}
-  class="card-minimal flex-none w-[85vw] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-center flex flex-col group hover:shadow-2xl transition-all duration-300 bg-white rounded-2xl overflow-hidden text-left cursor-pointer border border-gray-100 {reportado ? 'opacity-40 grayscale' : ''}"
+  class="card-minimal flex-none w-[85vw] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-center flex flex-col group/card hover:shadow-2xl transition-all duration-300 bg-white rounded-2xl overflow-hidden text-left cursor-pointer border border-gray-100 {reportado ? 'opacity-40 grayscale' : ''}"
   aria-label={`Ver oferta de ${origenSeguro} a ${destinoSeguro}`}
 >
 
@@ -64,10 +64,10 @@
       src={imgFinal}
       alt={deal?.titulo_gancho || 'Oferta'}
       loading="lazy"
-      class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
+      class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out"
     />
 
-    <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
 
     {#if deal?.tiempoTranscurrido}
       <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-lumiDark text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm tracking-wide border border-white/50 uppercase flex items-center gap-1">
@@ -103,7 +103,7 @@
       </div>
     </div>
 
-    <h3 class="text-xl font-bold mb-4 text-gray-800 group-hover:text-lumiDark transition-colors leading-snug line-clamp-2">
+    <h3 class="text-xl font-bold mb-4 text-gray-800 group-hover/card:text-lumiDark transition-colors leading-snug line-clamp-2">
       {deal?.titulo_gancho || 'Vuelo Especial'}
     </h3>
 
@@ -124,9 +124,9 @@
           </svg>
         </button>
         
-        <div class="bg-lumiDark text-white group-hover:bg-lumiCyan group-hover:text-lumiDark px-5 py-2.5 rounded-full font-black text-[11px] sm:text-xs transition-all shadow-md group-hover:shadow-lg active:scale-95 cursor-pointer flex items-center gap-1.5 uppercase tracking-wider">
+        <div class="bg-lumiDark text-white group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark px-5 py-2.5 rounded-full font-black text-[11px] sm:text-xs transition-all shadow-md group-hover/card:shadow-lg active:scale-95 cursor-pointer flex items-center gap-1.5 uppercase tracking-wider">
           Ver Vuelo
-          <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 transition-transform group-hover/card:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
           </svg>
         </div>
