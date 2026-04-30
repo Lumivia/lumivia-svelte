@@ -53,14 +53,11 @@
     const paisGuardado = typeof window !== 'undefined' ? localStorage.getItem('lumivia_pais') : null;
     goto('/paises/' + (paisGuardado?.toLowerCase() || 'mx'));
   }
-  
-  // 🔥 ROUTING CORRECTO Y PURO DE SVELTEKIT
   function seleccionarPais(codigoPais: string) {
     dropdownAbierto = false;
     if (typeof window !== 'undefined') localStorage.setItem('lumivia_pais', codigoPais);
     goto(`/masdestinos?pais=${codigoPais.toUpperCase()}&page=1`);
   }
-
   function irAPagina(n: number) {
     if (n < 1 || n > data.totalPages) return;
     goto(`/masdestinos?pais=${paisActual.toUpperCase()}&page=${n}`);
@@ -284,7 +281,7 @@
                 <div>
                   <p class="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">Vuelo Id/Vt</p>
                   <p class="text-2xl font-black text-lumiDark leading-none tracking-tight">
-                    ${precio} <span class="text-xs font-semibold text-gray-400">{monedaDeal}</span>
+                    ${Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')} <span class="text-xs font-semibold text-gray-400">{monedaDeal}</span>
                   </p>
                 </div>
 
