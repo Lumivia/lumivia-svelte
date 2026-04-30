@@ -59,6 +59,7 @@
       alt={deal?.titulo_gancho || 'Oferta'}
       loading="lazy"
       class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out"
+      onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';"
     />
     <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
 
