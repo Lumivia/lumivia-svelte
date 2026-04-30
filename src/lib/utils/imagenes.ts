@@ -1,57 +1,34 @@
-// ID prohibido (ala prohibida)
+// Imagen genérica fallback (Nubes Premium)
+const FALLBACK_PREMIUM = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&q=80';
+
+// ID de la infame "Ala de Avión" que ya no queremos ver
 const ALA_PROHIBIDA = '1436491865332-7a61a109cc05';
 
-// Diccionario infalible (puedes completarlo con todos los destinos que ya usabas)
-const diccionarioInfalible: Record<string, string[]> = {
-  // Ejemplos:
-  // 'CDMX': ['1519085360753-3a39c9c1c6c8', '1526481280695-3c687fd543c0'],
-  // 'MAD': ['1505761671935-60b3a7427bad'],
-};
-
-// Imagen genérica fallback
-const FALLBACK_BASE = 'https://images.unsplash.com/photo-1488085061387-422e15b40b18';
-
-// Construye URL de Unsplash con tamaño y calidad
-function construirUrlUnsplash(id: string, width: number, quality = 70): string {
-  return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${width}&q=${quality}&fm=webp`;
-}
-
-// Fallback genérico con tamaño
-function fallbackGenerico(width: number, quality = 70): string {
-  return `${FALLBACK_BASE}?auto=format&fit=crop&w=${width}&q=${quality}&fm=webp`;
-}
-
 /**
- * Obtiene la mejor imagen posible para un deal.
- * - Respeta url_imagen si es válida
- * - Bloquea la "ala prohibida"
- * - Usa diccionarioInfalible por destino
- * - Usa fallback genérico si no hay nada más
- *
- * @param deal Objeto de oferta
- * @param width Ancho deseado (600 para cards, 150 para radar, 800 para modal, etc.)
+ * Filtra basura de la base de datos y retorna una imagen limpia.
+ * (La lógica de buscar en el diccionario ya la hace tu +page.server.ts)
  */
-export function obtenerImagen(deal: any, width = 600): string {
-  let img = (deal?.url_imagen || '').trim();
-  const destinoLimpio = (deal?.destino || '').trim().toUpperCase();
+export function obtenerImagen(deal: any, width = 800): string {
+  // 1. Extraemos la imagen que trae la oferta original
+  let img = String(deal?.url_imagen || deal?.imagen_url_verificada || '').trim();
 
-  // Si está vacía, es null, o contiene el ID prohibido → ignorar
-  if (!img || img === 'null' || img.includes(ALA_PROHIBIDA)) {
-    // Intentar diccionario infalible
-    const lista = diccionarioInfalible[destinoLimpio];
-    if (lista && lista.length > 0) {
-      const fotoId = lista[Math.floor(Math.random() * lista.length)];
-      return construirUrlUnsplash(fotoId, width);
-    }
-    // Fallback genérico
-    return fallbackGenerico(width);
+  // 2. Si es basura de la base de datos o el Ala Prohibida, regresamos vacío
+  // para que el SvelteKit active el Escudo de Titanio.
+  if (
+    !img || 
+    img === 'null' || 
+    img === 'undefined' || 
+    img === 'REVISION_MANUAL' || 
+    img.includes(ALA_PROHIBIDA)
+  ) {
+    return ''; // Regresamos vacío para que Svelte aplique el fallback
   }
 
-  // Si no empieza con http, asumimos que es un ID de Unsplash
+  // 3. Si por alguna razón la base de datos guardó solo el ID de Unsplash en vez de la URL completa
   if (!img.startsWith('http')) {
-    return construirUrlUnsplash(img, width);
+    return `https://images.unsplash.com/photo-${img}?auto=format&fit=crop&w=${width}&q=80&fm=webp`;
   }
 
-  // Si ya es URL completa, la respetamos
+  // 4. Si es una URL válida y limpia, la regresamos
   return img;
 }
