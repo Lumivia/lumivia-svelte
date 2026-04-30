@@ -8,7 +8,11 @@
   const imgOriginal = $derived(obtenerImagen(deal, 150));
   const fallbackPremium = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=150&q=80';
 
-  // 🔥 BLINDAJE TITANIO MEJORADO: Destruye las URLs falsas que genera la base de datos
+  // 🔥 Función segura para TypeScript
+  function handleImageError(e: Event) {
+    (e.target as HTMLImageElement).src = fallbackPremium;
+  }
+
   const urlEsValida = (url: any) => {
     if (!url) return false;
     const s = String(url);
@@ -58,7 +62,7 @@
         loading="lazy"
         class="h-14 w-14 shrink-0 rounded-xl object-cover shadow-sm border border-gray-200 hidden sm:block transform group-hover/item:scale-105 transition-transform duration-500 ease-out"
         alt={deal.titulo_gancho || destinoSeguro}
-        onerror={(e) => { e.currentTarget.src = fallbackPremium; }}
+        onerror={handleImageError}
       />
 
       <div class="min-w-0 flex-1">
