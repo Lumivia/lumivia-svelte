@@ -43,6 +43,7 @@
         loading="lazy"
         class="h-14 w-14 shrink-0 rounded-xl object-cover shadow-sm border border-gray-200 hidden sm:block transform group-hover/item:scale-105 transition-transform duration-500 ease-out"
         alt={deal.titulo_gancho || destinoSeguro}
+        onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=150&q=80';"
       />
       <div class="min-w-0 flex-1">
         <h4 class="font-bold text-gray-800 text-base group-hover/item:text-lumiDark transition-colors line-clamp-1">
