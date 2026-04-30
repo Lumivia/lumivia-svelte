@@ -6,7 +6,7 @@ export function obtenerImagen(deal: any, width = 800): string {
   
   let img = '';
   
-  // 1. Cascada inteligente: Busca la primera URL real que no sea "null"
+  // 1. Cascada ultra segura usando String() para prevenir crasheos
   if (deal.url_imagen && String(deal.url_imagen).startsWith('http') && !String(deal.url_imagen).includes('null')) {
       img = String(deal.url_imagen);
   } else if (deal.imagen_url_verificada && String(deal.imagen_url_verificada).startsWith('http') && !String(deal.imagen_url_verificada).includes('null')) {
