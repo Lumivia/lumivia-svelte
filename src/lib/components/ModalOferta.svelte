@@ -39,7 +39,26 @@
     MX: 'MXN', CO: 'COP', CL: 'CLP', CR: 'USD'
   };
 
-  const imgFinal = $derived(deal ? obtenerImagen(deal, 800) : '');
+  // 🔥 EL ESCUDO DE TITANIO PARA EL MODAL
+  const imgOriginal = $derived(deal ? obtenerImagen(deal, 800) : '');
+  const fallbackPremium = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
+  
+  function handleImageError(e: Event) {
+    (e.target as HTMLImageElement).src = fallbackPremium;
+  }
+
+  const urlEsValida = (url: any) => {
+    if (!url) return false;
+    const s = String(url);
+    return s.startsWith('http') && !s.includes('null') && !s.includes('undefined') && !s.includes('REVISION_MANUAL');
+  };
+
+  const imgFinal = $derived(
+    urlEsValida(imgOriginal) ? imgOriginal :
+    urlEsValida(deal?.imagen_fallback) ? deal?.imagen_fallback :
+    fallbackPremium
+  );
+
   const fechasCortas = $derived(deal ? `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}` : '');
   
   const monedaDeal = $derived.by(() => {
@@ -101,12 +120,10 @@
     return `https://vuelos.lumivia.app/?flightSearch=${searchParam}`;
   });
 
-  // 🔥 FIX PARÉNTESIS COLGANTE
   const cuerpoPostLimpiado = $derived.by(() => {
     let original = String(deal?.cuerpo_post || deal?.descripcion || "");
     const splitText = original.split(/👉|👇|✨|Comenta la palabra/i);
     let limpiado = splitText[0].trim(); 
-    // Elimina caracteres huérfanos al final del texto cortado
     return limpiado.replace(/[\(\[\{\-\:\s]+$/, '');
   });
 </script>
@@ -122,7 +139,7 @@
       </button>
 
       <div class="h-48 sm:h-56 w-full overflow-hidden relative flex-shrink-0">
-        <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" />
+        <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" onerror={handleImageError} />
         <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
       </div>
 
@@ -131,8 +148,7 @@
         <div class="mb-4">
           <h2 class="text-2xl font-black text-lumiDark leading-tight mb-3">{deal?.titulo_gancho || ''}</h2>
           <div class="flex flex-wrap items-center gap-3 text-xs font-bold text-gray-500">
-            <div class="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-              <svg class="w-3.5 h-3.5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <div class="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100 uppercase tracking-widest text-[10.5px]">
               {fechasCortas}
             </div>
             <AmenidadesLinea {deal} paisActual={deal?.pais} />
