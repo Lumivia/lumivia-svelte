@@ -32,7 +32,6 @@
   const destinoSeguro = $derived(String(deal?.destino_nombre || deal?.destino || '').toUpperCase());
 
   const esVip = $derived(deal?.tipo_vuelo === 'directo');
-  const esHot = $derived((deal?.calidad_oferta ?? 0) >= 9);
 
   async function handleReportar(e: Event) {
     e.stopPropagation(); 
@@ -93,22 +92,16 @@
   </div>
 
   <div class="p-6 flex flex-col flex-grow bg-white relative">
-    <div class="flex flex-col gap-1.5 mb-3">
-      <div class="flex items-start justify-between gap-2">
-        <div class="flex-1 min-w-0 text-[12px] sm:text-[13px] font-black text-lumiDark uppercase tracking-widest flex items-center">
-          <span class="truncate">{origenSeguro}</span>
-          <span class="shrink-0 mx-1.5 text-[10px] font-bold text-gray-300">➔</span>
-          <span class="truncate text-lumiCyan">{destinoSeguro}</span>
-        </div>
-
-        {#if esHot}
-          <span class="shrink-0 text-red-500 font-extrabold flex items-center gap-1 text-[10px] uppercase tracking-wider bg-red-50 px-2 py-0.5 rounded-full">
-            HOT
-          </span>
-        {/if}
+    
+    <div class="flex items-center justify-between gap-2 mb-3">
+      <div class="flex-1 min-w-0 text-[12px] sm:text-[13px] font-black text-lumiDark uppercase tracking-widest flex items-center">
+        <span class="truncate">{origenSeguro}</span>
+        <span class="shrink-0 mx-2 text-[10px] font-bold text-gray-300">➔</span>
+        <span class="truncate">{destinoSeguro}</span>
       </div>
-      <div class="text-[10.5px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-        <svg class="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+
+      <div class="shrink-0 text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1 text-right">
+        <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
         {fechasCortas}
       </div>
     </div>
