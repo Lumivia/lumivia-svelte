@@ -8,6 +8,7 @@
   import ModalOferta from '$lib/components/ModalOferta.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
+  import { obtenerImagen } from '$lib/utils/imagenes'; // 🔥 IMPORTAMOS LA HERRAMIENTA MAESTRA
 
   let { data } = $props<PageData>();
 
@@ -48,10 +49,7 @@
 
   let mesesDisponibles = $state<string[]>([]);
   
-  // Reactividad para los reportes visuales locales
   let vuelosReportados = $state(new Set<number | string>());
-  
-  const alaProhibida = '1436491865332-7a61a109cc05';
 
   function toggleDropdown() {
     dropdownAbierto = !dropdownAbierto;
@@ -112,30 +110,6 @@
     return formateada.replace('.', '');
   }
 
-  const diccionarioInfalible: Record<string, string[]> = {
-    CUN: ['1500530855456-1e2a1c1a1c1a', '1516483638261-f4dbaf036963'],
-    MEX: ['1526402461234-4f3b5c2b9a1a', '1526481280695-3c687fd543c0'],
-    GDL: ['1526481280695-3c687fd543c0', '1526402461234-4f3b5c2b9a1a']
-  };
-
-  function obtenerImagenDestino(destino: string | null | undefined, url_imagen?: string | null) {
-    let imgFinal = url_imagen || '';
-    const destinoLimpio = (destino || '').trim().toUpperCase();
-
-    if (!imgFinal || imgFinal.trim() === '' || imgFinal.includes(alaProhibida) || imgFinal === 'null') {
-      if (diccionarioInfalible[destinoLimpio]) {
-        const listaFotos = diccionarioInfalible[destinoLimpio];
-        const fotoId = listaFotos[Math.floor(Math.random() * listaFotos.length)];
-        imgFinal = `https://images.unsplash.com/photo-${fotoId}?auto=format&fit=crop&w=800&q=80&fm=webp`;
-      } else {
-        imgFinal = 'https://images.unsplash.com/photo-1488085061387-422e15b40b18?auto=format&fit=crop&w=800&q=80&fm=webp';
-      }
-    } else if (!imgFinal.startsWith('http')) {
-      imgFinal = `https://images.unsplash.com/photo-${imgFinal}?auto=format&fit=crop&w=800&q=80&fm=webp`;
-    }
-    return imgFinal;
-  }
-
   function handleSubmitNewsletter(e: Event) {
     e.preventDefault();
     enviarNewsletter();
@@ -190,7 +164,6 @@
     }
   }
 
-  // 🔥 FIX BÚNKER DE SEGURIDAD: Usamos el RPC maestro para delegar el chequeo de IP a Supabase
   async function reportarCambioPrecio(id: number | string, e?: Event) {
     if (e) e.stopPropagation();
     if (vuelosReportados.has(id)) return;
@@ -383,8 +356,9 @@
           Aún no hay ofertas activas en la bóveda de {paisActual}.
         </div>
       {:else}
-        {#each data.deals as deal}
-          {@const imgFinal = obtenerImagenDestino(deal.destino, deal.url_imagen)}
+        {#each data.deals as deal (deal.id)}
+          {@const imgOriginal = obtenerImagen(deal)}
+          {@const imgFinal = (imgOriginal && String(imgOriginal).startsWith('http')) ? imgOriginal : (deal.imagen_fallback && String(deal.imagen_fallback).startsWith('http')) ? deal.imagen_fallback : 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80'}
           {@const tiempoTranscurrido = calcularTiempoTranscurrido(deal.created_at)}
           {@const fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`}
           {@const nacionales = destinosNacionales[paisActual] || []}
@@ -392,12 +366,14 @@
           {@const esVip = deal.tipo_vuelo === 'directo'}
           {@const etiquetaHot = deal.calidad_oferta >= 9}
           {@const monedaDeal = (deal.moneda || deal.currency || monedaActual).toUpperCase()}
+          {@const origenSeguro = String(deal.origen_nombre || deal.origen || '').toUpperCase()}
+          {@const destinoSeguro = String(deal.destino_nombre || deal.destino || '').toUpperCase()}
 
           <div 
             role="button" 
             tabindex="0" 
             aria-label="Ver detalles de la oferta {deal.titulo_gancho}"
-            class="card-minimal flex flex-col group hover:shadow-xl transition-shadow duration-300 h-full bg-white rounded-2xl overflow-hidden border border-gray-100 cursor-pointer {vuelosReportados.has(deal.id) ? 'opacity-30' : ''}" 
+            class="card-minimal flex flex-col group hover:shadow-xl transition-shadow duration-300 h-full bg-white rounded-2xl overflow-hidden border border-gray-100 cursor-pointer {vuelosReportados.has(deal.id) ? 'opacity-30 grayscale' : ''}" 
             onclick={() => abrirModal(deal)}
             onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
           >
@@ -421,14 +397,17 @@
             </div>
 
             <div class="p-6 flex flex-col flex-grow bg-white relative">
-              <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-2">
-                  <div class="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest">
-                    <span>{deal.origen || 'ORG'}</span> <span class="mx-0.5 font-normal text-gray-300">➔</span> <span>{deal.destino || 'DST'}</span>
+              <div class="flex flex-col gap-1 mb-3">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex-1 min-w-0 text-[10px] sm:text-[11px] font-extrabold text-gray-400 uppercase tracking-widest flex items-center">
+                    <span class="truncate">{origenSeguro}</span>
+                    <span class="shrink-0 mx-1 font-normal text-gray-300">➔</span>
+                    <span class="truncate">{destinoSeguro}</span>
                   </div>
+
                   {#if etiquetaHot}
-                    <span class="text-red-500 font-extrabold flex items-center gap-1 text-[10px] uppercase tracking-wider">
-                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/></svg> HOT
+                    <span class="shrink-0 text-red-500 font-extrabold flex items-center gap-1 text-[10px] uppercase tracking-wider bg-red-50 px-1.5 py-0.5 rounded">
+                      HOT
                     </span>
                   {/if}
                 </div>
@@ -479,10 +458,14 @@
     {#if data.totalPages > 1}
       <div class="flex justify-center items-center gap-3 mt-10 mb-20">
         <button type="button" onclick={() => irAPagina(data.page - 1)} disabled={data.page <= 1} class="px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-sm">← Anterior</button>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
           {#each Array(data.totalPages) as _, i}
             {@const n = i + 1}
-            <button type="button" onclick={() => irAPagina(n)} class="w-9 h-9 flex items-center justify-center rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-lumiCyan text-white shadow' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">{n}</button>
+            {#if Math.abs(data.page - n) <= 2 || n === 1 || n === data.totalPages}
+              <button type="button" onclick={() => irAPagina(n)} class="w-9 h-9 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-lumiCyan text-white shadow' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">{n}</button>
+            {:else if Math.abs(data.page - n) === 3}
+              <span class="text-gray-400 font-bold px-1">...</span>
+            {/if}
           {/each}
         </div>
         <button type="button" onclick={() => irAPagina(data.page + 1)} disabled={data.page >= data.totalPages} class="px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-sm">Siguiente →</button>
