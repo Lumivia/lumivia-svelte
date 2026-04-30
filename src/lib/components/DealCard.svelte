@@ -9,7 +9,6 @@
 
   let reportado = $state(false);
 
-  // REACTIVIDAD ABSOLUTA
   const imgOriginal = $derived(obtenerImagen(deal));
   const imgFinal = $derived(
     (imgOriginal && String(imgOriginal).startsWith('http')) ? imgOriginal :
@@ -57,7 +56,7 @@
   tabindex="0"
   onclick={onclick} 
   onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onclick(e); } }}
-  class="card-minimal flex-none w-[85vw] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-center flex flex-col group hover:shadow-xl transition-all duration-300 bg-white rounded-2xl overflow-hidden text-left cursor-pointer {reportado ? 'opacity-40 grayscale' : ''}"
+  class="card-minimal flex-none w-[85vw] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-center flex flex-col group hover:shadow-2xl transition-all duration-300 bg-white rounded-2xl overflow-hidden text-left cursor-pointer border border-gray-100 {reportado ? 'opacity-40 grayscale' : ''}"
   aria-label={`Ver oferta de ${origenSeguro} a ${destinoSeguro}`}
 >
 
@@ -94,26 +93,27 @@
   </div>
 
   <div class="p-6 flex flex-col flex-grow bg-white relative">
-    <div class="flex flex-col gap-1 mb-3">
+    <div class="flex flex-col gap-1.5 mb-3">
       <div class="flex items-start justify-between gap-2">
-        <div class="flex-1 min-w-0 text-[10px] sm:text-[11px] font-extrabold text-gray-400 uppercase tracking-widest flex items-center">
+        <div class="flex-1 min-w-0 text-[12px] sm:text-[13px] font-black text-lumiDark uppercase tracking-widest flex items-center">
           <span class="truncate">{origenSeguro}</span>
-          <span class="shrink-0 mx-1 font-normal text-gray-300">➔</span>
-          <span class="truncate">{destinoSeguro}</span>
+          <span class="shrink-0 mx-1.5 text-[10px] font-bold text-gray-300">➔</span>
+          <span class="truncate text-lumiCyan">{destinoSeguro}</span>
         </div>
 
         {#if esHot}
-          <span class="shrink-0 text-red-500 font-extrabold flex items-center gap-1 text-[10px] uppercase tracking-wider bg-red-50 px-1.5 py-0.5 rounded">
+          <span class="shrink-0 text-red-500 font-extrabold flex items-center gap-1 text-[10px] uppercase tracking-wider bg-red-50 px-2 py-0.5 rounded-full">
             HOT
           </span>
         {/if}
       </div>
-      <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+      <div class="text-[10.5px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+        <svg class="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
         {fechasCortas}
       </div>
     </div>
 
-    <h3 class="text-xl font-bold mb-4 text-lumiDark group-hover:text-lumiCyan transition-colors leading-snug line-clamp-2">
+    <h3 class="text-xl font-bold mb-4 text-gray-800 group-hover:text-lumiDark transition-colors leading-snug line-clamp-2">
       {deal?.titulo_gancho || 'Vuelo Especial'}
     </h3>
 
@@ -126,19 +126,22 @@
           ${precio} <span class="text-xs font-semibold text-gray-400">{monedaDeal}</span>
         </p>
       </div>
-      <div class="flex items-center gap-3">
-        <button type="button" onclick={handleCopiar} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan transition-colors p-2 hover:bg-gray-50 rounded-full cursor-pointer">
+      
+      <div class="flex items-center gap-1.5">
+        <button type="button" onclick={handleCopiar} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan hover:bg-lumiCyan/10 transition-colors p-2.5 rounded-full cursor-pointer">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
           </svg>
         </button>
-        <span class="text-lumiCyan hover:text-lumiDark font-extrabold text-sm transition-colors cursor-pointer flex items-center gap-1">
+        
+        <div class="bg-lumiDark text-white group-hover:bg-lumiCyan group-hover:text-lumiDark px-5 py-2.5 rounded-full font-black text-[11px] sm:text-xs transition-all shadow-md group-hover:shadow-lg active:scale-95 cursor-pointer flex items-center gap-1.5 uppercase tracking-wider">
           Ver Vuelo
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
           </svg>
-        </span>
+        </div>
       </div>
+
     </div>
   </div>
 </div>
