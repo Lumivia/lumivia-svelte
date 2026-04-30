@@ -9,15 +9,14 @@
 
   let reportado = $state(false);
 
-  // 🔥 CIRUGÍA 1: El Fallback Maestro de la Imagen
-  // Primero intentamos la función original, si devuelve vacío o error, usamos el fallback del servidor.
-  const imgOriginal = obtenerImagen(deal);
+  // 🔥 1. REACTIVIDAD ABSOLUTA: Esto evita el "fantasma" del país anterior
+  const imgOriginal = $derived(obtenerImagen(deal));
+  
+  // 🔥 2. BLINDAJE DE URL: Solo acepta links reales, si no, usa el genérico
   const imgFinal = $derived(
-    imgOriginal && imgOriginal !== '' 
-      ? imgOriginal 
-      : deal?.imagen_fallback 
-        ? deal.imagen_fallback 
-        : 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80' // Placeholder de avión si todo falla
+    (imgOriginal && String(imgOriginal).startsWith('http')) ? imgOriginal :
+    (deal?.imagen_fallback && String(deal?.imagen_fallback).startsWith('http')) ? deal.imagen_fallback :
+    'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80'
   );
 
   const fechasCortas = $derived(
@@ -32,8 +31,6 @@
     String(deal?.moneda || deal?.currency || monedaActual || 'MXN').toUpperCase()
   );
 
-  // 🔥 CIRUGÍA 2: Nombres Humanizados
-  // Usamos el nombre que vino del servidor. Si por algo no llegó, caemos de vuelta al IATA.
   const origenSeguro = $derived(String(deal?.origen_nombre || deal?.origen || '').toUpperCase());
   const destinoSeguro = $derived(String(deal?.destino_nombre || deal?.destino || '').toUpperCase());
 
@@ -66,7 +63,7 @@
   aria-label={`Ver oferta de ${origenSeguro} a ${destinoSeguro}`}
 >
 
-  <div class="relative h-56 overflow-hidden bg-gray-100">
+  <div class="relative h-56 overflow-hidden bg-gray-100 shrink-0">
     <img
       src={imgFinal}
       alt={deal?.titulo_gancho || 'Oferta'}
@@ -99,16 +96,16 @@
   </div>
 
   <div class="p-6 flex flex-col flex-grow bg-white relative">
-    <div class="flex items-center justify-between mb-3">
-      <div class="flex items-center gap-2">
-        <div class="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest">
-          <span>{origenSeguro}</span>
-          <span class="mx-0.5 font-normal text-gray-300">➔</span>
-          <span>{destinoSeguro}</span>
+    <div class="flex flex-col gap-1 mb-3">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex-1 min-w-0 text-[10px] sm:text-[11px] font-extrabold text-gray-400 uppercase tracking-widest flex items-center">
+          <span class="truncate">{origenSeguro}</span>
+          <span class="shrink-0 mx-1 font-normal text-gray-300">➔</span>
+          <span class="truncate">{destinoSeguro}</span>
         </div>
 
         {#if esHot}
-          <span class="text-red-500 font-extrabold flex items-center gap-1 text-[10px] uppercase tracking-wider">
+          <span class="shrink-0 text-red-500 font-extrabold flex items-center gap-1 text-[10px] uppercase tracking-wider bg-red-50 px-1.5 py-0.5 rounded">
             HOT
           </span>
         {/if}
