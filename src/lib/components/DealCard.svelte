@@ -9,25 +9,17 @@
 
   let reportado = $state(false);
 
-  const imgOriginal = $derived(obtenerImagen(deal));
+  // Todo el blindaje ahora vive en `obtenerImagen`
+  const imgFinal = $derived(obtenerImagen(deal));
   const fallbackPremium = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
   
-  // 🔥 Función segura para TypeScript
+  // Salvavidas visual HTML en caso de que la red falle
   function handleImageError(e: Event) {
-    (e.target as HTMLImageElement).src = fallbackPremium;
+    const target = e.target as HTMLImageElement;
+    if (target.src !== fallbackPremium) {
+      target.src = fallbackPremium;
+    }
   }
-
-  const urlEsValida = (url: any) => {
-    if (!url) return false;
-    const s = String(url);
-    return s.startsWith('http') && !s.includes('null') && !s.includes('undefined') && !s.includes('REVISION_MANUAL');
-  };
-
-  const imgFinal = $derived(
-    urlEsValida(imgOriginal) ? imgOriginal :
-    urlEsValida(deal?.imagen_fallback) ? deal?.imagen_fallback :
-    fallbackPremium
-  );
 
   const fechasCortas = $derived(
     `${formatearFechaCorta(deal?.fecha_salida)} - ${formatearFechaCorta(deal?.fecha_regreso)}`
