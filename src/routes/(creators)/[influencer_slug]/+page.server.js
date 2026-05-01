@@ -1,34 +1,34 @@
 import { error } from '@sveltejs/kit';
-// Importamos tu cliente estático que nos mostraste (asumiendo que vive en src/lib/)
 import { supabase } from '$lib/supabaseClient'; 
 
 export async function load({ params }) {
     const { influencer_slug } = params;
 
     try {
-        // 1. Buscamos al creador en la tabla 'creators'
-        const { data: creator, error: creatorError } = await supabase
+        // 1. Buscamos al creador (Modificado a prueba de duplicados)
+        const { data: creatorsArray, error: creatorError } = await supabase
             .from('creators')
             .select('*')
             .eq('slug', influencer_slug)
-            .single();
+            .limit(1); // Si hay 5 'viajexmemorias', solo toma el primero.
 
-        // Si hay error de conexión
         if (creatorError) {
             console.error("Error DB Creators:", creatorError);
-            throw error(500, `Error cargando perfil: ${creatorError.message}`);
+            throw error(500, `Error de DB: ${creatorError.message}`);
         }
 
-        // Si el slug no existe (ej. alguien tecleó mal el nombre)
+        // Extraemos el primer resultado del array
+        const creator = creatorsArray?.[0];
+
         if (!creator) {
             throw error(404, 'Radar de viajero no encontrado');
         }
 
-        // 2. Traemos las ofertas de TU tabla real 'publicaciones_lumivia'
+        // 2. Traemos las ofertas
         const { data: publicaciones, error: vuelosError } = await supabase
             .from('publicaciones_lumivia') 
             .select('origen, destino, precio, link_compra')
-            .eq('activo', true) // Filtramos solo las que están activas
+            .eq('activo', true) 
             .order('created_at', { ascending: false })
             .limit(10); 
 
@@ -37,7 +37,7 @@ export async function load({ params }) {
             throw error(500, `Error cargando ofertas: ${vuelosError.message}`);
         }
 
-        // 3. Mapeamos (Traducimos) las columnas de tu DB al formato que espera nuestro Svelte
+        // 3. Mapeamos
         const flights = publicaciones ? publicaciones.map(pub => ({
             origin: pub.origen,
             destination: pub.destino,
@@ -45,14 +45,14 @@ export async function load({ params }) {
             url: pub.link_compra
         })) : [];
 
-        // 4. Mandamos todo limpio al Frontend
+        // 4. Mandamos al Frontend
         return {
             creator,
             flights
         };
 
     } catch (err) {
-        console.error("Error fatal en el servidor (Load):", err);
+        console.error("Error fatal en el servidor:", err);
         throw error(err.status || 500, err.body?.message || err.message || 'Error interno del servidor');
     }
 }
