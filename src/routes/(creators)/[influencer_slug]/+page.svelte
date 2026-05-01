@@ -88,4 +88,66 @@
             <div class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden group hover:scale-[1.02] transition-all duration-300">
                 <div class="p-7">
                     <div class="flex justify-between items-start mb-4">
-                        <span class="px-3 py-1 bg-red-50 text-red-600 text
+                        <span class="px-3 py-1 bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-tighter rounded-lg border border-red-100">
+                            🔥 ERROR DE PRECIO
+                        </span>
+                        <div class="flex gap-1 text-orange-400">
+                            <span class="text-xs font-bold text-gray-900">10/10 Calidad</span>
+                        </div>
+                    </div>
+
+                    <h2 class="font-black text-4xl text-gray-900 leading-tight tracking-tighter">
+                        {flight.destination}
+                    </h2>
+                    <p class="text-gray-400 font-bold text-sm uppercase tracking-wide">
+                        Saliendo de {flight.origin}
+                    </p>
+                    
+                    <div class="mt-8 flex items-center justify-between">
+                        <div>
+                            <p class="text-[9px] text-gray-400 font-black uppercase tracking-widest mb-1">Precio Final Todo Incluido</p>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-3xl font-black text-gray-900">${formatPrice(flight.price)}</span>
+                                <span class="text-sm font-black text-gray-500">MXN</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-4.5l8 2.5z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <a 
+                    href={buildAffiliateLink(flight.url)} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    class="block text-center py-5 text-white font-black text-lg tracking-widest transition-all hover:brightness-110"
+                    style="background-color: {creator.theme_color};"
+                >
+                    RESERVAR AHORA
+                </a>
+            </div>
+        {:else}
+            <div class="text-center py-20 bg-white rounded-3xl shadow-inner border border-dashed border-gray-200">
+                <p class="text-gray-400 font-bold uppercase text-xs tracking-widest">Esperando el próximo error de tarifa...</p>
+            </div>
+        {/each}
+
+    </main>
+
+    <footer class="mt-12 text-center px-6">
+        <p class="text-gray-400 text-[10px] font-bold tracking-widest uppercase mb-4">
+            Los precios pueden cambiar en cualquier momento.<br>Caza la oferta antes de que desaparezca.
+        </p>
+        <div class="h-1 w-12 bg-gray-200 mx-auto rounded-full"></div>
+    </footer>
+</div>
+
+<style>
+    :global(body) {
+        -webkit-tap-highlight-color: transparent;
+    }
+</style>
