@@ -13,9 +13,13 @@ const mercadosPermitidos = {
 
 type CodigoPais = keyof typeof mercadosPermitidos;
 
-export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform }) => {
+// 🔥 SE AÑADIÓ 'depends' PARA FORZAR LA REACTIVIDAD EN SVELTEKIT
+export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform, depends }) => {
   const paisParam = params.pais ?? '';
   const codigoPais = paisParam.toLowerCase();
+
+  // Le decimos explícitamente a SvelteKit: "Si el país cambia, VUELVE a ejecutar esto"
+  depends(`app:paises:${codigoPais}`);
 
   // 1) Validación de Mercado
   const mercado = mercadosPermitidos[codigoPais as CodigoPais];
@@ -23,7 +27,7 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
 
   const paisUpper = codigoPais.toUpperCase();
   
-  // 🔥 CLAVE KV: Usamos una llave única por país (ej: cache_mx, cache_co)
+  // 🔥 CLAVE KV: Usamos una llave única por país
   const cacheKey = `lumivia_cache_${codigoPais}`;
 
   // 2) INTENTO DE LECTURA DESDE CLOUDFLARE EDGE
@@ -38,7 +42,7 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     console.error("Error leyendo KV Cache:", e);
   }
 
-  // 3) INICIALIZACIÓN DE SUPABASE (Solo si el caché falló)
+  // 3) INICIALIZACIÓN DE SUPABASE
   const supabaseUrl = env.PUBLIC_SUPABASE_URL;
   const supabaseKey = env.PUBLIC_SUPABASE_ANON_KEY;
 
@@ -64,45 +68,42 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
 
   let ofertasEnriquecidas = ofertasCrudas || [];
 
-  // 🔥 4.5) EL BISTURÍ: ENRIQUECIMIENTO DE DATOS (JOIN EN MEMORIA)
+  // 🔥 4.5) EL BISTURÍ: ENRIQUECIMIENTO DE DATOS
   if (ofertasEnriquecidas.length > 0) {
-    // 1. Sacamos todos los códigos IATA únicos de esta tanda (orígenes y destinos)
     const codigosIata = [...new Set([
       ...ofertasEnriquecidas.map(o => o.origen),
       ...ofertasEnriquecidas.map(o => o.destino)
     ])];
 
-    // 2. Traemos el diccionario solo para esos códigos (Rapidísimo)
-    const { data: diccionario } = await supabase
+    // 🚨 ARREGLO CRÍTICO: Cambiamos 'nombre_hotel' a 'nombre_ciudad'
+    const { data: diccionario, error: errDiccionario } = await supabase
       .from('diccionario_destinos')
-      .select('iata_code, nombre_hotel, imagen_url_verificada')
+      .select('iata_code, nombre_ciudad, imagen_url_verificada')
       .in('iata_code', codigosIata);
+      
+    if (errDiccionario) console.error('Error al consultar diccionario:', errDiccionario);
 
-    // 3. Creamos un mapa de búsqueda instantánea
     const mapaDestinos = (diccionario || []).reduce((acc, curr) => {
       acc[curr.iata_code] = curr;
       return acc;
     }, {} as Record<string, any>);
 
-    // 4. Inyectamos los nombres e imágenes a cada oferta antes de curarla
     ofertasEnriquecidas = ofertasEnriquecidas.map(oferta => ({
       ...oferta,
-      // Si encuentra el nombre en el diccionario lo pone, si no, deja el IATA como fallback de emergencia
-      origen_nombre: mapaDestinos[oferta.origen]?.nombre_hotel || oferta.origen,
-      destino_nombre: mapaDestinos[oferta.destino]?.nombre_hotel || oferta.destino,
-      // Guardamos la imagen verificada del destino
+      origen_nombre: mapaDestinos[oferta.origen]?.nombre_ciudad || oferta.origen,
+      destino_nombre: mapaDestinos[oferta.destino]?.nombre_ciudad || oferta.destino,
       imagen_fallback: mapaDestinos[oferta.destino]?.imagen_url_verificada || null
     }));
   }
 
-  // 5) EL CEREBRO: Curación y procesamiento (Ahora usa las enriquecidas)
+  // 5) EL CEREBRO: Curación y procesamiento
   const { hookDeals, radarDeals } = curarOfertas(ofertasEnriquecidas, paisUpper);
 
   const schemaAEO = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: `Vuelos baratos desde ${mercado.nombre} - Lumivia`,
-    description: `Ofertas destacadas y destinos populares desde ${mercado.nombre}.`,
+    description: `Ofertas destacadas y destinos populares desde ${mercado.nombre}. Planifica tu próxima gran historia con nuestra bóveda secreta.`,
     url: `https://www.lumivia.app/paises/${codigoPais}`
   });
 
