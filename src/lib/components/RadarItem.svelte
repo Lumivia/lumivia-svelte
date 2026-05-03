@@ -60,7 +60,7 @@
             {#if origenSeguro}
               <span>{origenSeguro}</span><span class="mx-1.5 text-[9px] font-bold text-gray-300 align-middle">➔</span>
             {/if}
-            <span class="text-lumiCyan">{destinoSeguro}</span>
+            <span>{destinoSeguro}</span>
           </div>
           <span class="text-gray-200 font-normal hidden sm:inline">|</span>
           <div class="text-[9.5px] font-extrabold text-gray-400 uppercase tracking-widest mt-[1px]">{fechasCortas}</div>
@@ -79,7 +79,7 @@
         <button type="button" onclick={handleCopiar} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan hover:bg-lumiCyan/10 p-2.5 rounded-full transition-colors cursor-pointer shrink-0">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
         </button>
-        <span class="text-lumiCyan group-hover/item:text-lumiDark font-extrabold text-[11px] sm:text-xs flex items-center gap-1 transition-colors uppercase tracking-wider shrink-0 cursor-pointer">
+        <span class="text-lumiDark group-hover/item:text-lumiCyan font-extrabold text-[11px] sm:text-xs flex items-center gap-1 transition-colors uppercase tracking-wider shrink-0 cursor-pointer">
           Ver Vuelo <svg class="w-4 h-4 transition-transform group-hover/item:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
         </span>
       </div>
