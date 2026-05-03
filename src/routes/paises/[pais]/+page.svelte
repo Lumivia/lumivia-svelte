@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import Header from '$lib/components/Header.svelte';
   import ModalOferta from '$lib/components/ModalOferta.svelte';
   import DealCard from '$lib/components/DealCard.svelte';
@@ -59,27 +58,6 @@
   let radarExito = $state(false);
   let radarCargando = $state(false);
   let meses = $state<string[]>([]);
-
-  // 🔥 UX MEJORADA: Carrusel inteligente que no molesta al usuario
-  function iniciarCarrusel() {
-    if (!scrollContainer) return;
-
-    const intervalo = setInterval(() => {
-      if (!scrollContainer || scrollContainer.children.length === 0 || pausarCarrusel) return;
-      
-      const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
-
-      if (scrollContainer.scrollLeft >= maxScroll - 10) {
-        scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        const primerHijo = scrollContainer.children[0] as HTMLElement;
-        const avance = (primerHijo?.clientWidth || 300) + 24;
-        scrollContainer.scrollBy({ left: avance, behavior: 'smooth' });
-      }
-    }, 5000);
-
-    return () => clearInterval(intervalo);
-  }
 
   async function enviarNewsletter() {
     newsletterCargando = true;
@@ -154,10 +132,27 @@
     }, 200);
   }
 
-  onMount(() => {
+  // 🔥 INYECCIÓN DE ARQUITECTURA SVELTE 5: $effect reemplaza a onMount
+  $effect(() => {
     poblarMeses();
-    const stop = iniciarCarrusel();
-    return stop; 
+
+    if (!scrollContainer) return;
+
+    const intervalo = setInterval(() => {
+      if (!scrollContainer || scrollContainer.children.length === 0 || pausarCarrusel) return;
+      
+      const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+
+      if (scrollContainer.scrollLeft >= maxScroll - 10) {
+        scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        const primerHijo = scrollContainer.children[0] as HTMLElement;
+        const avance = (primerHijo?.clientWidth || 300) + 24;
+        scrollContainer.scrollBy({ left: avance, behavior: 'smooth' });
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalo);
   });
 </script>
 
@@ -167,7 +162,7 @@
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
   <meta name="robots" content="index, follow" />
-  </svelte:head>
+</svelte:head>
 
 <div class="bg-gray-50 text-lumiDark min-h-screen flex flex-col">
   <Header paisUpper={data.paisUpper} mercado={data.mercado} />
@@ -225,29 +220,31 @@
     </div>
 
     <div class="relative w-full mb-16 group">
-      <div
-        bind:this={scrollContainer}
-        onmouseenter={() => pausarCarrusel = true}
-        onmouseleave={() => pausarCarrusel = false}
-        ontouchstart={() => pausarCarrusel = true}
-        ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)}
-        class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth"
-      >
-        {#if ofertasHook.length === 0}
-          <div class="w-full text-center text-gray-400 py-10 font-medium animate-pulse">
-            Conectando con la base de datos...
-          </div>
-        {:else}
-          {#each ofertasHook as deal (deal.id)}
-            <DealCard
-              {deal}
-              monedaActual={data.mercado?.moneda}
-              paisActual={data.paisUpper}
-              onclick={() => abrirModal(deal)}
-            />
-          {/each}
-        {/if}
-      </div>
+      {#key data.paisUpper}
+        <div
+          bind:this={scrollContainer}
+          onmouseenter={() => pausarCarrusel = true}
+          onmouseleave={() => pausarCarrusel = false}
+          ontouchstart={() => pausarCarrusel = true}
+          ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)}
+          class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth"
+        >
+          {#if ofertasHook.length === 0}
+            <div class="w-full text-center text-gray-400 py-10 font-medium animate-pulse">
+              Conectando con la base de datos...
+            </div>
+          {:else}
+            {#each ofertasHook as deal (deal.id)}
+              <DealCard
+                {deal}
+                monedaActual={data.mercado?.moneda}
+                paisActual={data.paisUpper}
+                onclick={() => abrirModal(deal)}
+              />
+            {/each}
+          {/if}
+        </div>
+      {/key}
     </div>
 
     <div class="mb-6 mt-4" id="titulo-radar">
