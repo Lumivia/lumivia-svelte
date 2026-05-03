@@ -77,7 +77,7 @@
     const diferenciaMinutos = Math.floor(diferenciaSegundos / 60);
     if (diferenciaMinutos < 60) return `Hace ${diferenciaMinutos} min`;
     const diferenciaHoras = Math.floor(diferenciaMinutos / 60);
-    if (diferenciaHoras < 24) return `Hace ${diferenciaHoras} horas`;
+    if (diferenciaHoras < 24) return `Hace ${diferenciaHoras} hours`;
     const diferenciaDias = Math.floor(diferenciaHoras / 24);
     return `Hace ${diferenciaDias} días`;
   }
@@ -161,7 +161,7 @@
   {/if}
 </svelte:head>
 
-<div class="bg-gray-50 text-lumiDark min-h-screen flex flex-col relative overflow-x-hidden">
+<div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col relative overflow-x-hidden">
   <header class="bg-white/70 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-200/50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-4">
@@ -205,12 +205,6 @@
   </header>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full relative z-10">
-    
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[600px] pointer-events-none z-0 overflow-hidden" aria-hidden="true">
-      <div class="absolute top-[-5%] left-[10%] w-[300px] md:w-[450px] h-[300px] md:h-[450px] bg-lumiCyan/40 blur-[120px] rounded-full"></div>
-      <div class="absolute top-[10%] right-[10%] w-[250px] md:w-[400px] h-[250px] md:h-[400px] bg-blue-500/30 blur-[120px] rounded-full"></div>
-    </div>
-
     <div class="mb-12 text-center relative z-10">
       <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-6">Catálogo de Oportunidades</h1>
       <div class="max-w-xl mx-auto mb-6 relative z-20 group">
