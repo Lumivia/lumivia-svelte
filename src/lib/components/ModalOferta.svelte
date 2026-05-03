@@ -37,6 +37,10 @@
     img.src = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
   }
 
+  // 🔥 NUEVO: Extraemos los nombres legibles o usamos IATA como respaldo
+  const origenNombre = $derived(String(deal?.origen_nombre || deal?.origen || '').toUpperCase());
+  const destinoNombre = $derived(String(deal?.destino_nombre || deal?.destino || '').toUpperCase());
+
   const fechasCortas = $derived(deal ? `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}` : '');
   
   const monedaDeal = $derived.by(() => {
@@ -50,9 +54,9 @@
   });
 
   const ciudadExtraida = $derived.by(() => {
-    if (!deal?.titulo_gancho) return deal?.destino || '';
+    if (!deal?.titulo_gancho) return deal?.destino_nombre || deal?.destino || '';
     const match = String(deal.titulo_gancho).match(/:\s*(.*?)\s*desde/i);
-    return match && match[1] ? match[1].trim() : (deal.destino || '');
+    return match && match[1] ? match[1].trim() : (deal?.destino_nombre || deal?.destino || '');
   });
   
   const esNacional = $derived.by(() => {
@@ -80,6 +84,7 @@
     }
   });
 
+  // El buscador de vuelos SÍ necesita los códigos IATA crudos (origen y destino) para funcionar
   const linkVuelo = $derived.by(() => {
     if (!deal) return '#';
     const origen = String(deal.origen || '').toUpperCase();
@@ -111,7 +116,15 @@
 
       <div class="px-6 pb-6 -mt-4 relative z-10 flex-grow flex flex-col">
         <div class="mb-4">
+          
+          <div class="inline-flex items-center gap-2 mb-3 px-3 py-1.5 bg-lumiDark text-white rounded-xl shadow-md border border-gray-800">
+            <span class="text-[11px] sm:text-[12px] font-black uppercase tracking-widest">{origenNombre}</span>
+            <svg class="w-3.5 h-3.5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            <span class="text-[11px] sm:text-[12px] font-black uppercase tracking-widest">{destinoNombre}</span>
+          </div>
+
           <h2 class="text-2xl font-black text-lumiDark leading-tight mb-3">{deal?.titulo_gancho || ''}</h2>
+          
           <div class="flex flex-wrap items-center gap-3 text-xs font-bold text-gray-500">
             <div class="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100 uppercase tracking-widest text-[10.5px]">
               {fechasCortas}
