@@ -96,10 +96,10 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
             ...ofertasCrudas.map(o => o.destino)
         ])];
 
-        // Consultamos el diccionario
+        // 🚨 ARREGLO CRÍTICO: Cambiamos 'nombre_hotel' a 'nombre_ciudad'
         const { data: diccionario } = await supabase
             .from('diccionario_destinos')
-            .select('iata_code, nombre_hotel, imagen_url_verificada')
+            .select('iata_code, nombre_ciudad, imagen_url_verificada')
             .in('iata_code', codigosIata);
 
         // Creamos mapa ultrarrápido
@@ -111,8 +111,8 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
         // Inyectamos nombres e imágenes
         ofertasCrudas = ofertasCrudas.map(oferta => ({
             ...oferta,
-            origen_nombre: mapaDestinos[oferta.origen]?.nombre_hotel || oferta.origen,
-            destino_nombre: mapaDestinos[oferta.destino]?.nombre_hotel || oferta.destino,
+            origen_nombre: mapaDestinos[oferta.origen]?.nombre_ciudad || oferta.origen,
+            destino_nombre: mapaDestinos[oferta.destino]?.nombre_ciudad || oferta.destino,
             imagen_fallback: mapaDestinos[oferta.destino]?.imagen_url_verificada || null
         }));
     }
