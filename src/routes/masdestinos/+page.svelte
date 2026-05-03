@@ -20,6 +20,7 @@
     CR: { moneda: 'USD', bandera: 'https://flagcdn.com/w20/cr.png' }
   };
 
+  // 🔥 ESTADO REACTIVO MAESTRO
   const paisActual = $derived(data.pais || 'MX');
   const monedaActual = $derived(configMercado[paisActual]?.moneda ?? 'MXN');
   const banderaActual = $derived(configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png');
@@ -51,19 +52,20 @@
   }
 
   function toggleDropdown() { dropdownAbierto = !dropdownAbierto; }
+  
   function handleClickOutside(event: MouseEvent) {
     const target = event.target as HTMLElement;
     if (!target.closest('#selector-pais-catalogo')) dropdownAbierto = false;
   }
-  function volverAlPais() {
-    const paisGuardado = typeof window !== 'undefined' ? localStorage.getItem('lumivia_pais') : null;
-    goto('/paises/' + (paisGuardado?.toLowerCase() || 'mx'));
-  }
+
+  // 🔥 ELIMINAMOS "volverAlPais()" POR COMPLETO. AHORA USAMOS HTML NATIVO.
+
   function seleccionarPais(codigoPais: string) {
     dropdownAbierto = false;
-    if (typeof window !== 'undefined') localStorage.setItem('lumivia_pais', codigoPais);
+    localStorage.setItem('lumivia_pais', codigoPais);
     goto(`/masdestinos?pais=${codigoPais.toUpperCase()}&page=1`);
   }
+
   function irAPagina(n: number) {
     if (n < 1 || n > data.totalPages) return;
     goto(`/masdestinos?pais=${paisActual.toUpperCase()}&page=${n}`);
@@ -134,8 +136,15 @@
   function abrirModal(deal: any) { dealSeleccionado = deal; modalAbierto = true; }
   function cerrarModal() { modalAbierto = false; setTimeout(() => { dealSeleccionado = null; }, 200); }
 
+  // Sincronizador en la sombra: Mantiene el LocalStorage actualizado por si acaso
+  $effect(() => {
+    if (paisActual) {
+      localStorage.setItem('lumivia_pais', paisActual);
+    }
+  });
+
   onMount(() => {
-    if (typeof window !== 'undefined') window.addEventListener('click', handleClickOutside);
+    window.addEventListener('click', handleClickOutside);
     const fechaActual = new Date();
     const meses: string[] = [];
     for (let i = 0; i < 12; i++) {
@@ -144,20 +153,7 @@
       meses.push(mesTexto.charAt(0).toUpperCase() + mesTexto.slice(1));
     }
     mesesDisponibles = meses;
-
-    if (typeof window !== 'undefined') {
-      let paisLocal = localStorage.getItem('lumivia_pais');
-      if (!paisLocal) {
-        fetch('https://1.1.1.1/cdn-cgi/trace').then((res) => res.text()).then((text) => {
-            const locLine = text.split('\n').find((line) => line.startsWith('loc='));
-            const countryCode = locLine ? locLine.split('=')[1] : 'MX';
-            const paisesAprobados = ['MX', 'CO', 'CL', 'CR'];
-            paisLocal = paisesAprobados.includes(countryCode) ? countryCode : 'MX';
-            localStorage.setItem('lumivia_pais', paisLocal!);
-          }).catch(() => { localStorage.setItem('lumivia_pais', 'MX'); });
-      }
-    }
-    return () => { if (typeof window !== 'undefined') window.removeEventListener('click', handleClickOutside); };
+    return () => { window.removeEventListener('click', handleClickOutside); };
   });
 </script>
 
@@ -173,9 +169,11 @@
   <header class="bg-white/70 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-200/50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <button onclick={volverAlPais} class="text-gray-400 hover:text-lumiDark transition-colors cursor-pointer" title="Volver al inicio" type="button">
+        
+        <a href={`/paises/${paisActual.toLowerCase()}`} class="text-gray-400 hover:text-lumiDark transition-colors cursor-pointer" title="Volver a los destinos de {paisActual}">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-        </button>
+        </a>
+        
         <span class="text-2xl font-extrabold tracking-tighter text-lumiDark">Lumivia <span class="text-lumiCyan font-light">| Catálogo</span></span>
       </div>
 
