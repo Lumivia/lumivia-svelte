@@ -20,7 +20,6 @@
     CR: { moneda: 'USD', bandera: 'https://flagcdn.com/w20/cr.png' }
   };
 
-  // 🔥 ESTADO REACTIVO MAESTRO
   const paisActual = $derived(data.pais || 'MX');
   const monedaActual = $derived(configMercado[paisActual]?.moneda ?? 'MXN');
   const banderaActual = $derived(configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png');
@@ -57,8 +56,6 @@
     const target = event.target as HTMLElement;
     if (!target.closest('#selector-pais-catalogo')) dropdownAbierto = false;
   }
-
-  // 🔥 ELIMINAMOS "volverAlPais()" POR COMPLETO. AHORA USAMOS HTML NATIVO.
 
   function seleccionarPais(codigoPais: string) {
     dropdownAbierto = false;
@@ -136,7 +133,6 @@
   function abrirModal(deal: any) { dealSeleccionado = deal; modalAbierto = true; }
   function cerrarModal() { modalAbierto = false; setTimeout(() => { dealSeleccionado = null; }, 200); }
 
-  // Sincronizador en la sombra: Mantiene el LocalStorage actualizado por si acaso
   $effect(() => {
     if (paisActual) {
       localStorage.setItem('lumivia_pais', paisActual);
@@ -165,7 +161,7 @@
   {/if}
 </svelte:head>
 
-<div class="bg-gray-50 text-lumiDark min-h-screen flex flex-col relative">
+<div class="bg-gray-50 text-lumiDark min-h-screen flex flex-col relative overflow-x-hidden">
   <header class="bg-white/70 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-200/50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-4">
@@ -209,10 +205,17 @@
   </header>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full relative z-10">
+    
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[500px] pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+      <div class="absolute top-[-10%] left-[15%] w-[300px] md:w-[400px] h-[300px] md:h-[400px] bg-lumiCyan/20 blur-[100px] rounded-full mix-blend-multiply"></div>
+      <div class="absolute top-[5%] right-[15%] w-[250px] md:w-[350px] h-[250px] md:h-[350px] bg-blue-500/10 blur-[100px] rounded-full mix-blend-multiply"></div>
+    </div>
+
     <div class="mb-12 text-center relative z-10">
       <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-6">Catálogo de Oportunidades</h1>
       <div class="max-w-xl mx-auto mb-6 relative z-20 group">
-        <div class="bg-white/80 backdrop-blur-xl p-2 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_40px_rgb(0,210,255,0.15)] ring-1 ring-black/5">
+        
+        <div class="bg-white/80 backdrop-blur-xl p-2 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-gray-200/60 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(0,210,255,0.12)]">
           <div class="pl-4 text-gray-400 hidden sm:block"><svg class="w-5 h-5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div>
           <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
             <input type="email" placeholder="Ingresa tu correo para recibir nuestra selección..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" bind:value={nlEmail} />
@@ -307,7 +310,7 @@
     </div>
 
     {#if data.totalPages > 1}
-      <div class="flex justify-center items-center gap-3 mt-10 mb-20">
+      <div class="flex justify-center items-center gap-3 mt-10 mb-20 relative z-10">
         <button type="button" onclick={() => irAPagina(data.page - 1)} disabled={data.page <= 1} class="px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-sm">← Anterior</button>
         <div class="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
           {#each Array(data.totalPages) as _, i}
@@ -323,7 +326,7 @@
       </div>
     {/if}
 
-    <section class="max-w-3xl mx-auto mb-24">
+    <section class="max-w-3xl mx-auto mb-24 relative z-10">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
         <h2 class="text-2xl font-black text-lumiDark mb-4 text-center">Radar Personal</h2>
         <p class="text-gray-500 text-center mb-8 text-sm leading-relaxed">Cuéntanos qué vuelo buscas y te avisamos cuando aparezca una ganga real.</p>
