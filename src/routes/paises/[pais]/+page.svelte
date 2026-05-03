@@ -43,7 +43,6 @@
   let ofertaSeleccionada = $state<any | null>(null);
   let modalAbierto = $state(false);
 
-  // Ya no necesitamos bind:this, la Action se encarga
   let pausarCarrusel = $state(false);
 
   let emailNewsletter = $state('');
@@ -60,13 +59,15 @@
   let radarCargando = $state(false);
   let meses = $state<string[]>([]);
 
-  // 🔥 ARQUITECTURA BLINDADA: Svelte Action
-  // Se engancha directo al contenedor sin estorbar al router ni a la reactividad
+  // 🔥 ARQUITECTURA SVELTE 5: Action Pura
   function carruselLogica(node: HTMLElement) {
     const intervalo = setInterval(() => {
-      if (node.children.length === 0 || pausarCarrusel) return;
+      // Si el usuario está tocando o no hay hijos, no hacemos nada
+      if (pausarCarrusel || node.children.length === 0) return;
       
       const maxScroll = node.scrollWidth - node.clientWidth;
+      
+      // Reseteo inteligente
       if (node.scrollLeft >= maxScroll - 10) {
         node.scrollTo({ left: 0, behavior: 'smooth' });
       } else {
@@ -78,7 +79,7 @@
 
     return {
       destroy() {
-        clearInterval(intervalo); // Se limpia automáticamente al salir de la página
+        clearInterval(intervalo);
       }
     };
   }
@@ -156,7 +157,6 @@
     }, 200);
   }
 
-  // Devolvemos poblarMeses a su estado natural para evitar errores de renderizado
   onMount(() => {
     poblarMeses();
   });
@@ -226,29 +226,31 @@
     </div>
 
     <div class="relative w-full mb-16 group">
-      <div
-        use:carruselLogica
-        onmouseenter={() => pausarCarrusel = true}
-        onmouseleave={() => pausarCarrusel = false}
-        ontouchstart={() => pausarCarrusel = true}
-        ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)}
-        class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth"
-      >
-        {#if ofertasHook.length === 0}
-          <div class="w-full text-center text-gray-400 py-10 font-medium animate-pulse">
-            Conectando con la base de datos...
-          </div>
-        {:else}
-          {#each ofertasHook as deal (deal.id)}
-            <DealCard
-              {deal}
-              monedaActual={data.mercado?.moneda}
-              paisActual={data.paisUpper}
-              onclick={() => abrirModal(deal)}
-            />
-          {/each}
-        {/if}
-      </div>
+      {#key data.paisUpper}
+        <div
+          use:carruselLogica
+          onmouseenter={() => pausarCarrusel = true}
+          onmouseleave={() => pausarCarrusel = false}
+          ontouchstart={() => pausarCarrusel = true}
+          ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)}
+          class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth"
+        >
+          {#if ofertasHook.length === 0}
+            <div class="w-full text-center text-gray-400 py-10 font-medium animate-pulse">
+              Conectando con la base de datos...
+            </div>
+          {:else}
+            {#each ofertasHook as deal (deal.id)}
+              <DealCard
+                {deal}
+                monedaActual={data.mercado?.moneda}
+                paisActual={data.paisUpper}
+                onclick={() => abrirModal(deal)}
+              />
+            {/each}
+          {/if}
+        </div>
+      {/key}
     </div>
 
     <div class="mb-6 mt-4" id="titulo-radar">
