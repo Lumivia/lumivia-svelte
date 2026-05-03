@@ -40,7 +40,7 @@
     tabindex="0"
     onclick={onclick}
     onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if(onclick) onclick(e); } }}
-    class="w-full p-4 sm:px-6 sm:py-5 hover:bg-gray-50/80 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left cursor-pointer group/item"
+    class="w-full p-4 sm:px-6 sm:py-5 hover:bg-gray-100 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left cursor-pointer group/item"
     aria-label={`Ver oferta de ${origenSeguro} a ${destinoSeguro}`}
   >
     <div class="flex items-center gap-4 flex-1 min-w-0">
