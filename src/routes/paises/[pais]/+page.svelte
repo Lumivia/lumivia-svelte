@@ -59,13 +59,10 @@
   let radarCargando = $state(false);
   let meses = $state<string[]>([]);
 
-  // 🔥 ARQUITECTURA SVELTE 5: Action Pura
   function carruselLogica(node: HTMLElement) {
     const intervalo = setInterval(() => {
       if (pausarCarrusel || node.children.length === 0) return;
-      
       const maxScroll = node.scrollWidth - node.clientWidth;
-      
       if (node.scrollLeft >= maxScroll - 10) {
         node.scrollTo({ left: 0, behavior: 'smooth' });
       } else {
@@ -74,25 +71,15 @@
         node.scrollBy({ left: avance, behavior: 'smooth' });
       }
     }, 5000);
-
-    return {
-      destroy() {
-        clearInterval(intervalo);
-      }
-    };
+    return { destroy() { clearInterval(intervalo); } };
   }
 
   async function enviarNewsletter() {
     newsletterCargando = true;
     newsletterMensaje = '';
     newsletterClase = '';
-
-    const { error } = await supabase
-      .from('suscriptores_radar')
-      .insert([{ email: emailNewsletter.toLowerCase(), pais: data.paisUpper, nombre: 'Viajero' }]);
-
+    const { error } = await supabase.from('suscriptores_radar').insert([{ email: emailNewsletter.toLowerCase(), pais: data.paisUpper, nombre: 'Viajero' }]);
     newsletterCargando = false;
-
     if (!error) {
       newsletterMensaje = '¡Listo! Te avisaremos de las mejores gangas.';
       newsletterClase = 'text-emerald-500';
@@ -109,7 +96,6 @@
   function poblarMeses() {
     const fechaActual = new Date();
     meses = [];
-
     for (let i = 0; i < 12; i++) {
       const fechaFutura = new Date(fechaActual.getFullYear(), fechaActual.getMonth() + i, 1);
       const mesTexto = fechaFutura.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
@@ -120,20 +106,8 @@
   async function enviarRadar() {
     radarCargando = true;
     radarExito = false;
-
-    const { error } = await supabase
-      .from('radares_personales')
-      .insert([{
-        nombre: radarNombre,
-        origen: radarOrigen,
-        destino: radarDestino,
-        mes_esperado: radarMes,
-        contacto: radarContacto,
-        status: 'pendiente_verificacion'
-      }]);
-
+    const { error } = await supabase.from('radares_personales').insert([{ nombre: radarNombre, origen: radarOrigen, destino: radarDestino, mes_esperado: radarMes, contacto: radarContacto, status: 'pendiente_verificacion' }]);
     radarCargando = false;
-
     if (!error) {
       radarExito = true;
       radarNombre = radarOrigen = radarDestino = radarMes = radarContacto = '';
@@ -143,21 +117,10 @@
     }
   }
 
-  function abrirModal(oferta: any) {
-    ofertaSeleccionada = oferta;
-    modalAbierto = true;
-  }
+  function abrirModal(oferta: any) { ofertaSeleccionada = oferta; modalAbierto = true; }
+  function cerrarModal() { modalAbierto = false; setTimeout(() => { ofertaSeleccionada = null; }, 200); }
 
-  function cerrarModal() {
-    modalAbierto = false;
-    setTimeout(() => {
-      ofertaSeleccionada = null;
-    }, 200);
-  }
-
-  onMount(() => {
-    poblarMeses();
-  });
+  onMount(() => { poblarMeses(); });
 </script>
 
 <svelte:head>
@@ -168,15 +131,10 @@
   <meta name="robots" content="index, follow" />
 </svelte:head>
 
-<div class="bg-gray-50 text-lumiDark min-h-screen flex flex-col overflow-x-hidden">
+<div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col overflow-x-hidden">
   <Header paisUpper={data.paisUpper} mercado={data.mercado} />
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full relative">
-
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[600px] pointer-events-none z-0 overflow-hidden" aria-hidden="true">
-      <div class="absolute top-[-5%] left-[10%] w-[300px] md:w-[450px] h-[300px] md:h-[450px] bg-lumiCyan/40 blur-[120px] rounded-full"></div>
-      <div class="absolute top-[10%] right-[10%] w-[250px] md:w-[400px] h-[250px] md:h-[400px] bg-blue-500/30 blur-[120px] rounded-full"></div>
-    </div>
 
     <div class="text-center max-w-3xl mx-auto mb-10 relative z-10" id="hero-section">
       <h1 class="text-4xl md:text-5xl font-black tracking-tighter mb-4 text-lumiDark leading-tight drop-shadow-sm mt-4">
@@ -197,29 +155,13 @@
     <div class="max-w-xl mx-auto mb-16 relative z-20 group" id="newsletter-section">
       <div class="bg-white/80 backdrop-blur-xl p-1.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-gray-200/60 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(0,210,255,0.12)]">
         <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
-          <input
-            id="newsletter-email"
-            type="email"
-            bind:value={emailNewsletter}
-            placeholder="Recibe nuestra selección del día..."
-            aria-label="Correo electrónico para suscribirse"
-            required
-            class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none"
-          />
-
-          <button
-            type="submit"
-            class="bg-lumiDark text-white hover:bg-black px-6 py-2 rounded-full font-bold transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-md"
-            disabled={newsletterCargando}
-          >
+          <input id="newsletter-email" type="email" bind:value={emailNewsletter} placeholder="Recibe nuestra selección del día..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" />
+          <button type="submit" class="bg-lumiDark text-white hover:bg-black px-6 py-2 rounded-full font-bold transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-md" disabled={newsletterCargando}>
             {newsletterCargando ? 'Guardando...' : 'Suscribirme Gratis'}
           </button>
         </form>
-
         {#if newsletterMensaje}
-          <p class="text-center text-sm font-bold mt-3 {newsletterClase}">
-            {newsletterMensaje}
-          </p>
+          <p class="text-center text-sm font-bold mt-3 {newsletterClase}">{newsletterMensaje}</p>
         {/if}
       </div>
     </div>
@@ -230,26 +172,12 @@
 
     <div class="relative w-full mb-16 group z-10">
       {#key data.paisUpper}
-        <div
-          use:carruselLogica
-          onmouseenter={() => pausarCarrusel = true}
-          onmouseleave={() => pausarCarrusel = false}
-          ontouchstart={() => pausarCarrusel = true}
-          ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)}
-          class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth"
-        >
+        <div use:carruselLogica onmouseenter={() => pausarCarrusel = true} onmouseleave={() => pausarCarrusel = false} ontouchstart={() => pausarCarrusel = true} ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)} class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth">
           {#if ofertasHook.length === 0}
-            <div class="w-full text-center text-gray-400 py-10 font-medium animate-pulse">
-              Conectando con la base de datos...
-            </div>
+            <div class="w-full text-center text-gray-400 py-10 font-medium animate-pulse">Conectando con la base de datos...</div>
           {:else}
             {#each ofertasHook as deal (deal.id)}
-              <DealCard
-                {deal}
-                monedaActual={data.mercado?.moneda}
-                paisActual={data.paisUpper}
-                onclick={() => abrirModal(deal)}
-              />
+              <DealCard {deal} monedaActual={data.mercado?.moneda} paisActual={data.paisUpper} onclick={() => abrirModal(deal)} />
             {/each}
           {/if}
         </div>
@@ -266,21 +194,14 @@
           <li class="p-6 text-gray-400 text-center">No hay más destinos por ahora.</li>
         {:else}
           {#each ofertasRadar as deal (deal.id)}
-            <RadarItem
-              {deal}
-              monedaActual={data.mercado?.moneda}
-              onclick={() => abrirModal(deal)}
-            />
+            <RadarItem {deal} monedaActual={data.mercado?.moneda} onclick={() => abrirModal(deal)} />
           {/each}
         {/if}
       </ul>
     </div>
 
     <div class="text-center mb-16 relative z-10" id="btn-radar-completo">
-      <a
-        href="/masdestinos?pais={data.paisUpper || 'MX'}"
-        class="inline-flex items-center justify-center bg-white border border-gray-200 text-lumiDark hover:border-lumiCyan hover:text-lumiCyan px-8 py-3.5 rounded-full font-bold transition-all shadow-[0_4px_14px_0_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,210,255,0.15)] active:scale-95 text-sm group"
-      >
+      <a href="/masdestinos?pais={data.paisUpper || 'MX'}" class="inline-flex items-center justify-center bg-white border border-gray-200 text-lumiDark hover:border-lumiCyan hover:text-lumiCyan px-8 py-3.5 rounded-full font-bold transition-all shadow-[0_4px_14px_0_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,210,255,0.15)] active:scale-95 text-sm group">
         Explorar más destinos
       </a>
     </div>
@@ -288,107 +209,54 @@
     <div class="bg-lumiDark text-white border border-gray-800 rounded-3xl px-8 py-8 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 mb-20 z-10">
       <div class="relative z-10 text-center md:text-left flex-grow">
         <h3 class="text-2xl font-bold mb-2">¿Tienes un viaje específico en mente?</h3>
-        <p class="text-gray-400 text-sm font-light">
-          Explora nuestro buscador global y compara todas las aerolíneas en milisegundos.
-        </p>
+        <p class="text-gray-400 text-sm font-light">Explora nuestro buscador global y compara todas las aerolíneas en milisegundos.</p>
       </div>
-
       <div class="relative z-10 whitespace-nowrap">
-        <a
-          href="https://vuelos.lumivia.app/"
-          target="_blank"
-          class="inline-flex items-center justify-center bg-white text-lumiDark hover:bg-lumiCyan hover:text-white px-8 py-3 rounded-2xl font-extrabold transition-all shadow-[0_0_20px_rgba(0,210,255,0.3)] active:scale-95 text-sm uppercase tracking-wide"
-        >
-          Abrir Buscador
-        </a>
+        <a href="https://vuelos.lumivia.app/" target="_blank" class="inline-flex items-center justify-center bg-white text-lumiDark hover:bg-lumiCyan hover:text-white px-8 py-3 rounded-2xl font-extrabold transition-all shadow-[0_0_20px_rgba(0,210,255,0.3)] active:scale-95 text-sm uppercase tracking-wide">Abrir Buscador</a>
       </div>
     </div>
 
     <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10">
       <div class="relative z-10 md:w-1/2 text-center md:text-left">
         <h3 class="text-3xl font-bold text-white mb-4">¿No ves tu destino soñado?</h3>
-        <p class="text-gray-400 font-light leading-relaxed">
-          Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos el momento perfecto.
-        </p>
+        <p class="text-gray-400 font-light leading-relaxed">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos el momento perfecto.</p>
       </div>
-
       <div class="relative z-10 md:w-1/2 w-full bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
         <form class="space-y-4" onsubmit={handleSubmitRadar}>
           <div>
             <label for="radar-nombre" class="block text-xs font-semibold text-gray-400 mb-1">Tu Nombre</label>
-            <input
-              id="radar-nombre"
-              type="text"
-              bind:value={radarNombre}
-              required
-              class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition"
-            />
+            <input id="radar-nombre" type="text" bind:value={radarNombre} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
           </div>
-
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label for="radar-origen" class="block text-xs font-semibold text-gray-400 mb-1">Origen</label>
-              <input
-                id="radar-origen"
-                type="text"
-                bind:value={radarOrigen}
-                required
-                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition"
-              />
+              <input id="radar-origen" type="text" bind:value={radarOrigen} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
             </div>
-
             <div>
               <label for="radar-destino" class="block text-xs font-semibold text-gray-400 mb-1">Destino</label>
-              <input
-                id="radar-destino"
-                type="text"
-                bind:value={radarDestino}
-                required
-                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition"
-              />
+              <input id="radar-destino" type="text" bind:value={radarDestino} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
             </div>
           </div>
-
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label for="radar-mes" class="block text-xs font-semibold text-gray-400 mb-1">Mes aproximado</label>
-              <select
-                id="radar-mes"
-                bind:value={radarMes}
-                required
-                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-lumiCyan transition"
-              >
+              <select id="radar-mes" bind:value={radarMes} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-lumiCyan transition">
                 <option value="" disabled>Elige un mes...</option>
                 {#each meses as m}
                   <option value={m} class="bg-lumiDark text-white">{m}</option>
                 {/each}
               </select>
             </div>
-
             <div>
               <label for="radar-contacto" class="block text-xs font-semibold text-gray-400 mb-1">Correo Electrónico</label>
-              <input
-                id="radar-contacto"
-                type="email"
-                bind:value={radarContacto}
-                required
-                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition"
-              />
+              <input id="radar-contacto" type="email" bind:value={radarContacto} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
             </div>
           </div>
-
-          <button
-            type="submit"
-            class="w-full bg-lumiCyan hover:bg-lumiCyanDark text-lumiDark font-bold py-3 rounded-lg transition-colors shadow-lg mt-2"
-            disabled={radarCargando}
-          >
+          <button type="submit" class="w-full bg-lumiCyan hover:bg-lumiCyanDark text-lumiDark font-bold py-3 rounded-lg transition-colors shadow-lg mt-2" disabled={radarCargando}>
             {radarCargando ? 'Activando...' : 'Activar mi Radar 🎯'}
           </button>
-
           {#if radarExito}
-            <p class="text-emerald-400 text-sm font-semibold text-center mt-2">
-              ¡Radar activado! Revisa tu correo pronto.
-            </p>
+            <p class="text-emerald-400 text-sm font-semibold text-center mt-2">¡Radar activado! Revisa tu correo pronto.</p>
           {/if}
         </form>
       </div>
@@ -396,7 +264,6 @@
   </main>
 
   <WhatsAppButton pais={data.paisUpper || data.pais} />
-
   <Footer />
 
   {#if modalAbierto}
