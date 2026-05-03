@@ -62,12 +62,10 @@
   // 🔥 ARQUITECTURA SVELTE 5: Action Pura
   function carruselLogica(node: HTMLElement) {
     const intervalo = setInterval(() => {
-      // Si el usuario está tocando o no hay hijos, no hacemos nada
       if (pausarCarrusel || node.children.length === 0) return;
       
       const maxScroll = node.scrollWidth - node.clientWidth;
       
-      // Reseteo inteligente
       if (node.scrollLeft >= maxScroll - 10) {
         node.scrollTo({ left: 0, behavior: 'smooth' });
       } else {
@@ -170,10 +168,15 @@
   <meta name="robots" content="index, follow" />
 </svelte:head>
 
-<div class="bg-gray-50 text-lumiDark min-h-screen flex flex-col">
+<div class="bg-gray-50 text-lumiDark min-h-screen flex flex-col overflow-x-hidden">
   <Header paisUpper={data.paisUpper} mercado={data.mercado} />
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full relative">
+
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[600px] pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+      <div class="absolute top-[-5%] left-[10%] w-[300px] md:w-[450px] h-[300px] md:h-[450px] bg-lumiCyan/20 blur-[100px] rounded-full mix-blend-multiply"></div>
+      <div class="absolute top-[10%] right-[10%] w-[250px] md:w-[400px] h-[250px] md:h-[400px] bg-blue-500/10 blur-[100px] rounded-full mix-blend-multiply"></div>
+    </div>
 
     <div class="text-center max-w-3xl mx-auto mb-10 relative z-10" id="hero-section">
       <h1 class="text-4xl md:text-5xl font-black tracking-tighter mb-4 text-lumiDark leading-tight drop-shadow-sm mt-4">
@@ -192,7 +195,7 @@
     </div>
 
     <div class="max-w-xl mx-auto mb-16 relative z-20 group" id="newsletter-section">
-      <div class="bg-white/80 backdrop-blur-xl p-1.5 rounded-full shadow-sm border border-gray-200 flex flex-col sm:flex-row items-center gap-2">
+      <div class="bg-white/80 backdrop-blur-xl p-1.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-gray-200/60 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(0,210,255,0.12)]">
         <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
           <input
             id="newsletter-email"
@@ -206,7 +209,7 @@
 
           <button
             type="submit"
-            class="bg-lumiDark text-white hover:bg-black px-6 py-2 rounded-full font-bold transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto"
+            class="bg-lumiDark text-white hover:bg-black px-6 py-2 rounded-full font-bold transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-md"
             disabled={newsletterCargando}
           >
             {newsletterCargando ? 'Guardando...' : 'Suscribirme Gratis'}
@@ -221,11 +224,11 @@
       </div>
     </div>
 
-    <div class="mb-6 flex items-center justify-between" id="titulo-hook">
+    <div class="mb-6 flex items-center justify-between relative z-10" id="titulo-hook">
       <h2 class="text-2xl font-bold tracking-tight">Oportunidades Destacadas</h2>
     </div>
 
-    <div class="relative w-full mb-16 group">
+    <div class="relative w-full mb-16 group z-10">
       {#key data.paisUpper}
         <div
           use:carruselLogica
@@ -253,11 +256,11 @@
       {/key}
     </div>
 
-    <div class="mb-6 mt-4" id="titulo-radar">
+    <div class="mb-6 mt-4 relative z-10" id="titulo-radar">
       <h2 class="text-2xl font-bold tracking-tight">Más Destinos</h2>
     </div>
 
-    <div class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6" id="contenedor-radar">
+    <div class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6 relative z-10" id="contenedor-radar">
       <ul class="divide-y divide-gray-100/80">
         {#if ofertasRadar.length === 0}
           <li class="p-6 text-gray-400 text-center">No hay más destinos por ahora.</li>
@@ -276,13 +279,13 @@
     <div class="text-center mb-16 relative z-10" id="btn-radar-completo">
       <a
         href="/masdestinos?pais={data.paisUpper || 'MX'}"
-        class="inline-flex items-center justify-center bg-white border border-gray-200 text-lumiDark hover:border-lumiCyan hover:text-lumiCyan px-8 py-3.5 rounded-full font-bold transition-all shadow-sm hover:shadow-md active:scale-95 text-sm group"
+        class="inline-flex items-center justify-center bg-white border border-gray-200 text-lumiDark hover:border-lumiCyan hover:text-lumiCyan px-8 py-3.5 rounded-full font-bold transition-all shadow-[0_4px_14px_0_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,210,255,0.15)] active:scale-95 text-sm group"
       >
         Explorar más destinos
       </a>
     </div>
 
-    <div class="bg-lumiDark text-white border border-gray-800 rounded-3xl px-8 py-8 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 mb-20">
+    <div class="bg-lumiDark text-white border border-gray-800 rounded-3xl px-8 py-8 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 mb-20 z-10">
       <div class="relative z-10 text-center md:text-left flex-grow">
         <h3 class="text-2xl font-bold mb-2">¿Tienes un viaje específico en mente?</h3>
         <p class="text-gray-400 text-sm font-light">
@@ -301,7 +304,7 @@
       </div>
     </div>
 
-    <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800">
+    <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10">
       <div class="relative z-10 md:w-1/2 text-center md:text-left">
         <h3 class="text-3xl font-bold text-white mb-4">¿No ves tu destino soñado?</h3>
         <p class="text-gray-400 font-light leading-relaxed">
