@@ -11,10 +11,41 @@
 
   let links = $state({ tours: '', hotel: '', esim: '', seguro: '' });
 
+  // 🔥 EVALUADOR DE OFERTAS EXPIRADAS (UX Best Practice)
+  const ofertaExpirada = $derived.by(() => {
+    if (!deal?.fecha_salida) return false;
+    try {
+      const fechaStr = String(deal.fecha_salida).split('T')[0];
+      const partes = fechaStr.split(/[-/]/);
+      if (partes.length === 3) {
+        let y, m, d;
+        if (partes[0].length === 4) { y = partes[0]; m = partes[1]; d = partes[2]; }
+        else if (partes[2].length === 4) { y = partes[2]; m = partes[1]; d = partes[0]; }
+        else return false;
+        
+        const fechaSalida = new Date(Number(y), Number(m)-1, Number(d));
+        const hoy = new Date();
+        hoy.setHours(0,0,0,0);
+        return fechaSalida < hoy;
+      }
+    } catch(e) {}
+    return false;
+  });
+
   function formatoAviasales(fechaIso: any) {
     if (!fechaIso) return '';
-    const partes = String(fechaIso).split('T')[0].split('-');
-    return partes.length === 3 ? `${partes[2]}${partes[1]}` : '';
+    try {
+      const soloFecha = String(fechaIso).split('T')[0];
+      const partes = soloFecha.split(/[-/]/);
+      if (partes.length === 3) {
+        let year, month, day;
+        if (partes[0].length === 4) { year = partes[0]; month = partes[1]; day = partes[2]; }
+        else if (partes[2].length === 4) { year = partes[2]; month = partes[1]; day = partes[0]; }
+        else return '';
+        return `${day}${month}`;
+      }
+    } catch(e) {}
+    return '';
   }
 
   const destinosNacionales: Record<string, string[]> = {
@@ -80,10 +111,20 @@
   });
 
   const linkVuelo = $derived.by(() => {
-    if (!deal) return '#';
+    if (!deal) return 'https://vuelos.lumivia.app/';
     const origen = String(deal.origen || '').toUpperCase();
     const destino = String(deal.destino || '').toUpperCase();
-    const searchParam = `${origen}${formatoAviasales(deal.fecha_salida)}${destino}${formatoAviasales(deal.fecha_regreso)}1`;
+
+    // Si ya expiró, mandamos directo al buscador genérico para evitar errores
+    if (ofertaExpirada) {
+      return `https://vuelos.lumivia.app/?origin_iata=${origen}&destination_iata=${destino}`;
+    }
+
+    const salidaOk = formatoAviasales(deal.fecha_salida);
+    const regresoOk = formatoAviasales(deal.fecha_regreso);
+    if (!salidaOk || !regresoOk) return `https://vuelos.lumivia.app/?origin_iata=${origen}&destination_iata=${destino}`;
+
+    const searchParam = `${origen}${salidaOk}${destino}${regresoOk}1`;
     return `https://vuelos.lumivia.app/?flightSearch=${searchParam}`;
   });
 
@@ -95,8 +136,39 @@
 </script>
 
 <svelte:head>
-  <title>{deal?.titulo_gancho} | Lumivia</title>
-  <meta name="description" content="Vuelo desde {origenNombre} a {destinoNombre}." />
+  <title>{deal?.titulo_gancho} | Lumivia Selección</title>
+  <meta name="description" content="Vuelo de oportunidad desde {origenNombre} a {destinoNombre} por solo ${deal?.precio} {monedaDeal}. Impuestos incluidos." />
+  
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://lumivia.app/oferta/{deal?.id}" />
+  <meta property="og:title" content="✈️ ${deal?.precio} {monedaDeal} | {deal?.titulo_gancho}" />
+  <meta property="og:description" content="Vuelo desde {origenNombre} a {destinoNombre}. Tasas e impuestos incluidos." />
+  <meta property="og:image" content={imgFinal} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="✈️ ${deal?.precio} {monedaDeal} | {deal?.titulo_gancho}" />
+  <meta name="twitter:description" content="Vuelo desde {origenNombre} a {destinoNombre}. Tasas e impuestos incluidos." />
+  <meta name="twitter:image" content={imgFinal} />
+
+  {@html `<script type="application/ld+json">
+    {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": "Vuelo: ${deal?.titulo_gancho}",
+      "image": "${imgFinal}",
+      "description": "Vuelo redondo desde ${origenNombre} a ${destinoNombre}",
+      "brand": { "@type": "Brand", "name": "Lumivia" },
+      "offers": {
+        "@type": "Offer",
+        "url": "https://lumivia.app/oferta/${deal?.id}",
+        "priceCurrency": "${monedaDeal}",
+        "price": "${deal?.precio}",
+        "availability": "https://schema.org/InStock"
+      }
+    }
+  </script>`}
 </svelte:head>
 
 <div class="bg-gray-50 min-h-screen flex flex-col font-sans">
@@ -108,9 +180,9 @@
   </header>
 
   <main class="flex-grow flex items-center justify-center p-4 py-8 md:py-12">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full relative border border-gray-100 flex flex-col overflow-hidden animate-fadeIn">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[85vh] overflow-y-auto relative border border-gray-100 flex flex-col animate-fadeIn">
       
-      <div class="h-56 sm:h-64 w-full overflow-hidden relative flex-shrink-0">
+      <div class="h-56 sm:h-64 w-full relative flex-shrink-0">
         <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" onerror={handleImageError} />
         <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
       </div>
@@ -123,17 +195,26 @@
             <span class="text-[11px] sm:text-[12px] font-black uppercase tracking-widest">{destinoNombre}</span>
           </div>
 
-          <h1 class="text-2xl sm:text-3xl font-black text-lumiDark leading-tight mb-3">{deal?.titulo_gancho || ''}</h1>
+          <h1 class="text-2xl sm:text-3xl font-black text-lumiDark leading-tight mb-3">
+            {deal?.titulo_gancho || ''}
+          </h1>
           
           <div class="flex flex-wrap items-center gap-3 text-xs font-bold text-gray-500">
-            <div class="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100 uppercase tracking-widest text-[10.5px]">
-              {fechasCortas}
+            <div class="flex items-center gap-1.5 {ofertaExpirada ? 'bg-red-50 text-red-600 border-red-100' : 'bg-gray-50 text-gray-500 border-gray-100'} px-3 py-1.5 rounded-full border uppercase tracking-widest text-[10.5px]">
+              {ofertaExpirada ? '⚠️ FECHAS PASADAS' : fechasCortas}
             </div>
             <AmenidadesLinea {deal} paisActual={deal?.pais} />
           </div>
         </div>
 
-        <div class="text-[14px] text-gray-600 leading-relaxed font-medium whitespace-pre-line text-justify mb-8">{@html cuerpoPostLimpiado}</div>
+        <div class="text-[14px] text-gray-600 leading-relaxed font-medium whitespace-pre-line text-justify mb-8">
+          {#if ofertaExpirada}
+            <div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs p-3 rounded-xl mb-4 font-bold">
+              Las fechas específicas de este vuelo ya pasaron, pero puedes consultar los precios actuales haciendo clic abajo.
+            </div>
+          {/if}
+          {@html cuerpoPostLimpiado}
+        </div>
 
         <div class="mt-auto bg-gray-50/50 -mx-6 px-6 pt-6 pb-2 border-t border-gray-100">
           <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 text-center">Planifica tu viaje</h4>
@@ -175,14 +256,18 @@
 
           <div class="flex items-center justify-between border-t border-gray-200 pt-5 mb-2">
             <div>
-              <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Vuelo Id / Vt</p>
-              <div class="text-3xl font-black text-lumiDark leading-none">
+              <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">
+                {ofertaExpirada ? 'Precio Histórico' : 'Vuelo Id / Vt'}
+              </p>
+              <div class="text-3xl font-black {ofertaExpirada ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none">
                 ${Number(deal?.precio ?? 0).toLocaleString('en-US')}
                 <span class="text-[11px] font-bold text-gray-400 uppercase ml-0.5">{monedaDeal}</span>
               </div>
             </div>
-            <a href={linkVuelo} target="_blank" rel="noopener noreferrer" class="bg-lumiDark hover:bg-black text-white font-bold px-8 py-4 rounded-full transition-all shadow-xl active:scale-95 text-[13px] uppercase tracking-wider flex items-center gap-2">
-              Ver Vuelo <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            
+            <a href={linkVuelo} target="_blank" rel="noopener noreferrer" class="{ofertaExpirada ? 'bg-amber-500 hover:bg-amber-600' : 'bg-lumiDark hover:bg-black'} text-white font-bold px-5 md:px-8 py-4 rounded-full transition-all shadow-xl active:scale-95 text-[11px] md:text-[13px] uppercase tracking-wider flex items-center gap-2 text-center">
+              {ofertaExpirada ? 'Buscar Fechas Actuales' : 'Ver Vuelo'} 
+              <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             </a>
           </div>
         </div>
@@ -197,4 +282,8 @@
 <style>
   .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+  
+  div::-webkit-scrollbar { width: 6px; }
+  div::-webkit-scrollbar-track { background: transparent; }
+  div::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 10px; }
 </style>
