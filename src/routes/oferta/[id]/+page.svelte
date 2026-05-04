@@ -178,22 +178,22 @@
   </header>
 
   <main class="flex-grow flex items-start justify-center p-4 py-8 md:py-12">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full relative border border-gray-100 flex flex-col animate-fadeIn overflow-hidden">
+    <div class="bg-white rounded-3xl shadow-xl max-w-2xl w-full relative border border-gray-100 flex flex-col animate-fadeIn overflow-hidden">
       
-      <div class="h-56 sm:h-72 w-full relative flex-shrink-0">
+      <div class="h-56 sm:h-[320px] w-full relative flex-shrink-0">
         <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" onerror={handleImageError} />
         <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
       </div>
 
-      <div class="px-6 sm:px-10 pb-8 -mt-6 relative z-10 flex-grow flex flex-col">
+      <div class="px-6 sm:px-10 pb-8 -mt-8 relative z-10 flex-grow flex flex-col">
         <div class="mb-6">
-          <div class="inline-flex items-center gap-2 mb-4 px-3 py-1.5 bg-lumiDark text-white rounded-xl shadow-md border border-gray-800">
+          <div class="inline-flex h-7 items-center gap-2 mb-4 px-3 bg-lumiDark text-white rounded-xl shadow-md border border-gray-800">
             <span class="text-[11px] sm:text-[12px] font-black uppercase tracking-widest">{origenNombre}</span>
             <svg class="w-3.5 h-3.5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             <span class="text-[11px] sm:text-[12px] font-black uppercase tracking-widest">{destinoNombre}</span>
           </div>
 
-          <h1 class="text-2xl sm:text-4xl font-black text-lumiDark leading-tight mb-4">
+          <h1 class="text-2xl sm:text-3xl md:text-4xl font-black text-lumiDark leading-tight mb-4">
             {deal?.titulo_gancho || ''}
           </h1>
           
@@ -207,58 +207,58 @@
           </div>
         </div>
 
-        <div class="text-[15px] sm:text-[16px] text-gray-600 leading-relaxed font-medium whitespace-pre-line text-justify mb-10 max-w-none">
+        <div class="text-[15px] sm:text-[16px] text-gray-600 leading-relaxed font-medium whitespace-pre-line text-justify mb-10">
           {#if ofertaExpirada}
             <div class="bg-amber-50 border border-amber-200 text-amber-800 text-sm p-4 rounded-xl mb-6 font-bold flex items-center gap-3">
-              <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+              <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
               <span>Las fechas específicas de este vuelo ya pasaron, pero puedes consultar los precios actuales haciendo clic abajo.</span>
             </div>
           {/if}
           {@html cuerpoPostLimpiado}
         </div>
 
-        <div class="mt-auto bg-gray-50/50 -mx-6 sm:-mx-10 px-6 sm:px-10 pt-8 pb-4 border-t border-gray-100">
+        <div class="mt-auto bg-gray-50/80 -mx-6 sm:-mx-10 px-6 sm:px-10 pt-8 pb-6 border-t border-gray-100">
           <h4 class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4 text-center sm:text-left">Planifica tu viaje</h4>
           
           {#if links.esim && !esNacional}
-            <div class="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 mb-4">
+            <div class="bg-emerald-50/80 border border-emerald-100 rounded-xl p-3 mb-4">
               <p class="text-[12px] text-emerald-900 leading-relaxed text-center sm:text-left">
                 ✨ <strong>Beneficios Lumivia en Airalo:</strong> Nuevos usuarios <strong class="text-emerald-700 font-black">LUMIVIA</strong> (15% OFF) | Recurrentes <strong class="text-emerald-700 font-black">LUMIVIA10</strong> (10% OFF)
               </p>
             </div>
           {/if}
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
             {#if links.esim && !esNacional}
               <a href={links.esim} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-2xl hover:border-emerald-400 hover:shadow-md transition-all group">
-                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1488509082528-cefbba5ad692?q=80&w=2070&auto=format&fit=crop" alt="eSIM Airalo" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
-                <div class="flex-1 min-w-0"><p class="text-[12px] font-black text-lumiDark truncate">Internet eSIM</p><p class="text-[10px] text-gray-500 truncate">Sin Roaming</p></div>
+                <div class="w-11 h-11 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1488509082528-cefbba5ad692?q=80&w=2070&auto=format&fit=crop" alt="eSIM Airalo" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="flex-1 min-w-0"><p class="text-[12px] font-black text-lumiDark truncate">Internet eSIM</p><p class="text-[11px] text-gray-500 truncate">Sin Roaming</p></div>
               </a>
             {/if}
             {#if links.tours}
               <a href={links.tours} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-2xl hover:border-blue-500 hover:shadow-md transition-all group">
-                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=150&q=80" alt="Tours Civitatis" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
-                <div class="flex-1 min-w-0"><p class="text-[12px] font-black text-lumiDark truncate">Tours & Guías</p><p class="text-[10px] text-gray-500 truncate">En español</p></div>
+                <div class="w-11 h-11 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=150&q=80" alt="Tours Civitatis" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="flex-1 min-w-0"><p class="text-[12px] font-black text-lumiDark truncate">Tours & Guías</p><p class="text-[11px] text-gray-500 truncate">En español</p></div>
               </a>
             {/if}
             {#if links.hotel}
               <a href={links.hotel} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-2xl hover:border-amber-500 hover:shadow-md transition-all group">
-                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=150&q=80" alt="Hoteles" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
-                <div class="flex-1 min-w-0"><p class="text-[12px] font-black text-lumiDark truncate">Hospedaje</p><p class="text-[10px] text-gray-500 truncate">Mapa Interactivo</p></div>
+                <div class="w-11 h-11 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=150&q=80" alt="Hoteles" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="flex-1 min-w-0"><p class="text-[12px] font-black text-lumiDark truncate">Hospedaje</p><p class="text-[11px] text-gray-500 truncate">Mapa Interactivo</p></div>
               </a>
             {/if}
             {#if links.seguro && !esNacional}
               <a href={links.seguro} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-2xl hover:border-rose-500 hover:shadow-md transition-all group">
-                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=150&q=80" alt="Seguro Viaje" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
-                <div class="flex-1 min-w-0"><p class="text-[12px] font-black text-lumiDark truncate">Asistencia</p><p class="text-[10px] text-gray-500 truncate">Seguro Global</p></div>
+                <div class="w-11 h-11 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=150&q=80" alt="Seguro Viaje" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="flex-1 min-w-0"><p class="text-[12px] font-black text-lumiDark truncate">Asistencia</p><p class="text-[11px] text-gray-500 truncate">Seguro Global</p></div>
               </a>
             {/if}
           </div>
 
           <div class="flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 pt-6 gap-6">
-            <div class="text-center sm:text-left">
+            <div class="text-center sm:text-left w-full sm:w-auto">
               <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                {ofertaExpirada ? 'Precio Histórico' : 'Vuelo por persona redondo'}
+                {ofertaExpirada ? 'Precio Histórico' : 'Vuelo Id / Vt'}
               </p>
               <div class="text-4xl font-black {ofertaExpirada ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none">
                 ${Number(deal?.precio ?? 0).toLocaleString('en-US')}
@@ -266,7 +266,7 @@
               </div>
             </div>
             
-            <a href={linkVuelo} target="_blank" rel="noopener noreferrer" class="{ofertaExpirada ? 'bg-amber-500 hover:bg-amber-600' : 'bg-lumiDark hover:bg-black'} text-white font-bold w-full sm:w-auto px-10 h-14 rounded-full transition-all shadow-xl active:scale-95 text-[13px] uppercase tracking-wider flex items-center justify-center gap-2">
+            <a href={linkVuelo} target="_blank" rel="noopener noreferrer" class="{ofertaExpirada ? 'bg-amber-500 hover:bg-amber-600' : 'bg-lumiDark hover:bg-black'} text-white font-bold w-full sm:w-auto px-8 h-14 rounded-full transition-all shadow-xl active:scale-95 text-[13px] uppercase tracking-wider flex items-center justify-center gap-2">
               {ofertaExpirada ? 'Buscar Fechas Actuales' : 'Ver Vuelo En Directo'} 
               <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             </a>
