@@ -74,31 +74,40 @@
     return { destroy() { clearInterval(intervalo); } };
   }
 
+  // 🔥 NUEVA VERSIÓN: Se comunica con tu propio backend para saltar el RLS
   async function enviarNewsletter() {
     newsletterCargando = true;
     newsletterMensaje = '';
     newsletterClase = '';
     
-    const { error } = await supabase.from('suscriptores_radar').upsert(
-      { 
-        email: emailNewsletter.toLowerCase(), 
-        pais: data.paisUpper, 
-        nombre: 'Viajero',
-        activo: true 
-      }, 
-      { onConflict: 'email' }
-    );
-    
-    newsletterCargando = false;
-    
-    if (!error) {
-      newsletterMensaje = '¡Listo! Te avisaremos de las mejores gangas.';
-      newsletterClase = 'text-emerald-500';
-      emailNewsletter = '';
-    } else {
+    try {
+      const response = await fetch('/api/suscribir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: emailNewsletter.toLowerCase(),
+          pais: data.paisUpper,
+          nombre: 'Viajero'
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        newsletterMensaje = '¡Listo! Te avisaremos de las mejores gangas.';
+        newsletterClase = 'text-emerald-500';
+        emailNewsletter = '';
+      } else {
+        newsletterMensaje = 'Error al procesar tu suscripción.';
+        newsletterClase = 'text-red-500';
+        console.error(result.message);
+      }
+    } catch (err) {
       newsletterMensaje = 'Error de conexión. Intenta de nuevo.';
       newsletterClase = 'text-red-500';
-      console.error(error);
+      console.error(err);
+    } finally {
+      newsletterCargando = false;
     }
   }
 
