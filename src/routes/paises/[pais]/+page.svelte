@@ -78,18 +78,27 @@
     newsletterCargando = true;
     newsletterMensaje = '';
     newsletterClase = '';
-    const { error } = await supabase.from('suscriptores_radar').insert([{ email: emailNewsletter.toLowerCase(), pais: data.paisUpper, nombre: 'Viajero' }]);
+    
+    const { error } = await supabase.from('suscriptores_radar').upsert(
+      { 
+        email: emailNewsletter.toLowerCase(), 
+        pais: data.paisUpper, 
+        nombre: 'Viajero',
+        activo: true 
+      }, 
+      { onConflict: 'email' }
+    );
+    
     newsletterCargando = false;
+    
     if (!error) {
       newsletterMensaje = '¡Listo! Te avisaremos de las mejores gangas.';
       newsletterClase = 'text-emerald-500';
       emailNewsletter = '';
-    } else if (error.code === '23505') {
-      newsletterMensaje = '¡Ya estás en nuestra lista!';
-      newsletterClase = 'text-lumiCyan';
     } else {
       newsletterMensaje = 'Error de conexión. Intenta de nuevo.';
       newsletterClase = 'text-red-500';
+      console.error(error);
     }
   }
 
