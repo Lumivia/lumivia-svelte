@@ -11,7 +11,6 @@
 
   let links = $state({ tours: '', hotel: '', esim: '', seguro: '' });
 
-  // 🔥 EVALUADOR DE OFERTAS EXPIRADAS (UX Best Practice)
   const ofertaExpirada = $derived.by(() => {
     if (!deal?.fecha_salida) return false;
     try {
@@ -65,8 +64,9 @@
     img.src = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
   }
 
-  const origenNombre = $derived(String(deal?.origen_nombre || deal?.origen || '').toUpperCase());
-  const destinoNombre = $derived(String(deal?.destino_nombre || deal?.destino || '').toUpperCase());
+  // 🔥 NUEVO: Forzamos la lectura de origenNombre traducido por el servidor
+  const origenNombre = $derived(String(deal?.origenNombre || deal?.origen_nombre || deal?.origen || '').toUpperCase());
+  const destinoNombre = $derived(String(deal?.destinoNombre || deal?.destino_nombre || deal?.destino || '').toUpperCase());
   const fechasCortas = $derived(deal ? `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}` : '');
   
   const monedaDeal = $derived.by(() => {
@@ -115,7 +115,6 @@
     const origen = String(deal.origen || '').toUpperCase();
     const destino = String(deal.destino || '').toUpperCase();
 
-    // Si ya expiró, mandamos directo al buscador genérico para evitar errores
     if (ofertaExpirada) {
       return `https://vuelos.lumivia.app/?origin_iata=${origen}&destination_iata=${destino}`;
     }
@@ -179,10 +178,10 @@
     </div>
   </header>
 
-  <main class="flex-grow flex items-center justify-center p-4 py-8 md:py-12">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[85vh] overflow-y-auto relative border border-gray-100 flex flex-col animate-fadeIn">
+  <main class="flex-grow flex items-start justify-center p-4 py-8 md:py-12">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full relative border border-gray-100 flex flex-col animate-fadeIn">
       
-      <div class="h-56 sm:h-64 w-full relative flex-shrink-0">
+      <div class="h-48 sm:h-56 w-full relative flex-shrink-0 rounded-t-3xl overflow-hidden">
         <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" onerror={handleImageError} />
         <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
       </div>
@@ -199,11 +198,13 @@
             {deal?.titulo_gancho || ''}
           </h1>
           
-          <div class="flex flex-wrap items-center gap-3 text-xs font-bold text-gray-500">
-            <div class="flex items-center gap-1.5 {ofertaExpirada ? 'bg-red-50 text-red-600 border-red-100' : 'bg-gray-50 text-gray-500 border-gray-100'} px-3 py-1.5 rounded-full border uppercase tracking-widest text-[10.5px]">
+          <div class="flex flex-wrap items-center gap-2 text-xs font-bold text-gray-500">
+            <div class="inline-flex h-7 items-center justify-center gap-1.5 {ofertaExpirada ? 'bg-red-50 text-red-600 border-red-100' : 'bg-gray-50 text-gray-500 border-gray-100'} px-3 rounded-full border uppercase tracking-widest text-[10px]">
               {ofertaExpirada ? '⚠️ FECHAS PASADAS' : fechasCortas}
             </div>
-            <AmenidadesLinea {deal} paisActual={deal?.pais} />
+            <div class="inline-flex h-7 items-center">
+              <AmenidadesLinea {deal} paisActual={deal?.pais} />
+            </div>
           </div>
         </div>
 
@@ -216,7 +217,7 @@
           {@html cuerpoPostLimpiado}
         </div>
 
-        <div class="mt-auto bg-gray-50/50 -mx-6 px-6 pt-6 pb-2 border-t border-gray-100">
+        <div class="mt-auto bg-gray-50/50 -mx-6 px-6 pt-6 pb-2 border-t border-gray-100 rounded-b-3xl">
           <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 text-center">Planifica tu viaje</h4>
           
           {#if links.esim && !esNacional}
@@ -283,7 +284,5 @@
   .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
   
-  div::-webkit-scrollbar { width: 6px; }
-  div::-webkit-scrollbar-track { background: transparent; }
-  div::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 10px; }
+  /* Quitamos el CSS personalizado del scrollbar. Dejamos que el navegador maneje el scroll natural. */
 </style>
