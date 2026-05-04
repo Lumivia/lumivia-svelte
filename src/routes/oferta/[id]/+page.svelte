@@ -167,6 +167,10 @@
       }
     }
   </script>`}
+
+  {#if deal?.geo_schema}
+    {@html deal.geo_schema}
+  {/if}
 </svelte:head>
 
 <div class="bg-gray-50 min-h-screen flex flex-col font-sans">
@@ -201,6 +205,20 @@
             <div class="inline-flex h-7 items-center justify-center gap-1.5 {ofertaExpirada ? 'bg-red-50 text-red-600 border-red-100' : 'bg-gray-50 text-gray-500 border-gray-100'} px-3 rounded-full border uppercase tracking-widest text-[10.5px]">
               {ofertaExpirada ? '⚠️ FECHAS PASADAS' : fechasCortas}
             </div>
+
+            {#if typeof deal?.escalas === 'number'}
+              <div class="inline-flex h-7 items-center justify-center gap-1.5 bg-gray-50 text-gray-500 border-gray-100 px-3 rounded-full border uppercase tracking-widest text-[10.5px]">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                {#if deal.escalas === 0}
+                  Vuelo Directo
+                {:else if deal.escalas === 1}
+                  1 Escala
+                {:else}
+                  {deal.escalas} Escalas
+                {/if}
+              </div>
+            {/if}
+
             <div class="inline-flex h-7 items-center">
               <AmenidadesLinea {deal} paisActual={deal?.pais} />
             </div>
