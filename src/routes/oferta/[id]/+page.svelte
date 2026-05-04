@@ -1,134 +1,200 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import Header from '$lib/components/Header.svelte';
   import Footer from '$lib/components/Footer.svelte';
+  import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
+  import { obtenerImagen } from '$lib/utils/imagenes';
+  import { formatearFechaCorta } from '$lib/utils/fechas';
+
   let { data } = $props();
   const deal = data.deal;
 
-  // Formateador de precio para que se vea premium
-  const formattedPrice = new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: deal.moneda || 'MXN'
-  }).format(deal.precio);
+  let links = $state({ tours: '', hotel: '', esim: '', seguro: '' });
+
+  function formatoAviasales(fechaIso: any) {
+    if (!fechaIso) return '';
+    const partes = String(fechaIso).split('T')[0].split('-');
+    return partes.length === 3 ? `${partes[2]}${partes[1]}` : '';
+  }
+
+  const destinosNacionales: Record<string, string[]> = {
+    MX: ['CUN', 'CANCUN', 'MID', 'MERIDA', 'SJD', 'LOS CABOS', 'PVR', 'PUERTO VALLARTA', 'PXM', 'PUERTO ESCONDIDO', 'OAX', 'OAXACA', 'TRC', 'TORREON', 'CUU', 'CHIHUAHUA', 'MEX', 'CIUDAD DE MEXICO', 'CDMX', 'GDL', 'GUADALAJARA', 'MTY', 'MONTERREY', 'TIJ', 'TIJUANA'],
+    CO: ['CTG', 'CARTAGENA', 'SMR', 'SANTA MARTA', 'ADZ', 'SAN ANDRES', 'BGA', 'BUCARAMANGA', 'PEI', 'PEREIRA', 'BOG', 'BOGOTA', 'MDE', 'MEDELLIN', 'CLO', 'CALI'],
+    CL: ['CJC', 'CALAMA', 'PUQ', 'PUNTA ARENAS', 'PMC', 'PUERTO MONTT', 'IQQ', 'IQUIQUE', 'SCL', 'SANTIAGO', 'LSC', 'LA SERENA', 'ZCO', 'TEMUCO', 'BBA', 'BALMACEDA'],
+    CR: ['SJO', 'SAN JOSE', 'LIR', 'LIBERIA']
+  };
+
+  const normalizar = (texto: any) => String(texto || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+
+  const imgFinal = $derived(obtenerImagen(deal));
+  
+  function handleImageError(e: Event) {
+    const img = e.target as HTMLImageElement;
+    img.onerror = null;
+    img.src = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
+  }
+
+  const origenNombre = $derived(String(deal?.origen_nombre || deal?.origen || '').toUpperCase());
+  const destinoNombre = $derived(String(deal?.destino_nombre || deal?.destino || '').toUpperCase());
+  const fechasCortas = $derived(deal ? `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}` : '');
+  
+  const monedaDeal = $derived.by(() => {
+    if (deal?.moneda) return String(deal.moneda).toUpperCase();
+    if (deal?.currency) return String(deal.currency).toUpperCase();
+    if (deal?.titulo_gancho) {
+      const match = String(deal.titulo_gancho).match(/(MXN|COP|CLP|USD)/i);
+      if (match) return match[1].toUpperCase();
+    }
+    return 'MXN';
+  });
+
+  const ciudadExtraida = $derived.by(() => {
+    if (!deal?.titulo_gancho) return deal?.destino_nombre || deal?.destino || '';
+    const match = String(deal.titulo_gancho).match(/:\s*(.*?)\s*desde/i);
+    return match && match[1] ? match[1].trim() : (deal?.destino_nombre || deal?.destino || '');
+  });
+  
+  const esNacional = $derived.by(() => {
+    if (!deal) return false;
+    let mercado = deal.pais ? String(deal.pais).toUpperCase() : 'MX';
+    if (!deal.pais && deal.titulo_gancho) {
+      const txt = String(deal.titulo_gancho).toUpperCase();
+      if (txt.includes('COP')) mercado = 'CO';
+      else if (txt.includes('CLP')) mercado = 'CL';
+      else if (txt.includes('USD')) mercado = 'CR';
+    }
+    const listaLocal = destinosNacionales[mercado] || [];
+    const destinoNorm = normalizar(deal.destino);
+    const tituloNorm = normalizar(deal.titulo_gancho);
+    return listaLocal.some(keyword => destinoNorm.includes(keyword) || tituloNorm.includes(keyword));
+  });
+
+  $effect(() => {
+    if (deal) {
+      const params = new URLSearchParams({
+        destino: deal.destino || '', ciudad: ciudadExtraida || '', pais: deal.pais || 'MX',
+        salida: deal.fecha_salida || '', regreso: deal.fecha_regreso || '', url_hotel: deal.url_hotel || ''
+      });
+      fetch(`/api/links?${params.toString()}`).then(res => res.json()).then(data => links = data).catch(err => console.error(err));
+    }
+  });
+
+  const linkVuelo = $derived.by(() => {
+    if (!deal) return '#';
+    const origen = String(deal.origen || '').toUpperCase();
+    const destino = String(deal.destino || '').toUpperCase();
+    const searchParam = `${origen}${formatoAviasales(deal.fecha_salida)}${destino}${formatoAviasales(deal.fecha_regreso)}1`;
+    return `https://vuelos.lumivia.app/?flightSearch=${searchParam}`;
+  });
+
+  const cuerpoPostLimpiado = $derived.by(() => {
+    let original = String(deal?.cuerpo_post || deal?.descripcion || "");
+    const splitText = original.split(/👉|👇|✨|Comenta la palabra/i);
+    return splitText[0].trim().replace(/[\(\[\{\-\:\s]+$/, '');
+  });
 </script>
 
 <svelte:head>
-  <title>{deal.titulo_gancho} | Lumivia Selección</title>
-  <meta name="description" content="Vuelo desde {deal.origenNombre} a {deal.destinoNombre} por solo {formattedPrice}" />
+  <title>{deal?.titulo_gancho} | Lumivia</title>
+  <meta name="description" content="Vuelo desde {origenNombre} a {destinoNombre}." />
 </svelte:head>
 
-<div class="bg-white text-lumiDark min-h-screen font-sans">
-  <header class="border-b border-gray-100 py-4 px-6 sticky top-0 bg-white/80 backdrop-blur-md z-50">
+<div class="bg-gray-50 min-h-screen flex flex-col font-sans">
+  <header class="bg-white/80 backdrop-blur-md border-b border-gray-100 py-4 px-6 sticky top-0 z-50">
     <div class="max-w-5xl mx-auto flex justify-between items-center">
-      <a href="/" class="text-xl font-black tracking-tighter hover:scale-105 transition-transform">LUMIVIA</a>
-      <div class="hidden md:block text-xs font-bold text-gray-400 uppercase tracking-widest">Selección Exclusiva No. {deal.id}</div>
+      <a href="/" class="text-xl font-black tracking-tighter text-lumiDark hover:scale-105 transition-transform">LUMIVIA</a>
+      <a href="/" class="text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-lumiCyan transition-colors">← Ver más ofertas</a>
     </div>
   </header>
 
-  <main class="max-w-5xl mx-auto px-4 py-8 md:py-12">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+  <main class="flex-grow flex items-center justify-center p-4 py-8 md:py-12">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full relative border border-gray-100 flex flex-col overflow-hidden animate-fadeIn">
       
-      <div class="lg:col-span-2 space-y-8">
-        
-        <div class="inline-flex items-center gap-2 bg-lumiCyan/10 text-lumiCyan px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
-          <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-lumiCyan opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-lumiCyan"></span>
-          </span>
-          Tarifa Detectada hace un momento
-        </div>
-
-        <div class="space-y-4">
-          <h1 class="text-4xl md:text-6xl font-black leading-tight tracking-tighter">
-            {deal.destinoNombre}
-          </h1>
-          <div class="flex items-center gap-4 text-xl md:text-2xl text-gray-500 font-medium">
-            <span>{deal.origenNombre}</span>
-            <span class="text-lumiCyan text-3xl">✈</span>
-            <span>{deal.destinoNombre}</span>
-          </div>
-        </div>
-
-        <div class="bg-gray-50 rounded-3xl p-8 border border-gray-100 space-y-6">
-          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div>
-              <p class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Precio Final por Persona</p>
-              <div class="text-5xl font-black text-lumiDark">{formattedPrice}</div>
-              <p class="text-xs text-gray-400 mt-2">Vuelo redondo • Tasas e impuestos incluidos</p>
-            </div>
-            <a 
-              href={deal.link_compra} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              class="w-full md:w-auto bg-lumiDark text-white text-center px-10 py-5 rounded-2xl font-black text-lg hover:bg-lumiCyan hover:text-lumiDark transition-all shadow-xl shadow-lumiDark/10 active:scale-95"
-            >
-              RESERVAR VUELO
-            </a>
-          </div>
-
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-gray-200/50">
-            <div>
-              <p class="text-[10px] font-bold text-gray-400 uppercase">Salida</p>
-              <p class="text-sm font-bold">{deal.fecha_salida || 'Consultar'}</p>
-            </div>
-            <div>
-              <p class="text-[10px] font-bold text-gray-400 uppercase">Regreso</p>
-              <p class="text-sm font-bold">{deal.fecha_regreso || 'Consultar'}</p>
-            </div>
-            <div>
-              <p class="text-[10px] font-bold text-gray-400 uppercase">Escalas</p>
-              <p class="text-sm font-bold">Según selección</p>
-            </div>
-            <div>
-              <p class="text-[10px] font-bold text-gray-400 uppercase">Maleta</p>
-              <p class="text-sm font-bold">Objeto Personal</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="prose prose-lg text-gray-600 max-w-none">
-          <h3 class="text-lumiDark font-bold">¿Por qué es una buena oferta?</h3>
-          <p>{deal.titulo_gancho}. Hemos comparado este precio con el promedio histórico y representa un ahorro del 40% al 60%. Ideal para viajeros flexibles que buscan lujo a precio de hostal.</p>
-        </div>
+      <div class="h-56 sm:h-64 w-full overflow-hidden relative flex-shrink-0">
+        <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" onerror={handleImageError} />
+        <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
       </div>
 
-      <div class="space-y-6">
-        <div class="sticky top-24 space-y-6">
+      <div class="px-6 pb-6 -mt-6 relative z-10 flex-grow flex flex-col">
+        <div class="mb-4">
+          <div class="inline-flex items-center gap-2 mb-3 px-3 py-1.5 bg-lumiDark text-white rounded-xl shadow-md border border-gray-800">
+            <span class="text-[11px] sm:text-[12px] font-black uppercase tracking-widest">{origenNombre}</span>
+            <svg class="w-3.5 h-3.5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            <span class="text-[11px] sm:text-[12px] font-black uppercase tracking-widest">{destinoNombre}</span>
+          </div>
+
+          <h1 class="text-2xl sm:text-3xl font-black text-lumiDark leading-tight mb-3">{deal?.titulo_gancho || ''}</h1>
           
-          <div class="bg-lumiDark text-white rounded-3xl p-6 overflow-hidden relative">
-            <div class="relative z-10 space-y-4">
-              <h3 class="font-bold text-lg leading-tight">Hospedaje en {deal.destinoNombre}</h3>
-              <p class="text-gray-400 text-sm">Encuentra los hoteles con mejor puntuación para tus fechas.</p>
-              <a href="https://www.booking.com/searchresults.html?ss={deal.destinoNombre}" target="_blank" class="block w-full bg-white text-lumiDark text-center py-3 rounded-xl font-bold text-sm hover:bg-lumiCyan transition-colors">
-                Ver Hoteles Disponibles
-              </a>
+          <div class="flex flex-wrap items-center gap-3 text-xs font-bold text-gray-500">
+            <div class="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100 uppercase tracking-widest text-[10.5px]">
+              {fechasCortas}
             </div>
-            <div class="absolute -right-4 -bottom-4 text-white/5 text-8xl font-black">HTL</div>
+            <AmenidadesLinea {deal} paisActual={deal?.pais} />
+          </div>
+        </div>
+
+        <div class="text-[14px] text-gray-600 leading-relaxed font-medium whitespace-pre-line text-justify mb-8">{@html cuerpoPostLimpiado}</div>
+
+        <div class="mt-auto bg-gray-50/50 -mx-6 px-6 pt-6 pb-2 border-t border-gray-100">
+          <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 text-center">Planifica tu viaje</h4>
+          
+          {#if links.esim && !esNacional}
+            <div class="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 mb-3">
+              <p class="text-[11px] text-emerald-900 leading-relaxed text-center">
+                ✨ <strong>Beneficios Lumivia en Airalo:</strong> Nuevos usuarios <strong class="text-emerald-700 font-black">LUMIVIA</strong> (15% OFF) | Recurrentes <strong class="text-emerald-700 font-black">LUMIVIA10</strong> (10% OFF)
+              </p>
+            </div>
+          {/if}
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            {#if links.esim && !esNacional}
+              <a href={links.esim} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-200 rounded-2xl hover:border-emerald-400 hover:shadow-md transition-all group">
+                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1488509082528-cefbba5ad692?q=80&w=2070&auto=format&fit=crop" alt="eSIM Airalo" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="flex-1 min-w-0"><p class="text-[11px] font-black text-lumiDark truncate">Internet eSIM</p><p class="text-[10px] text-gray-500 truncate">Sin Roaming</p></div>
+              </a>
+            {/if}
+            {#if links.tours}
+              <a href={links.tours} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-200 rounded-2xl hover:border-blue-500 hover:shadow-md transition-all group">
+                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=150&q=80" alt="Tours Civitatis" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="flex-1 min-w-0"><p class="text-[11px] font-black text-lumiDark truncate">Tours & Guías</p><p class="text-[10px] text-gray-500 truncate">En español</p></div>
+              </a>
+            {/if}
+            {#if links.hotel}
+              <a href={links.hotel} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-200 rounded-2xl hover:border-amber-500 hover:shadow-md transition-all group">
+                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=150&q=80" alt="Hoteles" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="flex-1 min-w-0"><p class="text-[11px] font-black text-lumiDark truncate">Hospedaje</p><p class="text-[10px] text-gray-500 truncate">Mapa Interactivo</p></div>
+              </a>
+            {/if}
+            {#if links.seguro && !esNacional}
+              <a href={links.seguro} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-200 rounded-2xl hover:border-rose-500 hover:shadow-md transition-all group">
+                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=150&q=80" alt="Seguro Viaje" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="flex-1 min-w-0"><p class="text-[11px] font-black text-lumiDark truncate">Asistencia</p><p class="text-[10px] text-gray-500 truncate">Seguro Global</p></div>
+              </a>
+            {/if}
           </div>
 
-          <div class="bg-gray-100 rounded-3xl p-6 border border-gray-200">
-            <h3 class="font-bold text-lg text-lumiDark mb-2">¿Qué hacer allá?</h3>
-            <p class="text-gray-500 text-sm mb-4">Free tours, museos y experiencias locales curadas.</p>
-            <a href="https://www.civitatis.com/es/buscar?q={deal.destinoNombre}" target="_blank" class="block w-full border-2 border-lumiDark text-lumiDark text-center py-3 rounded-xl font-bold text-sm hover:bg-lumiDark hover:text-white transition-all">
-              Explorar Actividades
+          <div class="flex items-center justify-between border-t border-gray-200 pt-5 mb-2">
+            <div>
+              <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Vuelo Id / Vt</p>
+              <div class="text-3xl font-black text-lumiDark leading-none">
+                ${Number(deal?.precio ?? 0).toLocaleString('en-US')}
+                <span class="text-[11px] font-bold text-gray-400 uppercase ml-0.5">{monedaDeal}</span>
+              </div>
+            </div>
+            <a href={linkVuelo} target="_blank" rel="noopener noreferrer" class="bg-lumiDark hover:bg-black text-white font-bold px-8 py-4 rounded-full transition-all shadow-xl active:scale-95 text-[13px] uppercase tracking-wider flex items-center gap-2">
+              Ver Vuelo <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             </a>
           </div>
-
-          <div class="bg-white rounded-3xl p-6 border border-gray-200 flex items-center gap-4">
-            <div class="text-3xl">📱</div>
-            <div>
-              <h4 class="font-bold text-sm">Internet en el viaje</h4>
-              <p class="text-xs text-gray-500 mb-2">Consigue tu eSIM para {deal.destinoNombre}.</p>
-              <a href="#" class="text-xs font-bold text-lumiCyan underline">Ver planes de datos</a>
-            </div>
-          </div>
-
-          <a href="/paises/mx" class="block text-center text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-lumiDark transition-colors">
-            ← Volver a todas las ofertas
-          </a>
         </div>
-      </div>
 
+      </div>
     </div>
   </main>
 
   <Footer />
 </div>
+
+<style>
+  .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+</style>
