@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/public';
+import { env as privateEnv } from '$env/dynamic/private';
 
 export const load = async ({ url, fetch }) => {
     try {
@@ -14,12 +15,16 @@ export const load = async ({ url, fetch }) => {
 
         // Conexión a Supabase
         const supabaseUrl = env.PUBLIC_SUPABASE_URL || '';
-        const supabaseKey = env.PUBLIC_SUPABASE_ANON_KEY || '';
+        
+        // 🔥 LA LLAVE DE DIOS: Llamamos a la variable privada que pusiste en Cloudflare
+        const supabaseKey = privateEnv.SUPABASE_SERVICE_ROLE_KEY || '';
         
         if (!supabaseUrl || !supabaseKey) {
+            console.error("Faltan credenciales del servidor.");
             return { success: false, message: 'Error interno del servidor.' };
         }
 
+        // Al usar la Service Role, Supabase apaga el cadenero (RLS) y obedece sin preguntar.
         const supabase = createClient(supabaseUrl, supabaseKey, {
             global: { fetch },
             auth: { persistSession: false }
@@ -34,6 +39,7 @@ export const load = async ({ url, fetch }) => {
             .single();
 
         if (error || !data) {
+            console.error("Supabase rechazó la baja:", error);
             return { success: false, message: 'No encontramos tu suscripción o ya estabas dado de baja.' };
         }
 
@@ -44,7 +50,6 @@ export const load = async ({ url, fetch }) => {
         };
 
     } catch (err) {
-        // Si todo falla, atrapamos el error para que NUNCA salga el "500 Internal Error"
         console.error('Error catastrófico en baja:', err);
         return { success: false, message: 'Ocurrió un error inesperado. Intenta de nuevo.' };
     }
