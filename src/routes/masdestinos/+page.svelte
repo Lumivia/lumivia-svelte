@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { page } from '$app/stores'; // <-- IMPORTAMOS ESTO PARA LEER LA URL
+  import { page } from '$app/stores'; 
   import type { PageData } from './$types';
   
   import { supabase } from '$lib/supabaseClient';
@@ -21,7 +21,8 @@
     CR: { moneda: 'USD', bandera: 'https://flagcdn.com/w20/cr.png' }
   };
 
-  const paisActual = $derived(data.pais || 'MX');
+  // 🛡️ BLINDAJE ANTIBALAS: Limpiamos la variable por si la URL trae "?admin=true" pegado al país
+  const paisActual = $derived(String(data.pais || 'MX').split('?')[0].split('&')[0].toUpperCase());
   const monedaActual = $derived(configMercado[paisActual]?.moneda ?? 'MXN');
   const banderaActual = $derived(configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png');
   
@@ -45,7 +46,7 @@
   let mesesDisponibles = $state<string[]>([]);
   let vuelosReportados = $state(new Set<number | string>());
 
-  // 🕵️ MODO DIOS: Lee si la URL tiene ?admin=true
+  // 🕵️ MODO DIOS: Lee si la URL tiene ?admin=true o &admin=true
   const isAdminModo = $derived($page.url.searchParams.get('admin') === 'true');
   let cargandoAdmin = $state(false);
 
@@ -179,7 +180,7 @@
 
   async function copiarUrlUnica(id: number | string, e?: Event) {
     if (e) e.stopPropagation();
-    const url = `${window.location.origin}/oferta/${id}`; // CORREGÍ A /oferta/ PORQUE TU URL DINÁMICA ES ESA
+    const url = `${window.location.origin}/oferta/${id}`; 
     try { await navigator.clipboard.writeText(url); alert('¡Enlace copiado! Listo para compartir.'); } catch (err) { console.error(err); }
   }
 
