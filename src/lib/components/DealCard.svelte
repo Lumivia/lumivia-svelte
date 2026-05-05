@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from '$app/stores';
   import { formatearFechaCorta } from '$lib/utils/fechas';
   import { obtenerImagen } from '$lib/utils/imagenes';
   import { copiarUrlUnica } from '$lib/utils/clipboard';
@@ -8,6 +9,34 @@
   const { deal, monedaActual, paisActual, onclick } = $props();
 
   let reportado = $state(false);
+  let cargandoAdmin = $state(false);
+
+  // 🕵️ MODO DIOS: Lee si la URL tiene ?admin=true
+  const isAdminModo = $derived($page.url.searchParams.get('admin') === 'true');
+
+  // Evalúa si la oferta está muerta (por ti o por la fecha)
+  const estaMuerta = $derived.by(() => {
+    if (deal?.expirada_manualmente) return true;
+    if (reportado) return true;
+    
+    if (!deal?.fecha_salida) return false;
+    try {
+      const fechaStr = String(deal.fecha_salida).split('T')[0];
+      const partes = fechaStr.split(/[-/]/);
+      if (partes.length === 3) {
+        let y, m, d;
+        if (partes[0].length === 4) { y = partes[0]; m = partes[1]; d = partes[2]; }
+        else if (partes[2].length === 4) { y = partes[2]; m = partes[1]; d = partes[0]; }
+        else return false;
+        
+        const fechaSalida = new Date(Number(y), Number(m)-1, Number(d));
+        const hoy = new Date();
+        hoy.setHours(0,0,0,0);
+        return fechaSalida < hoy;
+      }
+    } catch(e) {}
+    return false;
+  });
 
   const imgFinal = $derived(obtenerImagen(deal));
   
@@ -32,7 +61,8 @@
   const origenSeguro = $derived(String(deal?.origen_nombre || deal?.origen || '').toUpperCase());
   const destinoSeguro = $derived(String(deal?.destino_nombre || deal?.destino || '').toUpperCase());
 
-  const esVip = $derived(deal?.tipo_vuelo === 'directo');
+  // El sistema anterior de VIP se queda, pero agregamos la validación de la base de datos
+  const esVip = $derived(deal?.tipo_vuelo === 'directo' || deal?.escalas === 0);
 
   async function handleReportar(e: Event) {
     e.stopPropagation(); 
@@ -49,6 +79,33 @@
     e.stopPropagation(); 
     if (deal?.id) await copiarUrlUnica(deal.id);
   }
+
+  // 💣 FUNCIÓN GOD MODE (Dispara al backend)
+  async function handleMatarOferta(e: Event) {
+    e.stopPropagation();
+    const password = prompt("Ingresa la contraseña de administrador para matar esta oferta:");
+    if (!password) return;
+
+    cargandoAdmin = true;
+    try {
+      const res = await fetch('/api/matar-oferta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: deal.id, secret: password })
+      });
+      
+      if (res.ok) {
+        alert("💀 Oferta aniquilada.");
+        // Opcional: Forzamos la recarga de la página o cambiamos el estado visual
+        window.location.reload(); 
+      } else {
+        alert("Contraseña incorrecta o error en el servidor.");
+      }
+    } catch (error) {
+      alert("Error de conexión.");
+    }
+    cargandoAdmin = false;
+  }
 </script>
 
 <div
@@ -56,7 +113,7 @@
   tabindex="0"
   onclick={onclick} 
   onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if(onclick) onclick(e); } }}
-  class="card-minimal flex-none w-[85vw] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-center flex flex-col group/card hover:shadow-2xl transition-all duration-300 bg-white rounded-2xl overflow-hidden text-left cursor-pointer border border-gray-100 {reportado ? 'opacity-40 grayscale' : ''}"
+  class="card-minimal flex-none w-[85vw] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-center flex flex-col group/card hover:shadow-2xl transition-all duration-300 bg-white rounded-2xl overflow-hidden text-left cursor-pointer border border-gray-100 {estaMuerta ? 'opacity-50 grayscale hover:grayscale-0 focus:grayscale-0' : ''}"
   aria-label={`Ver oferta de ${origenSeguro} a ${destinoSeguro}`}
 >
   <div class="relative h-56 overflow-hidden bg-gray-100 shrink-0">
@@ -69,21 +126,47 @@
     />
     <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
 
-    {#if deal?.tiempoTranscurrido}
+    {#if isAdminModo && !estaMuerta}
+      <button 
+        type="button" 
+        onclick={handleMatarOferta} 
+        disabled={cargandoAdmin}
+        class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600/90 hover:bg-red-700 text-white backdrop-blur-md px-4 py-1.5 rounded-full font-black text-[10px] shadow-lg border border-red-400 z-30 uppercase tracking-widest flex items-center gap-1 transition-all"
+      >
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        {cargandoAdmin ? '...' : 'MATAR OFERTA'}
+      </button>
+    {/if}
+
+    {#if estaMuerta}
+      <div class="absolute inset-0 flex items-center justify-center bg-black/40 z-20">
+        <div class="bg-black/80 text-white font-black px-6 py-2 rounded-full uppercase tracking-widest text-[11px] shadow-2xl border border-white/20">
+          Fechas Pasadas / Expirada
+        </div>
+      </div>
+    {/if}
+
+    {#if deal?.tiempoTranscurrido && !estaMuerta}
       <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-lumiDark text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm tracking-wide border border-white/50 uppercase flex items-center gap-1">
         ⏱️ {deal.tiempoTranscurrido}
       </div>
     {/if}
 
     {#if esVip}
-      <div class="absolute top-4 right-4 badge-vip-glass text-white text-[10px] font-black px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg">
+      <div class="absolute top-4 right-4 bg-emerald-500/90 text-white text-[10px] font-black px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-emerald-400/50">
         <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Directo
+      </div>
+    {:else if typeof deal?.escalas === 'number'}
+      <div class="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-white/20">
+        {deal.escalas} Escala{deal.escalas > 1 ? 's' : ''}
       </div>
     {/if}
 
-    <button type="button" onclick={handleReportar} title="¿El precio subió? Repórtalo" class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 transition-colors z-10 cursor-pointer">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-1 6-1-1H11.5l-1-1H5v10m0 0h4"></path></svg>
-    </button>
+    {#if !estaMuerta}
+      <button type="button" onclick={handleReportar} title="¿El precio subió? Repórtalo" class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 transition-colors z-10 cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-1 6-1-1H11.5l-1-1H5v10m0 0h4"></path></svg>
+      </button>
+    {/if}
   </div>
 
   <div class="p-6 flex flex-col flex-grow bg-white relative">
@@ -104,8 +187,8 @@
 
     <div class="mt-auto pt-5 border-t border-gray-100 flex items-center justify-between">
       <div>
-        <p class="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">Vuelo Id/Vt</p>
-        <p class="text-2xl font-black text-lumiDark leading-none tracking-tight">
+        <p class="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">{estaMuerta ? 'Precio Histórico' : 'Vuelo Id/Vt'}</p>
+        <p class="text-2xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tight">
           ${precio} <span class="text-xs font-semibold text-gray-400">{monedaDeal}</span>
         </p>
       </div>
@@ -114,8 +197,8 @@
         <button type="button" onclick={handleCopiar} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan hover:bg-lumiCyan/10 transition-colors p-2.5 rounded-full cursor-pointer">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
         </button>
-        <div class="bg-lumiDark text-white group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark px-5 py-2.5 rounded-full font-black text-[11px] sm:text-xs transition-all shadow-md group-hover/card:shadow-lg active:scale-95 cursor-pointer flex items-center gap-1.5 uppercase tracking-wider">
-          Ver Vuelo <svg class="w-4 h-4 transition-transform group-hover/card:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        <div class="{estaMuerta ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-lumiDark text-white group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark'} px-5 py-2.5 rounded-full font-black text-[11px] sm:text-xs transition-all shadow-md group-hover/card:shadow-lg active:scale-95 cursor-pointer flex items-center gap-1.5 uppercase tracking-wider">
+          {estaMuerta ? 'Ver Actuales' : 'Ver Vuelo'} <svg class="w-4 h-4 transition-transform group-hover/card:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
         </div>
       </div>
     </div>
