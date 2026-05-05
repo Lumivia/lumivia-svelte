@@ -6,15 +6,15 @@ import { json } from '@sveltejs/kit';
 export async function POST({ request }) {
   const { id, secret } = await request.json();
 
-  // 1. BLINDAJE: Solo tú sabes esta contraseña. Cámbiala por algo seguro.
-  const MI_CONTRASEÑA_SECRETA = "LumiviaGod2026!"; 
+  // 1. BLINDAJE PROFESIONAL: Jalamos la contraseña desde tu archivo .env
+  const MI_CONTRASEÑA_SECRETA = env.ADMIN_PASSWORD; 
 
-  if (secret !== MI_CONTRASEÑA_SECRETA) {
+  // Verificamos que exista la variable y que la contraseña coincida
+  if (!MI_CONTRASEÑA_SECRETA || secret !== MI_CONTRASEÑA_SECRETA) {
     return json({ error: 'Acceso denegado.' }, { status: 401 });
   }
 
-  // 2. Conexión con privilegios máximos (Service Role Key) para poder actualizar la tabla
-  // OJO: Asegúrate de tener SUPABASE_SERVICE_ROLE_KEY en tu archivo .env
+  // 2. Conexión con Supabase (Usamos la Service Role Key para tener permisos de escritura)
   const supabaseUrl = envPublic.PUBLIC_SUPABASE_URL;
   const supabaseAdminKey = env.SUPABASE_SERVICE_ROLE_KEY || envPublic.PUBLIC_SUPABASE_ANON_KEY; 
 
