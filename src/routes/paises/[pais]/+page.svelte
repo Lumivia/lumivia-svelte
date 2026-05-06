@@ -23,7 +23,6 @@
     }))
   );
 
-  // 🔥 NUEVA DECLARACIÓN: Escapadas
   const ofertasEscapadas = $derived(
     (data.escapadas || []).map((d: any) => ({
       ...d,
@@ -82,7 +81,6 @@
     return { destroy() { clearInterval(intervalo); } };
   }
 
-  // 🔥 NUEVA VERSIÓN: Se comunica con tu propio backend para saltar el RLS
   async function enviarNewsletter() {
     newsletterCargando = true;
     newsletterMensaje = '';
@@ -211,64 +209,69 @@
     </div>
 
     {#if ofertasEscapadas.length > 0}
-      <div class="mb-5 mt-4 relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div class="mb-6 mt-8 relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h2 class="text-2xl font-bold tracking-tight">Escapadas de Fin de Semana</h2>
-          <p class="text-sm text-gray-500 font-light mt-1">Poco tiempo, poco dinero. Vuelos para desconectar de la rutina.</p>
+          <p class="text-sm text-gray-500 font-light mt-1">Poco tiempo y sin gastar mucho. Vuelos para desconectar de la rutina.</p>
         </div>
       </div>
 
-      <div class="relative w-full mb-16 group z-10 bg-[#F8F9FA]/80 rounded-3xl p-5 sm:p-6 border border-gray-100 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
-        <div class="flex overflow-x-auto snap-x snap-mandatory gap-5 pb-6 no-scrollbar scroll-smooth">
+      <div class="relative w-full mb-8 group z-10">
+        <div use:carruselLogica onmouseenter={() => pausarCarrusel = true} onmouseleave={() => pausarCarrusel = false} ontouchstart={() => pausarCarrusel = true} ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)} class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth">
           {#each ofertasEscapadas as deal (deal.id)}
-            <div class="flex-none w-[280px] sm:w-[310px] snap-center bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer relative group/card" onclick={() => abrirModal(deal)}>
+            <div class="flex-none w-[300px] sm:w-[340px] snap-center bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden hover:shadow-[0_8px_30px_rgba(0,210,255,0.12)] hover:border-lumiCyan/50 transition-all duration-500 hover:-translate-y-1.5 cursor-pointer relative group/card flex flex-col" onclick={() => abrirModal(deal)}>
               
-              <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-lumiDark text-[10px] font-extrabold px-3 py-1.5 rounded-full z-20 shadow-sm flex items-center gap-1.5 uppercase tracking-wide">
+              <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-lumiDark text-[11px] font-black px-3.5 py-1.5 rounded-full z-20 shadow-sm flex items-center gap-1.5 uppercase tracking-wider">
                 {#if deal.escalas === 0 || deal.tipo_vuelo === 'directo'}
-                  <span class="text-emerald-500">⚡</span> Directo
+                  <span class="text-emerald-500 text-sm leading-none">⚡</span> DIRECTO
                 {:else}
-                  <span>⏱️</span> Break Corto
+                  <span class="text-blue-500 text-sm leading-none">⏱️</span> BREAK
                 {/if}
               </div>
 
-              <div class="w-full h-36 bg-gray-200 relative overflow-hidden">
+              <div class="w-full h-48 bg-gray-200 relative overflow-hidden">
                 {#if deal.imagen_fallback}
-                  <img src={deal.imagen_fallback} alt={deal.destino_nombre || deal.destino} class="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105" />
+                  <img src={deal.imagen_fallback} alt={deal.destino_nombre || deal.destino} class="w-full h-full object-cover transition-transform duration-1000 group-hover/card:scale-110" />
                 {:else}
                   <div class="w-full h-full bg-lumiDark flex items-center justify-center text-white/50 text-xs">Sin foto</div>
                 {/if}
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                <div class="absolute bottom-3 left-4 text-white">
-                  <p class="font-bold text-xl leading-tight drop-shadow-md">{deal.destino_nombre || deal.destino}</p>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                <div class="absolute bottom-4 left-5 text-white pr-4">
+                  <p class="font-black text-2xl leading-tight drop-shadow-lg">{deal.destino_nombre || deal.destino}</p>
                 </div>
               </div>
 
-              <div class="p-4">
-                <p class="text-[11px] text-gray-500 font-semibold mb-3 bg-gray-50 inline-block px-2.5 py-1.5 rounded-md border border-gray-100 w-full text-center">
-                  📅 {deal.fecha_salida ? deal.fecha_salida.split('T')[0] : ''} al {deal.fecha_regreso ? deal.fecha_regreso.split('T')[0] : ''}
-                </p>
-                <div class="flex items-end justify-between mt-1">
+              <div class="p-5 flex-grow flex flex-col justify-between">
+                <div class="mb-4">
+                  <p class="text-[13px] text-gray-500 font-bold flex items-center gap-2">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    {deal.fecha_salida ? deal.fecha_salida.split('T')[0] : ''} <span class="text-gray-300 font-normal mx-1">al</span> {deal.fecha_regreso ? deal.fecha_regreso.split('T')[0] : ''}
+                  </p>
+                </div>
+                
+                <div class="flex items-end justify-between mt-auto pt-3 border-t border-gray-50">
                   <div>
-                    <p class="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Tarifa desde</p>
-                    <p class="text-2xl font-black text-lumiDark leading-none mt-1">${deal.precio} <span class="text-sm font-bold text-gray-400">{data.mercado?.moneda || ''}</span></p>
+                    <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Tarifa desde</p>
+                    <p class="text-3xl font-black text-lumiDark leading-none mt-1 drop-shadow-sm">${deal.precio} <span class="text-sm font-bold text-gray-400">{data.mercado?.moneda || ''}</span></p>
                   </div>
-                  <button class="bg-lumiDark text-white p-2 rounded-full group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark transition-colors">
-                    <svg class="w-5 h-5 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
-                  </button>
+                  <div class="bg-gray-50 border border-gray-200 text-lumiDark w-10 h-10 rounded-full flex items-center justify-center group-hover/card:bg-lumiCyan group-hover/card:border-lumiCyan group-hover/card:text-white transition-all duration-300 shadow-sm">
+                    <svg class="w-5 h-5 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+                  </div>
                 </div>
               </div>
             </div>
           {/each}
         </div>
+      </div>
 
-        <div class="mt-2 flex justify-center">
-          <a href="/escapadas?pais={data.paisUpper || 'MX'}" class="inline-flex items-center gap-2 text-sm font-bold text-lumiDark hover:text-white bg-white hover:bg-lumiDark px-7 py-3 rounded-full shadow-sm border border-gray-200 hover:border-lumiDark transition-all active:scale-95">
-            Explorar todas las escapadas
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-          </a>
-        </div>
+      <div class="text-center mb-16 relative z-10" id="btn-escapadas-completo">
+        <a href="/escapadas?pais={data.paisUpper || 'MX'}" class="inline-flex items-center justify-center bg-white border border-gray-200 text-lumiDark hover:border-lumiCyan hover:text-lumiCyan px-8 py-3.5 rounded-full font-bold transition-all shadow-[0_4px_14px_0_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,210,255,0.15)] active:scale-95 text-sm group">
+          Explorar todas las escapadas
+          <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+        </a>
       </div>
     {/if}
+
     <div class="mb-6 mt-4 relative z-10" id="titulo-radar">
       <h2 class="text-2xl font-bold tracking-tight">Más Destinos</h2>
     </div>
