@@ -73,7 +73,7 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
     }
   }
 
-  // PASO 4: El Factor WOW Histórico (Llenamos el resto del Hero hasta 10 y el radar)
+  // PASO 4: El Factor WOW Histórico (Llenamos el Hero a 5 y soltamos todo al radar)
   const restoOfertas = limpias.filter(d => !destinosVistos.has(d.destinoUpper));
 
   restoOfertas.sort((a, b) => {
@@ -91,7 +91,8 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
   for (const d of restoOfertas) {
     if (!destinosVistos.has(d.destinoUpper)) {
       destinosVistos.add(d.destinoUpper);
-      if (hookDeals.length < 10) {
+      // 🔥 CAMBIO CRÍTICO: Bajamos el hambre del Hero de 10 a 5.
+      if (hookDeals.length < 5) {
         hookDeals.push(d);
       } else {
         radarDeals.push(d);
