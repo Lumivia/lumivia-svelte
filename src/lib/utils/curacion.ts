@@ -3,7 +3,6 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
     return { hookDeals: [], radarDeals: [] };
   }
 
-  // 1) Normalizar datos y agregar flag de Escapada
   const limpias = ofertas
     .filter((d) => d.destino && d.origen)
     .map((d) => ({
@@ -23,12 +22,10 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
   const destinosVistos = new Set<string>();
   const hookDeals: any[] = [];
   const radarDeals: any[] = [];
+  let escapadasEnHero = 0; // 🔥 El contador clave
 
   const ofertasPais = limpias.filter(d => d.esDelPaisActual);
 
-  // --- NUEVO ORDEN DE EXTRACCIÓN ---
-
-  // Pre-ordenamos TODAS las ofertas para evaluar las escapadas (Factor WOW)
   const escapadasDisponibles = [...ofertasPais]
     .filter(d => d.esEscapada)
     .sort((a, b) => {
@@ -37,18 +34,16 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
       return b.timestamp - a.timestamp;
     });
 
-  // PASO 1: El Tributo del Hero (1 Escapada obligatoria a Destacadas)
+  // PASO 1: Metemos exactamente 1 escapada al Hero
   for (const d of escapadasDisponibles) {
     if (hookDeals.length < 1 && !destinosVistos.has(d.destinoUpper)) {
       hookDeals.push(d);
       destinosVistos.add(d.destinoUpper);
+      escapadasEnHero++;
       break; 
     }
   }
 
-  // (ELIMINADO EL PASO 2: Las escapadas restantes ahora fluyen libres hacia el Radar)
-
-  // PASO 3: Estrategia VIP Original (Frescura + Meritocracia para rellenar el Hero)
   const limiteFrescura = Date.now() - (3 * 24 * 60 * 60 * 1000);
   const ofertasFrescas = [...ofertasPais].filter(d => d.timestamp >= limiteFrescura);
   
@@ -58,24 +53,22 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
     return b.timestamp - a.timestamp;
   });
 
+  // PASO 2: Rellenamos frescura, vigilando las escapadas
   for (const d of ofertasFrescas) {
     if (hookDeals.length >= 3) break; 
     if (!destinosVistos.has(d.destinoUpper)) {
+      if (d.esEscapada && escapadasEnHero >= 1) continue; // Si ya hay escapada, nos la saltamos en el Hero
       hookDeals.push(d);
       destinosVistos.add(d.destinoUpper);
+      if (d.esEscapada) escapadasEnHero++;
     }
   }
 
-  // PASO 4: El Factor WOW Histórico (Llenamos el Hero a 8 y soltamos todo al radar)
+  // PASO 3: Llenamos el resto
   const restoOfertas = limpias.filter(d => !destinosVistos.has(d.destinoUpper));
-
   restoOfertas.sort((a, b) => {
-    if (a.esDelPaisActual !== b.esDelPaisActual) {
-      return Number(b.esDelPaisActual) - Number(a.esDelPaisActual);
-    }
-    if (a.esDirecto !== b.esDirecto) {
-      return Number(b.esDirecto) - Number(a.esDirecto);
-    }
+    if (a.esDelPaisActual !== b.esDelPaisActual) return Number(b.esDelPaisActual) - Number(a.esDelPaisActual);
+    if (a.esDirecto !== b.esDirecto) return Number(b.esDirecto) - Number(a.esDirecto);
     if (a.calidad !== b.calidad) return b.calidad - a.calidad;
     if (a.precioNum !== b.precioNum) return a.precioNum - b.precioNum;
     return b.timestamp - a.timestamp;
@@ -84,11 +77,17 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
   for (const d of restoOfertas) {
     if (!destinosVistos.has(d.destinoUpper)) {
       destinosVistos.add(d.destinoUpper);
-      // 🔥 Mantenemos el límite de 8 para el Hero
+      
+      // 🔥 Lógica maestra: ¿Cabe en el Hero y no rompe la regla de la escapada?
       if (hookDeals.length < 8) {
-        hookDeals.push(d);
+        if (d.esEscapada && escapadasEnHero >= 1) {
+          radarDeals.push(d); // No cabe en hero, pero SÍ se va al radar
+        } else {
+          hookDeals.push(d);
+          if (d.esEscapada) escapadasEnHero++;
+        }
       } else {
-        radarDeals.push(d);
+        radarDeals.push(d); // El Hero está lleno, todo al radar
       }
     }
   }
