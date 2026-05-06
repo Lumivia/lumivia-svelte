@@ -1,21 +1,9 @@
-/**
- * Curación de ofertas Lumivia (Motor Híbrido 2026)
- *
- * - Separa ofertas en:
- * - hookDeals -> carrusel principal (máximo 10)
- * - radarDeals -> lista secundaria
- *
- * - ESTRATEGIA: Reserva 3 slots (30%) VIP para Frescura + Meritocracia (< 72 hrs ordenado por Calidad/Precio).
- * - El resto (70%) compite a muerte por Calidad y Precio (Factor WOW histórico).
- * - Cero duplicados de destinos.
- */
-
 export function curarOfertas(ofertas: any[], paisActual: string) {
   if (!ofertas || ofertas.length === 0) {
-    return { hookDeals: [], radarDeals: [] };
+    return { hookDeals: [], escapadasDeals: [], radarDeals: [] };
   }
 
-  // 1) Normalizar datos y agregar timestamp 
+  // 1) Normalizar datos y agregar flag de Escapada
   const limpias = ofertas
     .filter((d) => d.destino && d.origen)
     .map((d) => ({
@@ -25,7 +13,7 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
       destinoUpper: (d.destino || '').trim().toUpperCase(),
       origenUpper: (d.origen || '').trim().toUpperCase(),
       esDirecto: d.tipo_vuelo === 'directo',
-      // 🔥 Validación correcta de mercado
+      esEscapada: d.tipo_vuelo === 'escapada_finde', // NUEVO FLAG
       esDelPaisActual: d.pais_mercado 
         ? String(d.pais_mercado).toUpperCase() === paisActual.toUpperCase() 
         : true,
@@ -34,36 +22,58 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
 
   const destinosVistos = new Set<string>();
   const hookDeals: any[] = [];
+  const escapadasDeals: any[] = [];
+  const radarDeals: any[] = [];
 
-  // Separamos las ofertas que sí son del mercado actual
   const ofertasPais = limpias.filter(d => d.esDelPaisActual);
 
-  // 2) ESTRATEGIA VIP: Frescura + Meritocracia (Máximo 72 horas)
-  const limiteFrescura = Date.now() - (3 * 24 * 60 * 60 * 1000);
+  // --- NUEVO ORDEN DE EXTRACCIÓN ---
 
-  // Filtramos la barrera de tiempo y ordenamos por FACTOR WOW interno
+  // Pre-ordenamos TODAS las ofertas para evaluar las escapadas (Factor WOW)
+  const escapadasDisponibles = [...ofertasPais]
+    .filter(d => d.esEscapada)
+    .sort((a, b) => {
+      if (a.calidad !== b.calidad) return b.calidad - a.calidad;
+      if (a.precioNum !== b.precioNum) return a.precioNum - b.precioNum;
+      return b.timestamp - a.timestamp;
+    });
+
+  // PASO 1: El Tributo del Hero (1 Escapada obligatoria a Destacadas)
+  for (const d of escapadasDisponibles) {
+    if (hookDeals.length < 1 && !destinosVistos.has(d.destinoUpper)) {
+      hookDeals.push(d);
+      destinosVistos.add(d.destinoUpper);
+      break; 
+    }
+  }
+
+  // PASO 2: El Carrusel de Escapadas (Las siguientes 6 mejores)
+  for (const d of escapadasDisponibles) {
+    if (escapadasDeals.length < 6 && !destinosVistos.has(d.destinoUpper)) {
+      escapadasDeals.push(d);
+      destinosVistos.add(d.destinoUpper);
+    }
+  }
+
+  // PASO 3: Estrategia VIP Original (Frescura + Meritocracia para rellenar el Hero)
+  const limiteFrescura = Date.now() - (3 * 24 * 60 * 60 * 1000);
   const ofertasFrescas = [...ofertasPais].filter(d => d.timestamp >= limiteFrescura);
   
   ofertasFrescas.sort((a, b) => {
-    // 1ro: La de mayor calidad gana
     if (a.calidad !== b.calidad) return b.calidad - a.calidad;
-    // 2do: Si empatan en calidad, la más barata gana
     if (a.precioNum !== b.precioNum) return a.precioNum - b.precioNum;
-    // 3ro: Si empatan en todo, la más reciente gana
     return b.timestamp - a.timestamp;
   });
 
   for (const d of ofertasFrescas) {
     if (hookDeals.length >= 3) break; 
-    
-    // Mantenemos la elegancia visual
     if (!destinosVistos.has(d.destinoUpper)) {
       hookDeals.push(d);
       destinosVistos.add(d.destinoUpper);
     }
   }
 
-  // 3) EL FACTOR WOW HISTÓRICO: El resto compite por Calidad y Precio general
+  // PASO 4: El Factor WOW Histórico (Llenamos el resto del Hero hasta 10 y el radar)
   const restoOfertas = limpias.filter(d => !destinosVistos.has(d.destinoUpper));
 
   restoOfertas.sort((a, b) => {
@@ -78,13 +88,9 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
     return b.timestamp - a.timestamp;
   });
 
-  // 4) Llenar el resto del carrusel (hasta 10) y luego el radar
-  const radarDeals: any[] = [];
-
   for (const d of restoOfertas) {
     if (!destinosVistos.has(d.destinoUpper)) {
       destinosVistos.add(d.destinoUpper);
-      
       if (hookDeals.length < 10) {
         hookDeals.push(d);
       } else {
@@ -93,5 +99,5 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
     }
   }
 
-  return { hookDeals, radarDeals };
+  return { hookDeals, escapadasDeals, radarDeals };
 }
