@@ -48,42 +48,55 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     global: { fetch }
   });
 
-  const { data: ofertasCrudas, error: err } = await supabase
-    .from('publicaciones_lumivia')
-    .select('*')
-    .eq('activo', true)
-    .eq('pais_mercado', paisUpper)
-    .order('created_at', { ascending: false })
-    .limit(50);
+  let ofertasEnriquecidas: any[] = [];
 
-  if (err) console.error('Error al extraer ofertas:', err);
+  // 🔥 BLINDAJE 1: Try/Catch global para que el servidor nunca arroje un 500 fatal a SvelteKit
+  try {
+    const { data: ofertasCrudas, error: err } = await supabase
+      .from('publicaciones_lumivia')
+      .select('*')
+      .eq('activo', true)
+      .eq('pais_mercado', paisUpper)
+      .order('created_at', { ascending: false })
+      .limit(50);
 
-  let ofertasEnriquecidas = ofertasCrudas || [];
+    if (err) {
+      console.error('Error al extraer ofertas:', err);
+    } else {
+      ofertasEnriquecidas = ofertasCrudas || [];
+    }
 
-  if (ofertasEnriquecidas.length > 0) {
-    const codigosIata = [...new Set([
-      ...ofertasEnriquecidas.map(o => o.origen),
-      ...ofertasEnriquecidas.map(o => o.destino)
-    ])];
+    if (ofertasEnriquecidas.length > 0) {
+      // 🔥 BLINDAJE 2: El .filter(Boolean) aniquila los nulls antes de que lleguen a Supabase
+      const codigosIata = [...new Set([
+        ...ofertasEnriquecidas.map(o => o.origen),
+        ...ofertasEnriquecidas.map(o => o.destino)
+      ].filter(Boolean))];
 
-    const { data: diccionario, error: errDiccionario } = await supabase
-      .from('diccionario_destinos')
-      .select('iata_code, nombre_ciudad, imagen_url_verificada')
-      .in('iata_code', codigosIata);
-      
-    if (errDiccionario) console.error('Error al consultar diccionario:', errDiccionario);
+      if (codigosIata.length > 0) {
+        const { data: diccionario, error: errDiccionario } = await supabase
+          .from('diccionario_destinos')
+          .select('iata_code, nombre_ciudad, imagen_url_verificada')
+          .in('iata_code', codigosIata);
+          
+        if (errDiccionario) console.error('Error al consultar diccionario:', errDiccionario);
 
-    const mapaDestinos = (diccionario || []).reduce((acc, curr) => {
-      acc[curr.iata_code] = curr;
-      return acc;
-    }, {} as Record<string, any>);
+        const mapaDestinos = (diccionario || []).reduce((acc, curr) => {
+          acc[curr.iata_code] = curr;
+          return acc;
+        }, {} as Record<string, any>);
 
-    ofertasEnriquecidas = ofertasEnriquecidas.map(oferta => ({
-      ...oferta,
-      origen_nombre: mapaDestinos[oferta.origen]?.nombre_ciudad || oferta.origen,
-      destino_nombre: mapaDestinos[oferta.destino]?.nombre_ciudad || oferta.destino,
-      imagen_fallback: mapaDestinos[oferta.destino]?.imagen_url_verificada || null
-    }));
+        ofertasEnriquecidas = ofertasEnriquecidas.map(oferta => ({
+          ...oferta,
+          origen_nombre: mapaDestinos[oferta.origen]?.nombre_ciudad || oferta.origen,
+          destino_nombre: mapaDestinos[oferta.destino]?.nombre_ciudad || oferta.destino,
+          imagen_fallback: mapaDestinos[oferta.destino]?.imagen_url_verificada || null
+        }));
+      }
+    }
+  } catch (dbError) {
+    console.error("Error crítico procesando DB en página de países:", dbError);
+    // Si la DB explota, ofertasEnriquecidas se queda como [] y la página carga viva y sin crash.
   }
 
   // Obtenemos solo las variables que necesita la página principal
