@@ -9,8 +9,12 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
       ...d,
       precioNum: Number(d.precio ?? d.price ?? Infinity),
       calidad: Number(d.calidad_oferta || 0),
-      destinoUpper: (d.destino || '').trim().toUpperCase(),
-      origenUpper: (d.origen || '').trim().toUpperCase(),
+      
+      // 🔥 EL BISTURÍ: En lugar de usar IATA, usamos el nombre de la ciudad.
+      // Así, si llega una oferta a MEX y otra a NLU, ambas son "CIUDAD DE MÉXICO" y bloquea el repetido.
+      destinoUpper: (d.destino_nombre || d.destino || '').trim().toUpperCase(),
+      origenUpper: (d.origen_nombre || d.origen || '').trim().toUpperCase(),
+      
       esDirecto: d.tipo_vuelo === 'directo',
       esEscapada: d.tipo_vuelo === 'escapada_finde',
       esDelPaisActual: d.pais_mercado 
@@ -22,7 +26,7 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
   const destinosVistos = new Set<string>();
   const hookDeals: any[] = [];
   const radarDeals: any[] = [];
-  let escapadasEnHero = 0; // 🔥 El contador clave
+  let escapadasEnHero = 0; 
 
   const ofertasPais = limpias.filter(d => d.esDelPaisActual);
 
@@ -57,7 +61,7 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
   for (const d of ofertasFrescas) {
     if (hookDeals.length >= 3) break; 
     if (!destinosVistos.has(d.destinoUpper)) {
-      if (d.esEscapada && escapadasEnHero >= 1) continue; // Si ya hay escapada, nos la saltamos en el Hero
+      if (d.esEscapada && escapadasEnHero >= 1) continue; 
       hookDeals.push(d);
       destinosVistos.add(d.destinoUpper);
       if (d.esEscapada) escapadasEnHero++;
@@ -78,16 +82,15 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
     if (!destinosVistos.has(d.destinoUpper)) {
       destinosVistos.add(d.destinoUpper);
       
-      // 🔥 Lógica maestra: ¿Cabe en el Hero y no rompe la regla de la escapada?
       if (hookDeals.length < 8) {
         if (d.esEscapada && escapadasEnHero >= 1) {
-          radarDeals.push(d); // No cabe en hero, pero SÍ se va al radar
+          radarDeals.push(d); 
         } else {
           hookDeals.push(d);
           if (d.esEscapada) escapadasEnHero++;
         }
       } else {
-        radarDeals.push(d); // El Hero está lleno, todo al radar
+        radarDeals.push(d); 
       }
     }
   }
