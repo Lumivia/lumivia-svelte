@@ -11,7 +11,8 @@
   import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
   import { supabase } from '$lib/supabaseClient';
 
-  let { data } = $props();
+  // 🔥 SINTAXIS SVELTE 5 ESTRICTA
+  let { data }: { data: any } = $props();
 
   const title = $derived(`Vuelos baratos desde ${data.mercado?.nombre || 'tu país'} - Lumivia`);
   const description = $derived(`Ofertas destacadas y destinos populares desde ${data.mercado?.nombre || 'tu país'}. Planifica tu próxima gran historia con nuestra bóveda secreta.`);
@@ -40,7 +41,7 @@
     enviarRadar();
   }
 
-  let ofertaSeleccionada = $state<any | null>(null);
+  let ofertaSeleccionada: any = $state(null);
   let modalAbierto = $state(false);
 
   let pausarCarrusel = $state(false);
@@ -149,6 +150,7 @@
 </svelte:head>
 
 <div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col overflow-x-hidden">
+  
   <Header paisUpper={data.paisUpper} mercado={data.mercado} />
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full relative">
