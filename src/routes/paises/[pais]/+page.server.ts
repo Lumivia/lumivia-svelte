@@ -13,24 +13,18 @@ const mercadosPermitidos = {
 
 type CodigoPais = keyof typeof mercadosPermitidos;
 
-// 🔥 SE AÑADIÓ 'depends' PARA FORZAR LA REACTIVIDAD EN SVELTEKIT
 export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform, depends }) => {
   const paisParam = params.pais ?? '';
   const codigoPais = paisParam.toLowerCase();
 
-  // Le decimos explícitamente a SvelteKit: "Si el país cambia, VUELVE a ejecutar esto"
   depends(`app:paises:${codigoPais}`);
 
-  // 1) Validación de Mercado
   const mercado = mercadosPermitidos[codigoPais as CodigoPais];
   if (!mercado) throw redirect(302, '/');
 
   const paisUpper = codigoPais.toUpperCase();
-  
-  // 🔥 CLAVE KV: Usamos una llave única por país
   const cacheKey = `lumivia_cache_${codigoPais}`;
 
-  // 2) INTENTO DE LECTURA DESDE CLOUDFLARE EDGE
   try {
     if (platform?.env?.KV_CACHE) {
       const cached = await platform.env.KV_CACHE.get(cacheKey, 'json');
@@ -42,7 +36,6 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     console.error("Error leyendo KV Cache:", e);
   }
 
-  // 3) INICIALIZACIÓN DE SUPABASE
   const supabaseUrl = env.PUBLIC_SUPABASE_URL;
   const supabaseKey = env.PUBLIC_SUPABASE_ANON_KEY;
 
@@ -55,7 +48,6 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     global: { fetch }
   });
 
-  // 4) EXTRACCIÓN DE DATOS FRESCOS
   const { data: ofertasCrudas, error: err } = await supabase
     .from('publicaciones_lumivia')
     .select('*')
@@ -68,14 +60,12 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
 
   let ofertasEnriquecidas = ofertasCrudas || [];
 
-  // 🔥 4.5) EL BISTURÍ: ENRIQUECIMIENTO DE DATOS
   if (ofertasEnriquecidas.length > 0) {
     const codigosIata = [...new Set([
       ...ofertasEnriquecidas.map(o => o.origen),
       ...ofertasEnriquecidas.map(o => o.destino)
     ])];
 
-    // 🚨 ARREGLO CRÍTICO: Cambiamos 'nombre_hotel' a 'nombre_ciudad'
     const { data: diccionario, error: errDiccionario } = await supabase
       .from('diccionario_destinos')
       .select('iata_code, nombre_ciudad, imagen_url_verificada')
@@ -96,7 +86,6 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     }));
   }
 
-  // 5) EL CEREBRO: Curación y procesamiento
   const { hookDeals, escapadasDeals, radarDeals } = curarOfertas(ofertasEnriquecidas, paisUpper);
 
   const schemaAEO = JSON.stringify({
@@ -107,18 +96,17 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     url: `https://www.lumivia.app/paises/${codigoPais}`
   });
 
-  // 6) PREPARACIÓN DE RESPUESTA
   const responseData = {
     pais: codigoPais,
     paisUpper,
     mercado,
     destacadas: hookDeals,
     escapadas: escapadasDeals,
-    masDestinos: radarDeals.slice(0, 8),
+    // 🔥 AUMENTADO A 10 para completar el total de 18
+    masDestinos: radarDeals.slice(0, 10),
     schemaAEO
   };
 
-  // 7) GUARDADO EN CACHÉ
   try {
     if (platform?.env?.KV_CACHE && hookDeals.length > 0) {
       await platform.env.KV_CACHE.put(cacheKey, JSON.stringify(responseData), { 
@@ -129,7 +117,6 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     console.error("Error guardando en KV Cache:", e);
   }
 
-  // 8) Configuración de headers
   setHeaders({
     'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60'
   });
