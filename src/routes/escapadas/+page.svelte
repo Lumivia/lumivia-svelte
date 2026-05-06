@@ -19,8 +19,9 @@
   };
 
   const paisActual = $derived(String(data.pais || 'MX').split('?')[0].split('&')[0].toUpperCase());
-  const monedaActual = $derived(configMercado[paisActual]?.moneda ?? 'MXN');
-  const banderaActual = $derived(configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png');
+  const mercadoActual = $derived(configMercado[paisActual] || configMercado['MX']);
+  const monedaActual = $derived(mercadoActual.moneda);
+  const banderaActual = $derived(mercadoActual.bandera);
   
   let dropdownAbierto = $state(false);
   let modalAbierto = $state(false);
@@ -31,7 +32,36 @@
   let cargandoAdmin = $state(false);
   let vuelosReportados: Set<number | string> = $state(new Set());
 
-  // 🔥 FIX IMÁGENES ROTAS: Función salvavidas
+  // 🔥 ALGORITMO DE REPARTO: Separa destinos repetidos
+  function intercalarOfertas(ofertas: any[]) {
+    if (!ofertas || ofertas.length === 0) return [];
+    
+    // Agrupamos por destino
+    const agrupados: Record<string, any[]> = {};
+    ofertas.forEach(o => {
+      const dest = o.destino_nombre || o.destino || 'UNKNOWN';
+      if (!agrupados[dest]) agrupados[dest] = [];
+      agrupados[dest].push(o);
+    });
+
+    // Repartimos una por una de cada grupo
+    const resultado = [];
+    let quedanCartas = true;
+    while(quedanCartas) {
+      quedanCartas = false;
+      for (const key in agrupados) {
+        if (agrupados[key].length > 0) {
+          resultado.push(agrupados[key].shift());
+          quedanCartas = true;
+        }
+      }
+    }
+    return resultado;
+  }
+
+  // Obtenemos la lista ya mezclada reactivamente
+  const dealsMezclados = $derived(intercalarOfertas([...(data.deals || [])]));
+
   function handleImageError(e: Event) {
     const img = e.target as HTMLImageElement;
     img.onerror = null;
@@ -179,10 +209,10 @@
     </div>
 
     <div id="escapadas-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20 relative z-10">
-      {#if !data.deals || data.deals.length === 0}
+      {#if !dealsMezclados || dealsMezclados.length === 0}
         <div class="col-span-full text-center text-gray-400 py-20 font-medium">Aún no hay escapadas activas en la bóveda de {paisActual}. Regresa pronto.</div>
       {:else}
-        {#each data.deals as deal (deal.id)}
+        {#each dealsMezclados as deal (deal.id)}
           {@const estaMuerta = checarSiEstaMuerta(deal, vuelosReportados)}
           {@const imgFinal = deal.imagen_url_verificada || deal.imagen_fallback || 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80'}
           {@const esVip = deal.tipo_vuelo === 'directo' || deal.escalas === 0}
@@ -238,7 +268,9 @@
               
               <div class="flex justify-between items-center mb-3">
                 <p class="text-[11px] font-black text-lumiDark uppercase tracking-widest">{origenSeguro} ✈ {destinoSeguro}</p>
-                <p class="text-[10px] text-gray-400 font-bold uppercase">{deal.fecha_salida ? deal.fecha_salida.split('T')[0] : ''}</p>
+                <p class="text-[10px] text-gray-400 font-bold uppercase">
+                  {deal.fecha_salida ? deal.fecha_salida.split('T')[0] : ''} al {deal.fecha_regreso ? deal.fecha_regreso.split('T')[0] : ''}
+                </p>
               </div>
 
               <h3 class="font-bold text-lg leading-snug mb-3 text-lumiDark">✨ Escapada: {destinoSeguro} desde ${deal.precio} {monedaActual}.</h3>
