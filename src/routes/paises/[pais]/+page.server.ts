@@ -40,7 +40,7 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
   const supabaseKey = env.PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    return { pais: codigoPais, paisUpper, mercado, destacadas: [], escapadas: [], masDestinos: [], schemaAEO: null };
+    return { pais: codigoPais, paisUpper, mercado, destacadas: [], masDestinos: [], schemaAEO: null };
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey, {
@@ -86,7 +86,8 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     }));
   }
 
-  const { hookDeals, escapadasDeals, radarDeals } = curarOfertas(ofertasEnriquecidas, paisUpper);
+  // Obtenemos solo las variables que necesita la página principal
+  const { hookDeals, radarDeals } = curarOfertas(ofertasEnriquecidas, paisUpper);
 
   const schemaAEO = JSON.stringify({
     '@context': 'https://schema.org',
@@ -101,8 +102,6 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     paisUpper,
     mercado,
     destacadas: hookDeals,
-    escapadas: escapadasDeals,
-    // 🔥 AUMENTADO A 10 para completar el total de 18
     masDestinos: radarDeals.slice(0, 10),
     schemaAEO
   };
