@@ -23,6 +23,14 @@
     }))
   );
 
+  // 🔥 NUEVA DECLARACIÓN: Escapadas
+  const ofertasEscapadas = $derived(
+    (data.escapadas || []).map((d: any) => ({
+      ...d,
+      tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at)
+    }))
+  );
+
   const ofertasRadar = $derived(
     (data.masDestinos || []).map((d: any) => ({
       ...d,
@@ -202,6 +210,65 @@
       {/key}
     </div>
 
+    {#if ofertasEscapadas.length > 0}
+      <div class="mb-5 mt-4 relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-bold tracking-tight">Escapadas de Fin de Semana</h2>
+          <p class="text-sm text-gray-500 font-light mt-1">Poco tiempo, poco dinero. Vuelos para desconectar de la rutina.</p>
+        </div>
+      </div>
+
+      <div class="relative w-full mb-16 group z-10 bg-[#F8F9FA]/80 rounded-3xl p-5 sm:p-6 border border-gray-100 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
+        <div class="flex overflow-x-auto snap-x snap-mandatory gap-5 pb-6 no-scrollbar scroll-smooth">
+          {#each ofertasEscapadas as deal (deal.id)}
+            <div class="flex-none w-[280px] sm:w-[310px] snap-center bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer relative group/card" onclick={() => abrirModal(deal)}>
+              
+              <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-lumiDark text-[10px] font-extrabold px-3 py-1.5 rounded-full z-20 shadow-sm flex items-center gap-1.5 uppercase tracking-wide">
+                {#if deal.escalas === 0 || deal.tipo_vuelo === 'directo'}
+                  <span class="text-emerald-500">⚡</span> Directo
+                {:else}
+                  <span>⏱️</span> Break Corto
+                {/if}
+              </div>
+
+              <div class="w-full h-36 bg-gray-200 relative overflow-hidden">
+                {#if deal.imagen_fallback}
+                  <img src={deal.imagen_fallback} alt={deal.destino_nombre || deal.destino} class="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105" />
+                {:else}
+                  <div class="w-full h-full bg-lumiDark flex items-center justify-center text-white/50 text-xs">Sin foto</div>
+                {/if}
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                <div class="absolute bottom-3 left-4 text-white">
+                  <p class="font-bold text-xl leading-tight drop-shadow-md">{deal.destino_nombre || deal.destino}</p>
+                </div>
+              </div>
+
+              <div class="p-4">
+                <p class="text-[11px] text-gray-500 font-semibold mb-3 bg-gray-50 inline-block px-2.5 py-1.5 rounded-md border border-gray-100 w-full text-center">
+                  📅 {deal.fecha_salida ? deal.fecha_salida.split('T')[0] : ''} al {deal.fecha_regreso ? deal.fecha_regreso.split('T')[0] : ''}
+                </p>
+                <div class="flex items-end justify-between mt-1">
+                  <div>
+                    <p class="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Tarifa desde</p>
+                    <p class="text-2xl font-black text-lumiDark leading-none mt-1">${deal.precio} <span class="text-sm font-bold text-gray-400">{data.mercado?.moneda || ''}</span></p>
+                  </div>
+                  <button class="bg-lumiDark text-white p-2 rounded-full group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark transition-colors">
+                    <svg class="w-5 h-5 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          {/each}
+        </div>
+
+        <div class="mt-2 flex justify-center">
+          <a href="/escapadas?pais={data.paisUpper || 'MX'}" class="inline-flex items-center gap-2 text-sm font-bold text-lumiDark hover:text-white bg-white hover:bg-lumiDark px-7 py-3 rounded-full shadow-sm border border-gray-200 hover:border-lumiDark transition-all active:scale-95">
+            Explorar todas las escapadas
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+          </a>
+        </div>
+      </div>
+    {/if}
     <div class="mb-6 mt-4 relative z-10" id="titulo-radar">
       <h2 class="text-2xl font-bold tracking-tight">Más Destinos</h2>
     </div>
