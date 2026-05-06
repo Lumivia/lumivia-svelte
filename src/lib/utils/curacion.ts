@@ -1,6 +1,6 @@
 export function curarOfertas(ofertas: any[], paisActual: string) {
   if (!ofertas || ofertas.length === 0) {
-    return { hookDeals: [], escapadasDeals: [], radarDeals: [] };
+    return { hookDeals: [], radarDeals: [] };
   }
 
   // 1) Normalizar datos y agregar flag de Escapada
@@ -22,7 +22,6 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
 
   const destinosVistos = new Set<string>();
   const hookDeals: any[] = [];
-  const escapadasDeals: any[] = [];
   const radarDeals: any[] = [];
 
   const ofertasPais = limpias.filter(d => d.esDelPaisActual);
@@ -47,13 +46,7 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
     }
   }
 
-  // PASO 2: El Carrusel de Escapadas (Las siguientes 6 mejores)
-  for (const d of escapadasDisponibles) {
-    if (escapadasDeals.length < 6 && !destinosVistos.has(d.destinoUpper)) {
-      escapadasDeals.push(d);
-      destinosVistos.add(d.destinoUpper);
-    }
-  }
+  // (ELIMINADO EL PASO 2: Las escapadas restantes ahora fluyen libres hacia el Radar)
 
   // PASO 3: Estrategia VIP Original (Frescura + Meritocracia para rellenar el Hero)
   const limiteFrescura = Date.now() - (3 * 24 * 60 * 60 * 1000);
@@ -91,7 +84,7 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
   for (const d of restoOfertas) {
     if (!destinosVistos.has(d.destinoUpper)) {
       destinosVistos.add(d.destinoUpper);
-      // 🔥 AUMENTADO A 8 COMO PEDISTE
+      // 🔥 Mantenemos el límite de 8 para el Hero
       if (hookDeals.length < 8) {
         hookDeals.push(d);
       } else {
@@ -100,5 +93,5 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
     }
   }
 
-  return { hookDeals, escapadasDeals, radarDeals };
+  return { hookDeals, radarDeals };
 }
