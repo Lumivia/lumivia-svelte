@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
   const supabaseKey = env.PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    return { pais: codigoPais, paisUpper, mercado, destacadas: [], masDestinos: [], schemaAEO: null };
+    return { pais: codigoPais, paisUpper, mercado, destacadas: [], escapadas: [], masDestinos: [], schemaAEO: null };
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey, {
@@ -97,7 +97,7 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
   }
 
   // 5) EL CEREBRO: Curación y procesamiento
-  const { hookDeals, radarDeals } = curarOfertas(ofertasEnriquecidas, paisUpper);
+  const { hookDeals, escapadasDeals, radarDeals } = curarOfertas(ofertasEnriquecidas, paisUpper);
 
   const schemaAEO = JSON.stringify({
     '@context': 'https://schema.org',
@@ -113,6 +113,7 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     paisUpper,
     mercado,
     destacadas: hookDeals,
+    escapadas: escapadasDeals,
     masDestinos: radarDeals.slice(0, 8),
     schemaAEO
   };
