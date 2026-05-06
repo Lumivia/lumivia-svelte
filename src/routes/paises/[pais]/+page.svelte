@@ -95,13 +95,13 @@
   <meta name="description" content={description} />
 </svelte:head>
 
-<div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col relative">
+<div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col relative w-full">
   
   <Header paisUpper={data.paisUpper} mercado={data.mercado || { moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' }} />
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full relative">
 
-    <div class="text-center max-w-3xl mx-auto mb-10 relative z-10">
+    <div class="text-center max-w-3xl mx-auto mb-10 relative z-10 w-full">
       <h1 class="text-4xl md:text-5xl font-black tracking-tighter mb-4 text-lumiDark leading-tight drop-shadow-sm mt-4">
         Viajes para tus recuerdos.<br>
         <span class="bg-clip-text text-transparent bg-gradient-to-r from-lumiCyan to-blue-500">
@@ -116,7 +116,7 @@
       </p>
     </div>
 
-    <div class="max-w-xl mx-auto mb-16 relative z-20 group">
+    <div class="max-w-xl mx-auto mb-16 relative z-20 group w-full">
       <div class="bg-white/80 backdrop-blur-xl p-1.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-gray-200/60 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(0,210,255,0.12)]">
         <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
           <input type="email" bind:value={emailNewsletter} placeholder="Recibe nuestra selección del día..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" />
@@ -130,12 +130,12 @@
       </div>
     </div>
 
-    <div class="mb-6 flex items-center justify-between relative z-10">
+    <div class="mb-6 flex items-center justify-between relative z-10 w-full">
       <h2 class="text-2xl font-bold tracking-tight">Oportunidades Destacadas</h2>
     </div>
 
     <div class="relative w-full mb-16 group z-10">
-      <div use:carruselLogica onmouseenter={() => pausarCarrusel = true} onmouseleave={() => pausarCarrusel = false} ontouchstart={() => pausarCarrusel = true} ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)} class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth">
+      <div use:carruselLogica onmouseenter={() => pausarCarrusel = true} onmouseleave={() => pausarCarrusel = false} ontouchstart={() => pausarCarrusel = true} ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)} class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth w-full">
         {#if ofertasHook.length === 0}
           <div class="w-full text-center text-gray-400 py-10 font-medium animate-pulse">Conectando con la base de datos...</div>
         {:else}
@@ -146,12 +146,12 @@
       </div>
     </div>
 
-    <div class="mb-6 mt-4 relative z-10">
+    <div class="mb-6 mt-4 relative z-10 w-full">
       <h2 class="text-2xl font-bold tracking-tight">Más Destinos</h2>
     </div>
 
-    <div class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6 relative z-10">
-      <ul class="divide-y divide-gray-100/80">
+    <div class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6 relative z-10 w-full">
+      <ul class="divide-y divide-gray-100/80 w-full">
         {#if ofertasRadar.length === 0}
           <li class="p-6 text-gray-400 text-center">No hay más destinos por ahora.</li>
         {:else}
@@ -162,13 +162,13 @@
       </ul>
     </div>
 
-    <div class="text-center mb-16 relative z-10">
+    <div class="text-center mb-16 relative z-10 w-full">
       <a href="/masdestinos?pais={data.paisUpper || 'MX'}" class="inline-flex items-center justify-center bg-white border border-gray-200 text-lumiDark hover:border-lumiCyan hover:text-lumiCyan px-8 py-3.5 rounded-full font-bold transition-all shadow-[0_4px_14px_0_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,210,255,0.15)] active:scale-95 text-sm group">
         Explorar más destinos
       </a>
     </div>
 
-    <div class="bg-lumiDark text-white border border-gray-800 rounded-3xl px-8 py-8 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 mb-20 z-10">
+    <div class="bg-lumiDark text-white border border-gray-800 rounded-3xl px-8 py-8 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 mb-20 z-10 w-full">
       <div class="relative z-10 text-center md:text-left flex-grow">
         <h3 class="text-2xl font-bold mb-2">¿Tienes un viaje específico en mente?</h3>
         <p class="text-gray-400 text-sm font-light">Explora nuestro buscador global y compara todas las aerolíneas en milisegundos.</p>
@@ -178,13 +178,13 @@
       </div>
     </div>
 
-    <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10">
+    <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10 w-full">
       <div class="relative z-10 md:w-1/2 text-center md:text-left">
         <h3 class="text-3xl font-bold text-white mb-4">¿No ves tu destino soñado?</h3>
         <p class="text-gray-400 font-light leading-relaxed">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos el momento perfecto.</p>
       </div>
       <div class="relative z-10 md:w-1/2 w-full bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
-        <form class="space-y-4" onsubmit={handleSubmitRadar}>
+        <form class="space-y-4 w-full" onsubmit={handleSubmitRadar}>
           <div>
             <label class="block text-xs font-semibold text-gray-400 mb-1">Tu Nombre</label>
             <input type="text" bind:value={radarNombre} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
