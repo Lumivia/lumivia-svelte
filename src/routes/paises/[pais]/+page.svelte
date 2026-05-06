@@ -5,45 +5,23 @@
   import DealCard from '$lib/components/DealCard.svelte';
   import RadarItem from '$lib/components/RadarItem.svelte';
   import Footer from '$lib/components/Footer.svelte';
-  
   import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
-
   import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
   import { supabase } from '$lib/supabaseClient';
 
-  // 🔥 SINTAXIS SVELTE 5 ESTRICTA
   let { data }: { data: any } = $props();
 
   const title = $derived(`Vuelos baratos desde ${data.mercado?.nombre || 'tu país'} - Lumivia`);
   const description = $derived(`Ofertas destacadas y destinos populares desde ${data.mercado?.nombre || 'tu país'}. Planifica tu próxima gran historia con nuestra bóveda secreta.`);
 
-  const ofertasHook = $derived(
-    (data.destacadas || []).map((d: any) => ({
-      ...d,
-      tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at)
-    }))
-  );
+  const ofertasHook = $derived((data.destacadas || []).map((d: any) => ({ ...d, tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at) })));
+  const ofertasRadar = $derived((data.masDestinos || []).map((d: any) => ({ ...d, tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at) })));
 
-  const ofertasRadar = $derived(
-    (data.masDestinos || []).map((d: any) => ({
-      ...d,
-      tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at)
-    }))
-  );
-
-  function handleSubmitNewsletter(e: Event) {
-    e.preventDefault();
-    enviarNewsletter();
-  }
-
-  function handleSubmitRadar(e: Event) {
-    e.preventDefault();
-    enviarRadar();
-  }
+  function handleSubmitNewsletter(e: Event) { e.preventDefault(); enviarNewsletter(); }
+  function handleSubmitRadar(e: Event) { e.preventDefault(); enviarRadar(); }
 
   let ofertaSeleccionada: any = $state(null);
   let modalAbierto = $state(false);
-
   let pausarCarrusel = $state(false);
 
   let emailNewsletter = $state('');
@@ -64,9 +42,8 @@
     const intervalo = setInterval(() => {
       if (pausarCarrusel || node.children.length === 0) return;
       const maxScroll = node.scrollWidth - node.clientWidth;
-      if (node.scrollLeft >= maxScroll - 10) {
-        node.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
+      if (node.scrollLeft >= maxScroll - 10) node.scrollTo({ left: 0, behavior: 'smooth' });
+      else {
         const primerHijo = node.children[0] as HTMLElement;
         const avance = (primerHijo?.clientWidth || 300) + 24;
         node.scrollBy({ left: avance, behavior: 'smooth' });
@@ -76,39 +53,17 @@
   }
 
   async function enviarNewsletter() {
-    newsletterCargando = true;
-    newsletterMensaje = '';
-    newsletterClase = '';
-    
+    newsletterCargando = true; newsletterMensaje = ''; newsletterClase = '';
     try {
       const response = await fetch('/api/suscribir', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: emailNewsletter.toLowerCase(),
-          pais: data.paisUpper,
-          nombre: 'Viajero'
-        })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailNewsletter.toLowerCase(), pais: data.paisUpper, nombre: 'Viajero' })
       });
-
       const result = await response.json();
-
-      if (result.success) {
-        newsletterMensaje = '¡Listo! Te avisaremos de las mejores gangas.';
-        newsletterClase = 'text-emerald-500';
-        emailNewsletter = '';
-      } else {
-        newsletterMensaje = 'Error al procesar tu suscripción.';
-        newsletterClase = 'text-red-500';
-        console.error(result.message);
-      }
-    } catch (err) {
-      newsletterMensaje = 'Error de conexión. Intenta de nuevo.';
-      newsletterClase = 'text-red-500';
-      console.error(err);
-    } finally {
-      newsletterCargando = false;
-    }
+      if (result.success) { newsletterMensaje = '¡Listo! Te avisaremos de las mejores gangas.'; newsletterClase = 'text-emerald-500'; emailNewsletter = ''; } 
+      else { newsletterMensaje = 'Error al procesar tu suscripción.'; newsletterClase = 'text-red-500'; }
+    } catch (err) { newsletterMensaje = 'Error de conexión. Intenta de nuevo.'; newsletterClase = 'text-red-500'; } 
+    finally { newsletterCargando = false; }
   }
 
   function poblarMeses() {
@@ -122,17 +77,11 @@
   }
 
   async function enviarRadar() {
-    radarCargando = true;
-    radarExito = false;
+    radarCargando = true; radarExito = false;
     const { error } = await supabase.from('radares_personales').insert([{ nombre: radarNombre, origen: radarOrigen, destino: radarDestino, mes_esperado: radarMes, contacto: radarContacto, status: 'pendiente_verificacion' }]);
     radarCargando = false;
-    if (!error) {
-      radarExito = true;
-      radarNombre = radarOrigen = radarDestino = radarMes = radarContacto = '';
-    } else {
-      alert("Hubo un error al guardar. Intenta de nuevo.");
-      console.error(error);
-    }
+    if (!error) { radarExito = true; radarNombre = radarOrigen = radarDestino = radarMes = radarContacto = ''; } 
+    else { alert("Hubo un error al guardar."); }
   }
 
   function abrirModal(oferta: any) { ofertaSeleccionada = oferta; modalAbierto = true; }
@@ -144,25 +93,21 @@
 <svelte:head>
   <title>{title}</title>
   <meta name="description" content={description} />
-  <meta property="og:title" content={title} />
-  <meta property="og:description" content={description} />
-  <meta name="robots" content="index, follow" />
 </svelte:head>
 
 <div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col overflow-x-hidden">
   
-  <Header paisUpper={data.paisUpper} mercado={data.mercado} />
+  <Header paisUpper={data.paisUpper} mercado={data.mercado || { moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' }} />
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full relative">
 
-    <div class="text-center max-w-3xl mx-auto mb-10 relative z-10" id="hero-section">
+    <div class="text-center max-w-3xl mx-auto mb-10 relative z-10">
       <h1 class="text-4xl md:text-5xl font-black tracking-tighter mb-4 text-lumiDark leading-tight drop-shadow-sm mt-4">
         Viajes para tus recuerdos.<br>
         <span class="bg-clip-text text-transparent bg-gradient-to-r from-lumiCyan to-blue-500">
           Historias para toda la vida.
         </span>
       </h1>
-
       <p class="text-base text-gray-600 mb-0 font-light leading-relaxed">
         Auditamos miles de vuelos a diario.
         <strong class="text-lumiDark font-semibold">
@@ -171,10 +116,10 @@
       </p>
     </div>
 
-    <div class="max-w-xl mx-auto mb-16 relative z-20 group" id="newsletter-section">
+    <div class="max-w-xl mx-auto mb-16 relative z-20 group">
       <div class="bg-white/80 backdrop-blur-xl p-1.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-gray-200/60 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(0,210,255,0.12)]">
         <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
-          <input id="newsletter-email" type="email" bind:value={emailNewsletter} placeholder="Recibe nuestra selección del día..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" />
+          <input type="email" bind:value={emailNewsletter} placeholder="Recibe nuestra selección del día..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" />
           <button type="submit" class="bg-lumiDark text-white hover:bg-black px-6 py-2 rounded-full font-bold transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-md" disabled={newsletterCargando}>
             {newsletterCargando ? 'Guardando...' : 'Suscribirme Gratis'}
           </button>
@@ -185,29 +130,27 @@
       </div>
     </div>
 
-    <div class="mb-6 flex items-center justify-between relative z-10" id="titulo-hook">
+    <div class="mb-6 flex items-center justify-between relative z-10">
       <h2 class="text-2xl font-bold tracking-tight">Oportunidades Destacadas</h2>
     </div>
 
     <div class="relative w-full mb-16 group z-10">
-      {#key data.paisUpper}
-        <div use:carruselLogica onmouseenter={() => pausarCarrusel = true} onmouseleave={() => pausarCarrusel = false} ontouchstart={() => pausarCarrusel = true} ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)} class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth">
-          {#if ofertasHook.length === 0}
-            <div class="w-full text-center text-gray-400 py-10 font-medium animate-pulse">Conectando con la base de datos...</div>
-          {:else}
-            {#each ofertasHook as deal (deal.id)}
-              <DealCard {deal} monedaActual={data.mercado?.moneda} paisActual={data.paisUpper} onclick={() => abrirModal(deal)} />
-            {/each}
-          {/if}
-        </div>
-      {/key}
+      <div use:carruselLogica onmouseenter={() => pausarCarrusel = true} onmouseleave={() => pausarCarrusel = false} ontouchstart={() => pausarCarrusel = true} ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)} class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth">
+        {#if ofertasHook.length === 0}
+          <div class="w-full text-center text-gray-400 py-10 font-medium animate-pulse">Conectando con la base de datos...</div>
+        {:else}
+          {#each ofertasHook as deal (deal.id)}
+            <DealCard {deal} monedaActual={data.mercado?.moneda} paisActual={data.paisUpper} onclick={() => abrirModal(deal)} />
+          {/each}
+        {/if}
+      </div>
     </div>
 
-    <div class="mb-6 mt-4 relative z-10" id="titulo-radar">
+    <div class="mb-6 mt-4 relative z-10">
       <h2 class="text-2xl font-bold tracking-tight">Más Destinos</h2>
     </div>
 
-    <div class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6 relative z-10" id="contenedor-radar">
+    <div class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6 relative z-10">
       <ul class="divide-y divide-gray-100/80">
         {#if ofertasRadar.length === 0}
           <li class="p-6 text-gray-400 text-center">No hay más destinos por ahora.</li>
@@ -219,7 +162,7 @@
       </ul>
     </div>
 
-    <div class="text-center mb-16 relative z-10" id="btn-radar-completo">
+    <div class="text-center mb-16 relative z-10">
       <a href="/masdestinos?pais={data.paisUpper || 'MX'}" class="inline-flex items-center justify-center bg-white border border-gray-200 text-lumiDark hover:border-lumiCyan hover:text-lumiCyan px-8 py-3.5 rounded-full font-bold transition-all shadow-[0_4px_14px_0_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,210,255,0.15)] active:scale-95 text-sm group">
         Explorar más destinos
       </a>
@@ -243,23 +186,23 @@
       <div class="relative z-10 md:w-1/2 w-full bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
         <form class="space-y-4" onsubmit={handleSubmitRadar}>
           <div>
-            <label for="radar-nombre" class="block text-xs font-semibold text-gray-400 mb-1">Tu Nombre</label>
-            <input id="radar-nombre" type="text" bind:value={radarNombre} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
+            <label class="block text-xs font-semibold text-gray-400 mb-1">Tu Nombre</label>
+            <input type="text" bind:value={radarNombre} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label for="radar-origen" class="block text-xs font-semibold text-gray-400 mb-1">Origen</label>
-              <input id="radar-origen" type="text" bind:value={radarOrigen} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
+              <label class="block text-xs font-semibold text-gray-400 mb-1">Origen</label>
+              <input type="text" bind:value={radarOrigen} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
             </div>
             <div>
-              <label for="radar-destino" class="block text-xs font-semibold text-gray-400 mb-1">Destino</label>
-              <input id="radar-destino" type="text" bind:value={radarDestino} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
+              <label class="block text-xs font-semibold text-gray-400 mb-1">Destino</label>
+              <input type="text" bind:value={radarDestino} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label for="radar-mes" class="block text-xs font-semibold text-gray-400 mb-1">Mes aproximado</label>
-              <select id="radar-mes" bind:value={radarMes} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-lumiCyan transition">
+              <label class="block text-xs font-semibold text-gray-400 mb-1">Mes aproximado</label>
+              <select bind:value={radarMes} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-lumiCyan transition">
                 <option value="" disabled>Elige un mes...</option>
                 {#each meses as m}
                   <option value={m} class="bg-lumiDark text-white">{m}</option>
@@ -267,8 +210,8 @@
               </select>
             </div>
             <div>
-              <label for="radar-contacto" class="block text-xs font-semibold text-gray-400 mb-1">Correo Electrónico</label>
-              <input id="radar-contacto" type="email" bind:value={radarContacto} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
+              <label class="block text-xs font-semibold text-gray-400 mb-1">Correo Electrónico</label>
+              <input type="email" bind:value={radarContacto} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
             </div>
           </div>
           <button type="submit" class="w-full bg-lumiCyan hover:bg-lumiCyanDark text-lumiDark font-bold py-3 rounded-lg transition-colors shadow-lg mt-2" disabled={radarCargando}>
