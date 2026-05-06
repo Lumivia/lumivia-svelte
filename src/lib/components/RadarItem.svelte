@@ -1,6 +1,5 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { formatearFechaCorta } from '$lib/utils/fechas';
   import { obtenerImagen } from '$lib/utils/imagenes';
   import { copiarUrlUnica } from '$lib/utils/clipboard';
 
@@ -42,9 +41,35 @@
     img.src = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=150&q=80';
   }
 
-  const fechasCortas = $derived(
-    `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`
-  );
+  // 🔥 FIX: Formateo Premium que recorta el "T" y las horas basuras de Supabase
+  function formatearFechasPremium(salida: string | null, regreso: string | null) {
+    const format = (iso: string | null) => {
+      if (!iso) return '';
+      try {
+        // Ignoramos todo después de la 'T' para evitar problemas de Timezone
+        const fechaLimpia = iso.split('T')[0];
+        const partes = fechaLimpia.split(/[-/]/);
+        if (partes.length !== 3) return fechaLimpia;
+        
+        let y, m, d;
+        if (partes[0].length === 4) { y = partes[0]; m = partes[1]; d = partes[2]; }
+        else if (partes[2].length === 4) { y = partes[2]; m = partes[1]; d = partes[0]; }
+        else return fechaLimpia;
+
+        const dateObj = new Date(Number(y), Number(m)-1, Number(d));
+        if (isNaN(dateObj.getTime())) return fechaLimpia;
+
+        const day = dateObj.getDate().toString().padStart(2, '0');
+        const month = dateObj.toLocaleDateString('es-ES', { month: 'short' }).toUpperCase().replace('.', '');
+        return `${day} ${month}`;
+      } catch { return ''; }
+    };
+    const s = format(salida);
+    const r = format(regreso);
+    return s && r ? `${s} - ${r}` : s;
+  }
+
+  const fechasCortas = $derived(formatearFechasPremium(deal.fecha_salida, deal.fecha_regreso));
 
   const precio = $derived(
     Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')
