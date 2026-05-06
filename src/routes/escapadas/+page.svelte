@@ -22,9 +22,7 @@
   const paisActual = $derived(String(data.pais || 'MX').split('?')[0].split('&')[0].toUpperCase());
   const mercadoActual = $derived(configMercado[paisActual] || configMercado['MX']);
   const monedaActual = $derived(mercadoActual.moneda);
-  const banderaActual = $derived(mercadoActual.bandera);
   
-  let dropdownAbierto = $state(false);
   let modalAbierto = $state(false);
   let dealSeleccionado: any = $state(null);
 
@@ -32,7 +30,6 @@
   let cargandoAdmin = $state(false);
   let vuelosReportados: Set<number | string> = $state(new Set());
 
-  // 🔥 ALGORITMO ANTI-CONSECUTIVOS MAESTRO: Mantiene calidad sin pegar la misma foto
   function aplicarAntiConsecutivos(ofertas: any[]) {
     if (!ofertas || ofertas.length === 0) return [];
     const resultado = [];
@@ -42,7 +39,6 @@
       let index = 0;
       if (resultado.length > 0) {
         const ultimoDestino = resultado[resultado.length - 1].destino_nombre || resultado[resultado.length - 1].destino;
-        // Busca la primera oferta que NO sea del mismo destino que la anterior
         const idx = pendientes.findIndex(o => (o.destino_nombre || o.destino) !== ultimoDestino);
         if (idx !== -1) index = idx;
       }
@@ -53,7 +49,7 @@
 
   const dealsFiltrados = $derived(aplicarAntiConsecutivos([...(data.deals || [])]));
 
-  // 🔥 FECHAS PREMIUM SIN AÑO: Ej: "22 MAY - 26 MAY"
+  // 🔥 FECHAS ELEGANTES: Sin fondos, solo texto limpio
   function formatearFechasPremium(salida: string | null, regreso: string | null) {
     const format = (iso: string | null) => {
       if (!iso) return '';
@@ -74,19 +70,6 @@
     const img = e.target as HTMLImageElement;
     img.onerror = null;
     img.src = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
-  }
-
-  function toggleDropdown() { dropdownAbierto = !dropdownAbierto; }
-  
-  function handleClickOutside(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    if (!target.closest('#selector-pais-catalogo')) dropdownAbierto = false;
-  }
-
-  function seleccionarPais(codigoPais: string) {
-    dropdownAbierto = false;
-    localStorage.setItem('lumivia_pais', codigoPais);
-    goto(`/escapadas?pais=${codigoPais.toUpperCase()}&page=1`);
   }
 
   function irAPagina(n: number) {
@@ -133,19 +116,14 @@
   function abrirModal(deal: any) { dealSeleccionado = deal; modalAbierto = true; }
   function cerrarModal() { modalAbierto = false; setTimeout(() => { dealSeleccionado = null; }, 200); }
 
-  $effect(() => { if (paisActual) { localStorage.setItem('lumivia_pais', paisActual); } });
-
-  onMount(() => {
-    window.addEventListener('click', handleClickOutside);
-    return () => { window.removeEventListener('click', handleClickOutside); };
-  });
+  $effect(() => { if (paisActual) localStorage.setItem('lumivia_pais', paisActual); });
 </script>
 
 <svelte:head>
   <title>Escapadas de Fin de Semana | Lumivia</title>
 </svelte:head>
 
-<div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col relative overflow-x-hidden">
+<div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col relative">
   
   <Header paisUpper={paisActual} mercado={mercadoActual} />
 
@@ -193,9 +171,9 @@
                 <span>⏱️</span> FINDE
               </div>
 
-              <div class="absolute top-4 right-4 text-[10px] font-black px-3 py-1.5 rounded-full z-20 shadow-sm flex items-center gap-1 uppercase tracking-widest {esVip ? 'bg-[#4ade80] text-[#064e3b]' : 'bg-[#1f2937] text-white'}">
+              <div class="absolute top-4 right-4 text-[10px] font-black px-3 py-1.5 rounded-full z-20 shadow-sm flex items-center gap-1 uppercase tracking-widest bg-[#1f2937] text-white">
                 {#if esVip}
-                  <svg class="w-3 h-3 text-[#064e3b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> DIRECTO
+                  <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> DIRECTO
                 {:else}
                   1 ESCALA
                 {/if}
@@ -209,7 +187,7 @@
                   {origenSeguro} <span class="text-gray-300 font-bold mx-1.5 text-[10px] align-middle">➔</span> {destinoSeguro}
                 </div>
                 {#if fechasPremium}
-                  <div class="shrink-0 text-[10px] font-extrabold text-lumiDark uppercase tracking-widest text-right mt-[2px] bg-yellow-300/80 px-2 py-1 rounded-sm shadow-sm">
+                  <div class="shrink-0 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest text-right mt-[2px]">
                     {fechasPremium}
                   </div>
                 {/if}
@@ -262,8 +240,3 @@
     <ModalOferta deal={dealSeleccionado} abierto={modalAbierto} cerrar={cerrarModal} />
   {/if}
 </div>
-
-<style>
-  .animate-fadeIn { animation: fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1); }
-  @keyframes fadeIn { from { opacity: 0; transform: scale(0.95) translateY(-5px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-</style>
