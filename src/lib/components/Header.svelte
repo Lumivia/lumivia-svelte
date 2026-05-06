@@ -62,6 +62,14 @@
         <span class="hidden sm:inline">Hoteles</span>
       </a>
 
+      <a href="/escapadas?pais={paisUpper}" 
+        class="flex items-center gap-1 text-xs font-black uppercase tracking-widest text-lumiDark hover:text-lumiCyan transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        </svg>
+        <span class="hidden sm:inline">Escapadas</span>
+      </a>
+
       <div class="h-5 w-px bg-gray-200 hidden sm:block"></div>
 
       <div id="selector-pais" class="relative inline-block text-left">
