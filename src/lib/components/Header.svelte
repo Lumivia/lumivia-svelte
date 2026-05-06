@@ -63,8 +63,8 @@
       </a>
 
       <a href="/escapadas?pais={paisUpper}" 
-        class="flex items-center gap-1 text-xs font-black uppercase tracking-widest text-lumiDark hover:text-lumiCyan transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors">
+        <svg class="w-4 h-4 text-lumiDark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
         </svg>
         <span class="hidden sm:inline">Escapadas</span>
