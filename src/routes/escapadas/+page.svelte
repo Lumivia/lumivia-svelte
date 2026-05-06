@@ -5,6 +5,7 @@
   import type { PageData } from './$types';
   
   import { supabase } from '$lib/supabaseClient';
+  import Header from '$lib/components/Header.svelte';
   import ModalOferta from '$lib/components/ModalOferta.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
@@ -27,40 +28,47 @@
   let modalAbierto = $state(false);
   let dealSeleccionado: any = $state(null);
 
-  // MODO DIOS (Admin)
   const isAdminModo = $derived($page.url.searchParams.get('admin') === 'true');
   let cargandoAdmin = $state(false);
   let vuelosReportados: Set<number | string> = $state(new Set());
 
-  // 🔥 ALGORITMO DE REPARTO: Separa destinos repetidos
-  function intercalarOfertas(ofertas: any[]) {
+  // 🔥 ALGORITMO ANTI-CONSECUTIVOS MAESTRO: Mantiene calidad sin pegar la misma foto
+  function aplicarAntiConsecutivos(ofertas: any[]) {
     if (!ofertas || ofertas.length === 0) return [];
-    
-    // Agrupamos por destino
-    const agrupados: Record<string, any[]> = {};
-    ofertas.forEach(o => {
-      const dest = o.destino_nombre || o.destino || 'UNKNOWN';
-      if (!agrupados[dest]) agrupados[dest] = [];
-      agrupados[dest].push(o);
-    });
-
-    // Repartimos una por una de cada grupo
     const resultado = [];
-    let quedanCartas = true;
-    while(quedanCartas) {
-      quedanCartas = false;
-      for (const key in agrupados) {
-        if (agrupados[key].length > 0) {
-          resultado.push(agrupados[key].shift());
-          quedanCartas = true;
-        }
+    const pendientes = [...ofertas];
+
+    while (pendientes.length > 0) {
+      let index = 0;
+      if (resultado.length > 0) {
+        const ultimoDestino = resultado[resultado.length - 1].destino_nombre || resultado[resultado.length - 1].destino;
+        // Busca la primera oferta que NO sea del mismo destino que la anterior
+        const idx = pendientes.findIndex(o => (o.destino_nombre || o.destino) !== ultimoDestino);
+        if (idx !== -1) index = idx;
       }
+      resultado.push(pendientes.splice(index, 1)[0]);
     }
     return resultado;
   }
 
-  // Obtenemos la lista ya mezclada reactivamente
-  const dealsMezclados = $derived(intercalarOfertas([...(data.deals || [])]));
+  const dealsFiltrados = $derived(aplicarAntiConsecutivos([...(data.deals || [])]));
+
+  // 🔥 FECHAS PREMIUM SIN AÑO: Ej: "22 MAY - 26 MAY"
+  function formatearFechasPremium(salida: string | null, regreso: string | null) {
+    const format = (iso: string | null) => {
+      if (!iso) return '';
+      try {
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return iso.split('T')[0];
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = d.toLocaleDateString('es-ES', { month: 'short' }).toUpperCase().replace('.', '');
+        return `${day} ${month}`;
+      } catch { return ''; }
+    };
+    const s = format(salida);
+    const r = format(regreso);
+    return s && r ? `${s} - ${r}` : s;
+  }
 
   function handleImageError(e: Event) {
     const img = e.target as HTMLImageElement;
@@ -111,35 +119,21 @@
     e.stopPropagation();
     const password = prompt("Ingresa la contraseña de administrador para matar esta oferta:");
     if (!password) return;
-
     cargandoAdmin = true;
     try {
       const res = await fetch('/api/matar-oferta', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, secret: password })
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, secret: password })
       });
-      
-      if (res.ok) {
-        alert("💀 Oferta aniquilada. Recarga la página.");
-        window.location.reload(); 
-      } else {
-        alert("Contraseña incorrecta o error en el servidor.");
-      }
-    } catch (error) {
-      alert("Error de conexión.");
-    }
+      if (res.ok) { alert("💀 Oferta aniquilada. Recarga la página."); window.location.reload(); } 
+      else { alert("Contraseña incorrecta o error en el servidor."); }
+    } catch (error) { alert("Error de conexión."); }
     cargandoAdmin = false;
   }
 
   function abrirModal(deal: any) { dealSeleccionado = deal; modalAbierto = true; }
   function cerrarModal() { modalAbierto = false; setTimeout(() => { dealSeleccionado = null; }, 200); }
 
-  $effect(() => {
-    if (paisActual) {
-      localStorage.setItem('lumivia_pais', paisActual);
-    }
-  });
+  $effect(() => { if (paisActual) { localStorage.setItem('lumivia_pais', paisActual); } });
 
   onMount(() => {
     window.addEventListener('click', handleClickOutside);
@@ -149,55 +143,11 @@
 
 <svelte:head>
   <title>Escapadas de Fin de Semana | Lumivia</title>
-  <meta name="description" content="Descubre oportunidades únicas de vuelos cortos y escapadas de fin de semana para desconectar sin gastar mucho." />
-  {#if data.schemaJSON}
-    {@html `<script type="application/ld+json">${data.schemaJSON}</script>`}
-  {/if}
 </svelte:head>
 
 <div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col relative overflow-x-hidden">
   
-  <header class="bg-white/70 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-200/50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        
-        <a href={`/paises/${paisActual.toLowerCase()}`} class="text-gray-400 hover:text-lumiDark transition-colors cursor-pointer" title="Volver a los destinos de {paisActual}">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-        </a>
-        
-        <span class="text-2xl font-extrabold tracking-tighter text-lumiDark">Lumivia <span class="text-lumiCyan font-light">| Escapadas</span></span>
-      </div>
-
-      <div class="flex items-center gap-4">
-        <a href="https://vuelos.lumivia.app/" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-lumiDark transition-colors hidden sm:flex">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg> Vuelos
-        </a>
-        <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-lumiCyan transition-colors hidden sm:flex">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg> Hoteles
-        </a>
-        <div class="h-4 w-px bg-gray-200 hidden sm:block"></div>
-
-        <div id="selector-pais-catalogo" class="relative inline-block text-left">
-          <button type="button" onclick={toggleDropdown} aria-expanded={dropdownAbierto} class="inline-flex items-center justify-center w-full rounded-full border border-gray-200 shadow-sm px-4 py-1.5 bg-white text-sm font-bold text-gray-600 hover:bg-gray-50 focus:outline-none focus:border-lumiCyan transition-colors gap-2 cursor-pointer">
-            <img src={banderaActual} alt={paisActual} class="w-4 h-auto rounded-sm shadow-sm" />
-            <span>{monedaActual}</span>
-            <svg class="w-3 h-3 text-gray-400 transition-transform" style={`transform: rotate(${dropdownAbierto ? '180deg' : '0deg'})`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-          </button>
-
-          {#if dropdownAbierto}
-            <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-xl shadow-lg bg-white ring-1 ring-black/5 focus:outline-none z-50 overflow-hidden border border-gray-100 animate-fadeIn" role="menu">
-              <div class="py-1">
-                <button type="button" onclick={() => seleccionarPais('MX')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/mx.png" alt="MX" class="w-5 h-auto rounded-sm shadow-sm" /> México (MXN)</button>
-                <button type="button" onclick={() => seleccionarPais('CO')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/co.png" alt="CO" class="w-5 h-auto rounded-sm shadow-sm" /> Colombia (COP)</button>
-                <button type="button" onclick={() => seleccionarPais('CL')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/cl.png" alt="CL" class="w-5 h-auto rounded-sm shadow-sm" /> Chile (CLP)</button>
-                <button type="button" onclick={() => seleccionarPais('CR')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/cr.png" alt="CR" class="w-5 h-auto rounded-sm shadow-sm" /> Costa Rica (USD)</button>
-              </div>
-            </div>
-          {/if}
-        </div>
-      </div>
-    </div>
-  </header>
+  <Header paisUpper={paisActual} mercado={mercadoActual} />
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full relative z-10">
     
@@ -209,45 +159,33 @@
     </div>
 
     <div id="escapadas-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20 relative z-10">
-      {#if !dealsMezclados || dealsMezclados.length === 0}
-        <div class="col-span-full text-center text-gray-400 py-20 font-medium">Aún no hay escapadas activas en la bóveda de {paisActual}. Regresa pronto.</div>
+      {#if !dealsFiltrados || dealsFiltrados.length === 0}
+        <div class="col-span-full text-center text-gray-400 py-20 font-medium">Aún no hay escapadas activas en la bóveda de {paisActual}.</div>
       {:else}
-        {#each dealsMezclados as deal (deal.id)}
+        {#each dealsFiltrados as deal (deal.id)}
           {@const estaMuerta = checarSiEstaMuerta(deal, vuelosReportados)}
           {@const imgFinal = deal.imagen_url_verificada || deal.imagen_fallback || 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80'}
           {@const esVip = deal.tipo_vuelo === 'directo' || deal.escalas === 0}
           {@const origenSeguro = String(deal.origen_nombre || deal.origen || '').toUpperCase()}
           {@const destinoSeguro = String(deal.destino_nombre || deal.destino || '').toUpperCase()}
+          {@const fechasPremium = formatearFechasPremium(deal.fecha_salida, deal.fecha_regreso)}
 
           <div 
-            role="button" 
-            tabindex="0" 
-            aria-label="Ver detalles de la escapada a {destinoSeguro}"
-            class="flex flex-col h-full bg-white rounded-[24px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden hover:shadow-[0_8px_30px_rgba(0,210,255,0.12)] transition-all duration-300 hover:-translate-y-1 cursor-pointer relative group/card {estaMuerta ? 'opacity-50 grayscale hover:grayscale-0 focus:grayscale-0' : ''}" 
+            role="button" tabindex="0" 
+            class="flex flex-col h-full bg-white rounded-[24px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden hover:shadow-[0_8px_30px_rgba(0,210,255,0.12)] transition-all duration-300 hover:-translate-y-1 cursor-pointer relative group/card {estaMuerta ? 'opacity-50 grayscale hover:grayscale-0' : ''}" 
             onclick={() => abrirModal(deal)}
             onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
           >
-            
             <div class="relative h-[220px] overflow-hidden bg-gray-200 shrink-0">
               <img src={imgFinal} alt={destinoSeguro} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
               
               {#if isAdminModo && !estaMuerta}
-                <button 
-                  type="button" 
-                  onclick={(e) => handleMatarOferta(deal.id, e)} 
-                  disabled={cargandoAdmin}
-                  class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600/90 hover:bg-red-700 text-white backdrop-blur-md px-4 py-1.5 rounded-full font-black text-[10px] shadow-lg border border-red-400 z-30 uppercase tracking-widest flex items-center gap-1 transition-all"
-                >
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                  {cargandoAdmin ? '...' : 'MATAR'}
-                </button>
+                <button type="button" onclick={(e) => handleMatarOferta(deal.id, e)} class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600/90 text-white px-4 py-1.5 rounded-full font-black text-[10px] z-30 uppercase">MATAR</button>
               {/if}
 
               {#if estaMuerta}
                 <div class="absolute inset-0 flex items-center justify-center bg-black/40 z-20">
-                  <div class="bg-black/80 text-white font-black px-6 py-2 rounded-full uppercase tracking-widest text-[11px] shadow-2xl border border-white/20">
-                    Fechas Pasadas
-                  </div>
+                  <div class="bg-black/80 text-white font-black px-6 py-2 rounded-full uppercase tracking-widest text-[11px] shadow-2xl border border-white/20">Fechas Pasadas</div>
                 </div>
               {/if}
 
@@ -257,7 +195,7 @@
 
               <div class="absolute top-4 right-4 text-[10px] font-black px-3 py-1.5 rounded-full z-20 shadow-sm flex items-center gap-1 uppercase tracking-widest {esVip ? 'bg-[#4ade80] text-[#064e3b]' : 'bg-[#1f2937] text-white'}">
                 {#if esVip}
-                  <span>✓</span> DIRECTO
+                  <svg class="w-3 h-3 text-[#064e3b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> DIRECTO
                 {:else}
                   1 ESCALA
                 {/if}
@@ -266,11 +204,15 @@
 
             <div class="p-6 flex flex-col flex-grow bg-white">
               
-              <div class="flex justify-between items-center mb-3">
-                <p class="text-[11px] font-black text-lumiDark uppercase tracking-widest">{origenSeguro} ✈ {destinoSeguro}</p>
-                <p class="text-[10px] text-gray-400 font-bold uppercase">
-                  {deal.fecha_salida ? deal.fecha_salida.split('T')[0] : ''} al {deal.fecha_regreso ? deal.fecha_regreso.split('T')[0] : ''}
-                </p>
+              <div class="flex items-start justify-between gap-3 mb-3">
+                <div class="text-[11px] sm:text-[12px] font-black text-lumiDark uppercase tracking-widest leading-snug break-words flex-1 flex items-center flex-wrap">
+                  {origenSeguro} <span class="text-gray-300 font-bold mx-1.5 text-[10px] align-middle">➔</span> {destinoSeguro}
+                </div>
+                {#if fechasPremium}
+                  <div class="shrink-0 text-[10px] font-extrabold text-lumiDark uppercase tracking-widest text-right mt-[2px] bg-yellow-300/80 px-2 py-1 rounded-sm shadow-sm">
+                    {fechasPremium}
+                  </div>
+                {/if}
               </div>
 
               <h3 class="font-bold text-lg leading-snug mb-3 text-lumiDark">✨ Escapada: {destinoSeguro} desde ${deal.precio} {monedaActual}.</h3>
@@ -281,11 +223,11 @@
 
               <div class="mt-auto flex items-center justify-between pt-4 border-t border-gray-100">
                 <div>
-                  <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">{estaMuerta ? 'Histórico' : 'Vuelo Ida/Vt'}</p>
-                  <p class="text-2xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none drop-shadow-sm">${deal.precio} <span class="text-xs font-bold text-gray-400">{monedaActual}</span></p>
+                  <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">Vuelo Ida/Vt</p>
+                  <p class="text-2xl font-black text-lumiDark leading-none drop-shadow-sm">${deal.precio} <span class="text-xs font-bold text-gray-400">{monedaActual}</span></p>
                 </div>
-                <button class="{estaMuerta ? 'bg-amber-500 hover:bg-amber-600' : 'bg-lumiDark group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark'} text-white px-5 py-2.5 rounded-full text-[11px] font-black uppercase transition-colors flex items-center gap-1.5 shadow-md">
-                  {estaMuerta ? 'VER OTRAS' : 'VER VUELO'} 
+                <button class="bg-lumiDark group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark text-white px-5 py-2.5 rounded-full text-[11px] font-black uppercase transition-colors flex items-center gap-1.5 shadow-md">
+                  VER VUELO 
                   <svg class="w-3.5 h-3.5 transition-transform group-hover/card:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </button>
               </div>
@@ -311,7 +253,6 @@
         <button type="button" onclick={() => irAPagina(data.page + 1)} disabled={data.page >= data.totalPages} class="px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-sm">Siguiente →</button>
       </div>
     {/if}
-
   </main>
 
   <WhatsAppButton pais={paisActual} />
