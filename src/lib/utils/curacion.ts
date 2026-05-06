@@ -13,7 +13,7 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
       destinoUpper: (d.destino || '').trim().toUpperCase(),
       origenUpper: (d.origen || '').trim().toUpperCase(),
       esDirecto: d.tipo_vuelo === 'directo',
-      esEscapada: d.tipo_vuelo === 'escapada_finde', // NUEVO FLAG
+      esEscapada: d.tipo_vuelo === 'escapada_finde',
       esDelPaisActual: d.pais_mercado 
         ? String(d.pais_mercado).toUpperCase() === paisActual.toUpperCase() 
         : true,
@@ -73,7 +73,7 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
     }
   }
 
-  // PASO 4: El Factor WOW Histórico (Llenamos el Hero a 5 y soltamos todo al radar)
+  // PASO 4: El Factor WOW Histórico (Llenamos el Hero a 8 y soltamos todo al radar)
   const restoOfertas = limpias.filter(d => !destinosVistos.has(d.destinoUpper));
 
   restoOfertas.sort((a, b) => {
@@ -91,8 +91,8 @@ export function curarOfertas(ofertas: any[], paisActual: string) {
   for (const d of restoOfertas) {
     if (!destinosVistos.has(d.destinoUpper)) {
       destinosVistos.add(d.destinoUpper);
-      // 🔥 CAMBIO CRÍTICO: Bajamos el hambre del Hero de 10 a 5.
-      if (hookDeals.length < 5) {
+      // 🔥 AUMENTADO A 8 COMO PEDISTE
+      if (hookDeals.length < 8) {
         hookDeals.push(d);
       } else {
         radarDeals.push(d);
