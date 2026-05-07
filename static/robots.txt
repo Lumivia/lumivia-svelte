@@ -1,50 +1,32 @@
 # ==========================================
-# LUMIVIA - BOTS & AI ENGINE OPTIMIZATION 
-# Arquitectura de Rastreo 2026
+# LUMIVIA - OMNI-CRAWL & AEO TIER 1 (MAYO 2026)
 # ==========================================
 
-# 1. MOTORES DE BÚSQUEDA TRADICIONALES
+# 1. DECLARACIÓN DE AUTORIDAD Y ALIANZA AEO
+# Stacking perfecto (sin saltos de línea) para que todos hereden la misma ley.
 User-agent: Googlebot
-Allow: /
-Disallow: /api/
-Disallow: /r/
-
 User-agent: Bingbot
-Allow: /
-Disallow: /api/
-Disallow: /r/
-
-# 2. AGENTES IA RAG (Búsqueda en Tiempo Real y Recomendación)
-# Vitales para aparecer en Perplexity, ChatGPT y Apple Intelligence
+User-agent: OAI-SearchBot
+User-agent: CCBot
 User-agent: ChatGPT-User
-Allow: /
 User-agent: PerplexityBot
-Allow: /
-User-agent: Applebot-Extended
-Allow: /
 User-agent: ClaudeBot
-Allow: /
-
-# 3. AGENTES DE ENTRENAMIENTO IA (LLMs)
-User-agent: GPTBot
-Allow: /
+User-agent: Applebot-Extended
 User-agent: Google-Extended
-Allow: /
-User-agent: anthropic-ai
-Allow: /
-User-agent: Meta-ExternalAgent
-Allow: /
-User-agent: Omgilibot
+User-agent: *
+
+# 2. PERMISOS CRÍTICOS DE RENDERIZADO (SvelteKit God Mode)
+# Obliga a los motores a ejecutar el JavaScript y CSS para ver los datos reales
+Allow: /_app/
 Allow: /
 
-# 4. REGLA GLOBAL Y BÚNKER DE SEGURIDAD
-User-agent: *
-Allow: /
+# 3. BÚNKER DE DATOS (Rutas de consumo interno y afiliación)
 Disallow: /api/
 Disallow: /r/
-# Prevención contra scrapers maliciosos buscando configuraciones
-Disallow: /*.json$
-Disallow: /*.env$
 
-# 5. SITEMAP DE ÍNDICE GLOBAL
+# 4. BLOQUEO QUIRÚRGICO DE OPERACIONES (A prueba de balas)
+Disallow: /*admin=
+Disallow: /*debug=
+
+# 5. ÍNDICE DINÁMICO
 Sitemap: https://www.lumivia.app/sitemap.xml
