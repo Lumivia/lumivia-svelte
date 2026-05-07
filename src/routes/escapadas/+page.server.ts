@@ -19,6 +19,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
   }
 
   const paisUpper = paisQuery.toUpperCase();
+  const mercadoInfo = mercadosPermitidos[paisQuery as CodigoPais];
   
   // Paginación
   const pageParam = url.searchParams.get('page');
@@ -39,53 +40,74 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
     global: { fetch }
   });
 
-  // 🚨 EL TRUCO: Solo pedimos escapadas de fin de semana
-  const { data: ofertasCrudas, count, error: err } = await supabase
-    .from('publicaciones_lumivia')
-    .select('*', { count: 'exact' })
-    .eq('activo', true)
-    .eq('pais_mercado', paisUpper)
-    .eq('tipo_vuelo', 'escapada_finde') 
-    .order('created_at', { ascending: false })
-    .range(start, end);
+  let ofertasEnriquecidas: any[] = [];
+  let totalItems = 0;
 
-  if (err) console.error('Error fetching escapadas:', err);
+  // 🔥 BLINDAJE 1: Try/Catch global para evitar Error 500 si la DB falla
+  try {
+    const { data: ofertasCrudas, count, error: err } = await supabase
+      .from('publicaciones_lumivia')
+      .select('*', { count: 'exact' })
+      .eq('activo', true)
+      .eq('pais_mercado', paisUpper)
+      .eq('tipo_vuelo', 'escapada_finde') 
+      .order('created_at', { ascending: false })
+      .range(start, end);
 
-  let ofertasEnriquecidas = ofertasCrudas || [];
+    if (err) {
+      console.error('Error fetching escapadas:', err);
+    } else {
+      ofertasEnriquecidas = ofertasCrudas || [];
+      totalItems = count || 0;
+    }
 
-  if (ofertasEnriquecidas.length > 0) {
-    const codigosIata = [...new Set([
-      ...ofertasEnriquecidas.map(o => o.origen),
-      ...ofertasEnriquecidas.map(o => o.destino)
-    ])];
+    if (ofertasEnriquecidas.length > 0) {
+      // 🔥 BLINDAJE 2: .filter(Boolean) aniquila los nulls antes de llamar a Diccionario
+      const codigosIata = [...new Set([
+        ...ofertasEnriquecidas.map(o => o.origen),
+        ...ofertasEnriquecidas.map(o => o.destino)
+      ].filter(Boolean))];
 
-    const { data: diccionario } = await supabase
-      .from('diccionario_destinos')
-      .select('iata_code, nombre_ciudad, imagen_url_verificada')
-      .in('iata_code', codigosIata);
+      if (codigosIata.length > 0) {
+        const { data: diccionario } = await supabase
+          .from('diccionario_destinos')
+          .select('iata_code, nombre_ciudad, imagen_url_verificada')
+          .in('iata_code', codigosIata);
 
-    const mapaDestinos = (diccionario || []).reduce((acc, curr) => {
-      acc[curr.iata_code] = curr;
-      return acc;
-    }, {} as Record<string, any>);
+        const mapaDestinos = (diccionario || []).reduce((acc, curr) => {
+          acc[curr.iata_code] = curr;
+          return acc;
+        }, {} as Record<string, any>);
 
-    ofertasEnriquecidas = ofertasEnriquecidas.map(oferta => ({
-      ...oferta,
-      origen_nombre: mapaDestinos[oferta.origen]?.nombre_ciudad || oferta.origen,
-      destino_nombre: mapaDestinos[oferta.destino]?.nombre_ciudad || oferta.destino,
-      imagen_fallback: mapaDestinos[oferta.destino]?.imagen_url_verificada || null
-    }));
+        ofertasEnriquecidas = ofertasEnriquecidas.map(oferta => ({
+          ...oferta,
+          origen_nombre: mapaDestinos[oferta.origen]?.nombre_ciudad || oferta.origen,
+          destino_nombre: mapaDestinos[oferta.destino]?.nombre_ciudad || oferta.destino,
+          imagen_fallback: mapaDestinos[oferta.destino]?.imagen_url_verificada || null
+        }));
+      }
+    }
+  } catch (dbError) {
+    console.error('Error crítico procesando DB en página de escapadas:', dbError);
   }
 
-  const totalItems = count || 0;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  // 🔥 BLINDAJE 3: Metadatos SEO Únicos y Paginación Perfecta
+  const metaTitle = `Escapadas de Fin de Semana desde ${mercadoInfo.nombre} | Lumivia`;
+  const metaDescription = `Descubre vuelos baratos y escapadas curadas para viajar el fin de semana desde ${mercadoInfo.nombre}. Poco presupuesto, máxima desconexión.`;
+  
+  // Canonical Dinámico respetando la Paginación
+  const canonicalClean = page > 1 
+    ? `https://www.lumivia.app/escapadas?pais=${paisUpper}&page=${page}`
+    : `https://www.lumivia.app/escapadas?pais=${paisUpper}`;
 
   const schemaAEO = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: `Escapadas de Fin de Semana desde ${mercadosPermitidos[paisQuery as CodigoPais].nombre} - Lumivia`,
-    description: `Ofertas de vuelos cortos y escapadas de fin de semana para desconectar de la rutina sin gastar mucho.`,
-    url: `https://www.lumivia.app/escapadas?pais=${paisQuery}`
+    name: metaTitle,
+    description: metaDescription,
+    url: canonicalClean
   });
 
   setHeaders({
@@ -97,6 +119,9 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
     deals: ofertasEnriquecidas,
     page,
     totalPages,
-    schemaJSON: schemaAEO
+    schemaJSON: schemaAEO,
+    title: page > 1 ? `${metaTitle} - Página ${page}` : metaTitle,
+    description: metaDescription,
+    canonicalURL: canonicalClean
   };
 };
