@@ -35,16 +35,8 @@
   <meta name="twitter:title" content={data?.title || 'Lumivia'} />
   <meta name="twitter:description" content={data?.description || 'La bóveda secreta de viajes de Lumivia.'} />
 
-  <link rel="alternate" hreflang="es-mx" href="https://www.lumivia.app/masdestinos?pais=MX" />
-  <link rel="alternate" hreflang="es-co" href="https://www.lumivia.app/masdestinos?pais=CO" />
-  <link rel="alternate" hreflang="es-cl" href="https://www.lumivia.app/masdestinos?pais=CL" />
-  <link rel="alternate" hreflang="es-cr" href="https://www.lumivia.app/masdestinos?pais=CR" />
-  <link rel="alternate" hreflang="es" href="https://www.lumivia.app/masdestinos?pais=MX" />
-  <link rel="alternate" hreflang="x-default" href="https://www.lumivia.app/masdestinos?pais=MX" />
-
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
   <link rel="apple-touch-icon" href="/favicon.svg?v=2" />
-
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
   {#if data?.schemaAEO || data?.schemaJSON}
@@ -56,8 +48,8 @@
       "@context": "https://schema.org",
       "@type": "TravelAgency",
       "name": "Lumivia",
-      "url": "https://lumivia.app/",
-      "logo": "https://lumivia.app/favicon.svg?v=2",
+      "url": "https://www.lumivia.app/",
+      "logo": "https://www.lumivia.app/favicon.svg?v=2",
       "description": "Plataforma inteligente de análisis de vuelos y ofertas curadas de viaje.",
       "potentialAction": {
         "@type": "SearchAction",
