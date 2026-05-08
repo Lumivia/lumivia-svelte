@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { obtenerImagen } from '$lib/utils/imagenes';
-  import { formatearFechaCorta } from '$lib/utils/fechas';
+  // 🔥 BLINDAJE 1: Importamos el motor maestro de fechas
+  import { formatDatesLumivia } from '$lib/utils/formatters';
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
 
   const { deal, abierto, cerrar } = $props();
@@ -37,11 +38,11 @@
     img.src = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
   }
 
-  // 🔥 NUEVO: Extraemos los nombres legibles o usamos IATA como respaldo
   const origenNombre = $derived(String(deal?.origen_nombre || deal?.origen || '').toUpperCase());
   const destinoNombre = $derived(String(deal?.destino_nombre || deal?.destino || '').toUpperCase());
 
-  const fechasCortas = $derived(deal ? `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}` : '');
+  // 🔥 BLINDAJE 2: Ejecución directa de la nueva utilidad de formato.
+  const fechasCortas = $derived(deal ? formatDatesLumivia(deal.fecha_salida, deal.fecha_regreso) : '');
   
   const monedaDeal = $derived.by(() => {
     if (deal?.moneda) return String(deal.moneda).toUpperCase();
@@ -84,7 +85,6 @@
     }
   });
 
-  // El buscador de vuelos SÍ necesita los códigos IATA crudos (origen y destino) para funcionar
   const linkVuelo = $derived.by(() => {
     if (!deal) return '#';
     const origen = String(deal.origen || '').toUpperCase();
