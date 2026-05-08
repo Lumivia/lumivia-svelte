@@ -75,6 +75,27 @@
     return listaLocal.some(keyword => destinoNorm.includes(keyword) || tituloNorm.includes(keyword));
   });
 
+  // 🔥 TIER 1: Estructura de datos para la IA (Schema.org / JSON-LD)
+  // Esto es lo que leerá Bing/Google para mostrar precios y estrellas en los resultados
+  const jsonLd = $derived.by(() => {
+    if (!deal) return null;
+    return {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": deal.titulo_gancho || `Vuelo a ${destinoNombre}`,
+      "image": imgFinal,
+      "description": deal.descripcion || deal.cuerpo_post || "Oferta de vuelo exclusiva en Lumivia",
+      "brand": { "@type": "Brand", "name": "Lumivia" },
+      "offers": {
+        "@type": "Offer",
+        "url": `https://www.lumivia.app/escapadas?deal=${deal.id || ''}`,
+        "priceCurrency": monedaDeal,
+        "price": deal.precio || 0,
+        "availability": "https://schema.org/InStock"
+      }
+    };
+  });
+
   $effect(() => {
     if (abierto && deal) {
       const params = new URLSearchParams({
@@ -99,6 +120,14 @@
     return splitText[0].trim().replace(/[\(\[\{\-\:\s]+$/, '');
   });
 </script>
+
+<svelte:head>
+  {#if jsonLd}
+    <script type="application/ld+json">
+      {@html JSON.stringify(jsonLd)}
+    </script>
+  {/if}
+</svelte:head>
 
 {#if abierto && deal}
   <div class="fixed inset-0 bg-lumiDark/60 backdrop-blur-sm z-[999]" onclick={cerrar} role="button" tabindex="0" onkeydown={handleKey} aria-label="Cerrar modal"></div>
