@@ -27,6 +27,8 @@ Disallow: /r/
 # 4. BLOQUEO QUIRÚRGICO DE OPERACIONES (A prueba de balas)
 Disallow: /*admin=
 Disallow: /*debug=
+Disallow: /*?*fbclid=
+Disallow: /*?*gclid=
 
 # 5. ÍNDICE DINÁMICO
 Sitemap: https://www.lumivia.app/sitemap.xml
