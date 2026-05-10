@@ -55,6 +55,11 @@
         <span class="hidden sm:inline">Escapadas</span>
       </a>
 
+      <a href="/wanderlust?pais={paisUpper}" class="group hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full hover:border-lumiCyan hover:shadow-lg hover:shadow-lumiCyan/20 transition-all duration-300">
+        <svg class="w-4 h-4 text-lumiDark group-hover:text-lumiCyan transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8l2.586-2.586a2 2 0 00-2.828-2.828L13.172 5.172M16 8A4 4 0 108 16a4 4 0 008-8z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16l-2.586 2.586a2 2 0 002.828 2.828L10.828 18.828"></path></svg>
+        <span class="text-xs font-bold uppercase tracking-widest text-lumiDark group-hover:text-lumiCyan transition-colors">Wanderlust</span>
+      </a>
+
       <div class="h-5 w-px bg-gray-200 hidden sm:block"></div>
 
       <div id="selector-pais" class="relative inline-block text-left">
