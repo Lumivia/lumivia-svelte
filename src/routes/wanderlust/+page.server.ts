@@ -9,11 +9,11 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
     const pageParam = Number(url.searchParams.get('page') ?? '1');
     const pageFromQuery = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
     
-    // Blindaje de País
+    // Blindaje de País (Maneja dinámicamente MX, CO, CL, CR)
     const rawPais = url.searchParams.get('pais');
     const paisQuery = (rawPais && rawPais.trim() !== '' ? rawPais : 'MX').toUpperCase();
 
-    // Caché estricto (300s = 5 min)
+    // Caché estricto
     setHeaders({
         'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60'
     });
@@ -46,7 +46,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
     let total = 0;
     let totalPages = 1;
 
-    // 2) CONSULTA A BASE DE DATOS (Filtro Wanderlust)
+    // 2) CONSULTA A BASE DE DATOS (Arquitectura Exacta)
     try {
         const from = (pageFromQuery - 1) * PAGE_SIZE;
         const to = from + PAGE_SIZE - 1;
@@ -55,8 +55,11 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
             .from('publicaciones_lumivia')
             .select('*', { count: 'exact' })
             .eq('activo', true)
+            // Filtro 1: El mercado actual seleccionado en el header
             .eq('pais_mercado', paisQuery)
-            .like('titulo_gancho', 'WANDERLUST:%')
+            // Filtro 2 y 3: Tus campos específicos de Wanderlust
+            .eq('status_wl', 'oferta_activa')
+            .not('wanderlust_id', 'is', null)
             .order('created_at', { ascending: false })
             .range(from, to);
 
