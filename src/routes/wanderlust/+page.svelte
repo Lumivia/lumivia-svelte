@@ -212,13 +212,11 @@
         <div class="col-span-full text-center text-gray-400 py-20 font-medium">Nuestro sistema está auditando nuevas rutas VIP. Vuelve más tarde.</div>
       {:else}
         {#each data.deals as deal (deal.id)}
-          
           <article 
             class="flex flex-col bg-white rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_8px_40px_rgba(0,229,181,0.15)] hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative"
             onclick={() => abrirModal(deal)}
             role="presentation"
           >
-            
             <div class="relative h-56 w-full overflow-hidden bg-gray-100">
               <img src={deal.url_imagen || deal.imagen_fallback || obtenerImagen(deal)} alt={deal.destino_nombre} class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               
@@ -311,4 +309,44 @@
             </div>
             <div>
               <label for="radar-destino" class="block text-xs font-semibold text-gray-400 mb-1">Destino</label>
-              <input id="radar-destino" type="text" bind:value={leadDestino} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-
+              <input id="radar-destino" type="text" bind:value={leadDestino} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#00E5B5] focus:border-[#00E5B5] outline-none text-sm" placeholder="Ej. JFK" />
+            </div>
+          </div>
+          <div>
+            <label for="radar-mes" class="block text-xs font-semibold text-gray-400 mb-1">Mes aproximado</label>
+            <select id="radar-mes" bind:value={leadMes} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#00E5B5] focus:border-[#00E5B5] outline-none text-sm bg-white">
+              <option value="" disabled>Selecciona un mes</option>
+              {#each mesesDisponibles as mes}
+                <option value={mes}>{mes}</option>
+              {/each}
+            </select>
+          </div>
+          <div>
+            <label for="radar-contacto" class="block text-xs font-semibold text-gray-400 mb-1">Correo Electrónico</label>
+            <input id="radar-contacto" type="email" bind:value={leadContacto} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#00E5B5] focus:border-[#00E5B5] outline-none text-sm" placeholder="ejemplo@correo.com" />
+          </div>
+          <button type="submit" class="w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-[#00E5B5] hover:text-gray-900 transition-all active:scale-95 shadow-md" disabled={radarEnviando}>
+            {radarEnviando ? 'Enviando...' : 'Activar Radar'}
+          </button>
+          {#if radarExito}
+            <p class="text-center text-[#00E5B5] font-bold text-sm mt-4">¡Radar activado! Te avisaremos cuando aparezca la oportunidad.</p>
+          {/if}
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <WhatsAppButton pais={paisActual} />
+  <Footer />
+
+</div>
+
+{#if modalAbierto && dealSeleccionado}
+  <ModalWanderlust deal={dealSeleccionado} abierto={modalAbierto} cerrar={cerrarModal} />
+{/if}
+
+<style>
+  .animate-fadeIn { animation: fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1); }
+  @keyframes fadeIn { from { opacity: 0; transform: scale(0.95) translateY(-5px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+</style>
