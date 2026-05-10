@@ -1,16 +1,16 @@
 <script lang="ts">
-  import Header from '$lib/components/Header.svelte'; // Ajusta la ruta si es necesario
-  import Footer from '$lib/components/Footer.svelte'; // Ajusta la ruta si es necesario
+  import Header from '$lib/components/Header.svelte'; 
+  import Footer from '$lib/components/Footer.svelte'; 
 
-  // Recibimos los datos del servidor (page.server.ts)
+  // Recibimos los datos del servidor
   let { data } = $props();
   
-  // Extraemos la lista de vuelos Wanderlust
+  // Extraemos la lista de vuelos
   let ofertas = $derived(data.deals || []);
 </script>
 
 <svelte:head>
-  <title>Wanderlust | Selección Lumivia</title>
+  <title>Wanderlust | Colección Lumivia</title>
   <meta name="description" content="Acceso a rutas aéreas exclusivas y optimizadas." />
 </svelte:head>
 
@@ -39,59 +39,58 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {#each ofertas as deal (deal.id)}
           
-          <article class="flex flex-col bg-[#111111] rounded-[32px] overflow-hidden shadow-2xl group transition-all duration-500 border border-white/5">
+          <article class="flex flex-col bg-[#0A0A0A] rounded-[24px] overflow-hidden shadow-2xl group transition-all duration-300 border border-white/5 hover:border-[#00E5B5]/30 hover:-translate-y-1">
             
-            <div class="relative h-60 w-full overflow-hidden">
+            <div class="relative h-56 w-full overflow-hidden bg-gray-900">
               <img 
                 src={deal.url_imagen || deal.imagen_fallback} 
                 alt={deal.destino_nombre} 
-                class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
               />
-              
-              <div class="absolute inset-0 bg-gradient-to-t from-[#111111] via-transparent to-black/40"></div>
+              <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60"></div>
               
               <div class="absolute top-4 left-4 right-4 flex justify-between items-start">
-                <div class="flex flex-col gap-2">
-                   <span class="bg-black/50 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 w-fit">
+                <div class="flex flex-col gap-1">
+                   <span class="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1.5 w-fit border border-white/10">
                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg>
                     DIRECTO
                   </span>
-                  <span class="text-white/60 text-[9px] font-medium tracking-widest uppercase ml-1">Unsplash</span>
+                  <span class="text-white/80 text-[8px] font-medium tracking-widest uppercase ml-1">Unsplash</span>
                 </div>
                 
-                <div class="bg-[#00E5B5] text-black text-[10px] font-black px-3 py-1 rounded-full shadow-lg shadow-[#00E5B5]/20">
+                <div class="bg-[#00E5B5] text-[#0A0A0A] text-[9px] font-black px-3 py-1.5 rounded-full shadow-lg">
                   SELECCIÓN AUDITADA
                 </div>
               </div>
             </div>
 
-            <div class="p-8 pt-4 flex flex-col flex-grow">
+            <div class="p-6 flex flex-col flex-grow bg-[#0A0A0A]">
+              
               <h2 class="text-3xl font-black text-white uppercase tracking-tight mb-1">
                 {deal.destino_nombre} <span class="text-gray-500 font-bold text-lg">({deal.destino})</span>
               </h2>
 
-              <div class="text-[#00E5B5] text-xs font-bold uppercase tracking-widest mb-6">
+              <div class="text-[#00E5B5] text-xs font-bold uppercase tracking-widest mb-4">
                 {deal.titulo_gancho}
               </div>
 
-              <div class="text-gray-400 text-sm leading-relaxed mb-8 flex-grow">
+              <div class="text-gray-400 text-sm leading-relaxed mb-6 flex-grow line-clamp-3">
                 {deal.cuerpo_post}
               </div>
 
-              <div class="flex items-center justify-between border-t border-white/10 pt-6">
+              <div class="flex items-end justify-between border-t border-white/10 pt-5 mt-auto">
                 <div class="flex flex-col">
-                  <span class="text-gray-500 text-[10px] font-bold tracking-widest uppercase">Precio Ancla</span>
-                  <div class="text-white text-3xl font-black">
+                  <span class="text-gray-500 text-[10px] font-bold tracking-widest uppercase mb-0.5">Precio Ancla</span>
+                  <div class="text-white text-2xl font-black leading-none">
                     ${deal.precio?.toLocaleString('en-US')} 
-                    <span class="text-xs font-bold text-gray-500 uppercase">{deal.moneda || 'USD'}</span>
+                    <span class="text-[10px] font-bold text-gray-500 uppercase">{deal.moneda || data.pais === 'MX' ? 'MXN' : 'USD'}</span>
                   </div>
-                  <span class="text-[9px] text-gray-600 font-bold">Desde {deal.origen_nombre}</span>
+                  <span class="text-[9px] text-gray-600 font-bold mt-1">Desde {deal.origen_nombre}</span>
                 </div>
 
                 <a 
-                  href={deal.link_compra} 
-                  target="_blank"
-                  class="bg-white/5 hover:bg-[#00E5B5] text-white hover:text-black border border-white/10 hover:border-[#00E5B5] px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300"
+                  href={`?vuelo=${deal.id}`} 
+                  class="bg-white/5 hover:bg-[#00E5B5] text-white hover:text-[#0A0A0A] border border-white/10 hover:border-[#00E5B5] px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300"
                 >
                   Ver Oferta
                 </a>
@@ -101,6 +100,20 @@
           </article>
         {/each}
       </div>
+
+      {#if data.totalPages > 1}
+        <div class="mt-16 flex justify-center gap-2">
+          {#each Array(data.totalPages) as _, i}
+            <a 
+              href="?pais={data.pais}&page={i + 1}"
+              class={`w-10 h-10 flex items-center justify-center rounded-lg font-bold text-sm transition-all ${data.page === i + 1 ? 'bg-[#0A0A0A] text-white shadow-md' : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+            >
+              {i + 1}
+            </a>
+          {/each}
+        </div>
+      {/if}
+
     {/if}
   </div>
 </main>
