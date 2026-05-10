@@ -87,90 +87,92 @@
 </script>
 
 {#if abierto && deal}
-  <div class="fixed inset-0 bg-black/80 backdrop-blur-md z-[999]" onclick={cerrar} role="button" tabindex="0" onkeydown={handleKey} aria-label="Cerrar modal"></div>
+  <div class="fixed inset-0 bg-black/60 backdrop-blur-md z-[999]" onclick={cerrar} role="button" tabindex="0" onkeydown={handleKey} aria-label="Cerrar modal"></div>
 
   <div class="fixed inset-0 z-[1000] flex items-center justify-center p-4 pointer-events-none">
-    <div class="bg-[#0A0A0A] border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] max-w-2xl w-full max-h-[90vh] overflow-y-auto relative animate-fadeIn pointer-events-auto flex flex-col">
+    <div class="bg-[#161616] border border-white/10 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] max-w-2xl w-full max-h-[90vh] overflow-y-auto relative animate-fadeIn pointer-events-auto flex flex-col">
       
-      <button class="absolute top-4 right-4 bg-black/50 border border-white/10 backdrop-blur-md hover:bg-[#111111] p-2.5 rounded-full shadow-sm z-20 transition-colors" onclick={cerrar} aria-label="Cerrar ventana">
-        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      <button class="absolute top-4 right-4 bg-black/40 backdrop-blur-md hover:bg-white text-white hover:text-black p-2.5 rounded-full shadow-lg z-20 transition-all duration-300" onclick={cerrar} aria-label="Cerrar ventana">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
 
-      <div class="h-56 w-full overflow-hidden relative flex-shrink-0 bg-gray-900">
-        <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover opacity-90" onerror={handleImageError} />
-        <div class="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent"></div>
-        <div class="absolute bottom-4 left-6">
-          <div class="inline-flex items-center gap-2 mb-2 px-3 py-1.5 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-lg shadow-md">
-            <span class="text-[11px] font-black uppercase tracking-widest">{origenNombre}</span>
-            <svg class="w-3.5 h-3.5 text-[#00E5B5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-            <span class="text-[11px] font-black uppercase tracking-widest">{destinoNombre}</span>
+      <div class="h-64 w-full overflow-hidden relative flex-shrink-0 bg-gray-900">
+        <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" onerror={handleImageError} />
+        <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#161616] via-[#161616]/60 to-transparent"></div>
+        
+        <div class="absolute bottom-6 left-8">
+          <div class="inline-flex items-center gap-2 mb-3 px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-lg shadow-sm">
+            <span class="text-[12px] font-black uppercase tracking-widest">{origenNombre}</span>
+            <svg class="w-4 h-4 text-[#00E5B5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            <span class="text-[12px] font-black uppercase tracking-widest">{destinoNombre}</span>
           </div>
-          <h2 class="text-3xl font-black text-white leading-tight drop-shadow-md">{deal?.titulo_gancho || ''}</h2>
+          <h2 class="text-4xl font-black text-white leading-tight drop-shadow-xl">{deal?.titulo_gancho || ''}</h2>
         </div>
       </div>
 
-      <div class="px-8 pb-8 pt-4 relative z-10 flex-grow flex flex-col">
+      <div class="px-8 pb-8 pt-2 relative z-10 flex-grow flex flex-col">
         
         <div class="flex items-center gap-2 mb-6">
-          <div class="bg-white/5 px-3 py-1.5 rounded-full border border-white/10 text-gray-300 font-bold uppercase tracking-widest text-[10px]">
+          <div class="bg-[#00E5B5]/10 px-3 py-1.5 rounded-full border border-[#00E5B5]/20 text-[#00E5B5] font-black uppercase tracking-widest text-[11px]">
             {fechasCortas}
           </div>
         </div>
 
-        <div class="text-[14px] text-gray-300 leading-relaxed font-medium whitespace-pre-line mb-8">
+        <div class="text-[15px] text-gray-300 leading-relaxed font-medium whitespace-pre-line mb-8">
           {@html cuerpoPostLimpiado}
         </div>
 
         {#if links.esim && !esNacional}
-          <div class="bg-[#111111] border border-[#00E5B5]/30 rounded-xl p-4 mb-8 flex items-start gap-3">
-            <span class="text-[#00E5B5] text-lg">💡</span>
-            <p class="text-gray-400 text-xs leading-relaxed font-medium mt-0.5">
-              <strong class="text-white block mb-1">Beneficios Lumivia en Airalo:</strong>
-              Nuevos usuarios: <span class="text-[#00E5B5] font-black">LUMIVIA</span> (15% OFF) | Recurrentes: <span class="text-[#00E5B5] font-black">LUMIVIA10</span> (10% OFF)
+          <div class="bg-[#0A0A0A] border border-[#00E5B5]/30 rounded-2xl p-5 mb-8 flex items-start gap-4 shadow-inner">
+            <span class="text-[#00E5B5] text-2xl">💡</span>
+            <p class="text-gray-300 text-sm leading-relaxed font-medium">
+              <strong class="text-white block mb-1 text-[15px]">Beneficios Lumivia en Airalo:</strong>
+              Nuevos usuarios: <span class="text-[#00E5B5] font-black px-1">LUMIVIA</span> (15% OFF) <br class="sm:hidden">
+              <span class="hidden sm:inline">|</span> Recurrentes: <span class="text-[#00E5B5] font-black px-1">LUMIVIA10</span> (10% OFF)
             </p>
           </div>
         {/if}
 
         <div class="mt-auto">
-          <h4 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Complementos de Viaje</h4>
+          <h4 class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4">Complementos de Viaje</h4>
           
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
             {#if links.esim && !esNacional}
-              <a href={links.esim} target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-3 bg-[#111111] border border-white/5 rounded-2xl hover:border-[#00E5B5]/50 transition-all group">
-                <div class="w-10 h-10 rounded-full bg-gray-800 overflow-hidden flex-shrink-0"><img src="https://images.unsplash.com/photo-1488509082528-cefbba5ad692?q=80&w=2070&auto=format&fit=crop" alt="eSIM Airalo" class="w-full h-full object-cover opacity-80 group-hover:opacity-100" /></div>
-                <div class="flex-1 min-w-0"><p class="text-[12px] font-black text-white">Internet eSIM</p><p class="text-[10px] text-gray-500">Sin Roaming</p></div>
+              <a href={links.esim} target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-3 bg-[#0A0A0A] border border-white/5 rounded-2xl hover:border-[#00E5B5]/50 hover:bg-[#111111] transition-all group">
+                <div class="w-12 h-12 rounded-full bg-gray-800 overflow-hidden flex-shrink-0 border border-white/10"><img src="https://images.unsplash.com/photo-1488509082528-cefbba5ad692?q=80&w=2070&auto=format&fit=crop" alt="eSIM" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="flex-1 min-w-0"><p class="text-[13px] font-black text-white mb-0.5">Internet eSIM</p><p class="text-[11px] text-gray-400">Sin Roaming</p></div>
               </a>
             {/if}
             {#if links.tours}
-              <a href={links.tours} target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-3 bg-[#111111] border border-white/5 rounded-2xl hover:border-[#00E5B5]/50 transition-all group">
-                <div class="w-10 h-10 rounded-full bg-gray-800 overflow-hidden flex-shrink-0"><img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=150&q=80" alt="Tours" class="w-full h-full object-cover opacity-80 group-hover:opacity-100" /></div>
-                <div class="flex-1 min-w-0"><p class="text-[12px] font-black text-white">Tours & Guías</p><p class="text-[10px] text-gray-500">En español</p></div>
+              <a href={links.tours} target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-3 bg-[#0A0A0A] border border-white/5 rounded-2xl hover:border-[#00E5B5]/50 hover:bg-[#111111] transition-all group">
+                <div class="w-12 h-12 rounded-full bg-gray-800 overflow-hidden flex-shrink-0 border border-white/10"><img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=150&q=80" alt="Tours" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="flex-1 min-w-0"><p class="text-[13px] font-black text-white mb-0.5">Tours & Guías</p><p class="text-[11px] text-gray-400">En español</p></div>
               </a>
             {/if}
             {#if links.hotel}
-              <a href={links.hotel} target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-3 bg-[#111111] border border-white/5 rounded-2xl hover:border-[#00E5B5]/50 transition-all group">
-                <div class="w-10 h-10 rounded-full bg-gray-800 overflow-hidden flex-shrink-0"><img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=150&q=80" alt="Hoteles" class="w-full h-full object-cover opacity-80 group-hover:opacity-100" /></div>
-                <div class="flex-1 min-w-0"><p class="text-[12px] font-black text-white">Hospedaje</p><p class="text-[10px] text-gray-500">Mapa Interactivo</p></div>
+              <a href={links.hotel} target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-3 bg-[#0A0A0A] border border-white/5 rounded-2xl hover:border-[#00E5B5]/50 hover:bg-[#111111] transition-all group">
+                <div class="w-12 h-12 rounded-full bg-gray-800 overflow-hidden flex-shrink-0 border border-white/10"><img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=150&q=80" alt="Hoteles" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="flex-1 min-w-0"><p class="text-[13px] font-black text-white mb-0.5">Hospedaje</p><p class="text-[11px] text-gray-400">Mapa Interactivo</p></div>
               </a>
             {/if}
             {#if links.seguro && !esNacional}
-              <a href={links.seguro} target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-3 bg-[#111111] border border-white/5 rounded-2xl hover:border-[#00E5B5]/50 transition-all group">
-                <div class="w-10 h-10 rounded-full bg-gray-800 overflow-hidden flex-shrink-0"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=150&q=80" alt="Seguro Viaje" class="w-full h-full object-cover opacity-80 group-hover:opacity-100" /></div>
-                <div class="flex-1 min-w-0"><p class="text-[12px] font-black text-white">Asistencia</p><p class="text-[10px] text-gray-500">Seguro Global</p></div>
+              <a href={links.seguro} target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-3 bg-[#0A0A0A] border border-white/5 rounded-2xl hover:border-[#00E5B5]/50 hover:bg-[#111111] transition-all group">
+                <div class="w-12 h-12 rounded-full bg-gray-800 overflow-hidden flex-shrink-0 border border-white/10"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=150&q=80" alt="Seguro Viaje" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="flex-1 min-w-0"><p class="text-[13px] font-black text-white mb-0.5">Asistencia</p><p class="text-[11px] text-gray-400">Seguro Global</p></div>
               </a>
             {/if}
           </div>
 
           <div class="flex items-center justify-between border-t border-white/10 pt-6">
             <div>
-              <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-0.5">Vuelo Id / Vt</p>
-              <div class="text-3xl font-black text-white leading-none">
+              <p class="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1">Vuelo Id / Vt</p>
+              <div class="text-3xl sm:text-4xl font-black text-white leading-none">
                 ${Number(deal?.precio ?? 0).toLocaleString('en-US')}
-                <span class="text-[11px] font-bold text-gray-500 uppercase ml-0.5">{monedaDeal}</span>
+                <span class="text-[12px] font-bold text-gray-500 uppercase ml-1">{monedaDeal}</span>
               </div>
             </div>
-            <a href={linkVuelo} target="_blank" rel="noopener noreferrer" class="bg-[#00E5B5] hover:bg-white text-[#0A0A0A] font-black px-8 py-3.5 rounded-full transition-all shadow-[0_0_20px_rgba(0,229,181,0.2)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] active:scale-95 text-[12px] uppercase tracking-widest flex items-center gap-2">
-              Ver Vuelo <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            <a href={linkVuelo} target="_blank" rel="noopener noreferrer" class="bg-[#00E5B5] hover:bg-white text-[#0A0A0A] font-black px-8 py-4 rounded-full transition-all shadow-[0_10px_30px_rgba(0,229,181,0.2)] hover:shadow-[0_10px_30px_rgba(255,255,255,0.3)] active:scale-95 text-[13px] uppercase tracking-widest flex items-center gap-2">
+              Ver Vuelo <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             </a>
           </div>
         </div>
