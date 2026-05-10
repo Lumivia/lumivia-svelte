@@ -53,9 +53,9 @@
     if (abierto && deal) {
       const params = new URLSearchParams({
         destino: deal.destino || '', ciudad: ciudadExtraida || '', pais: deal.pais || 'MX',
-        salida: deal.fecha_salida || '', regreso: deal.fecha_regreso || '', url_hotel: deal.url_hotel || ''
+        salida: deal.fecha_salida || '', regreso: deal.fecha_regreso || ''
       });
-      fetch(`/api/links?${params.toString()}`).then(res => res.json()).then(data => links = data);
+      fetch(`/api/links?${params.toString()}`).then(res => res.json()).then(data => links = data).catch(() => {});
     }
   });
 
@@ -72,6 +72,11 @@
     const splitText = original.split(/👉|👇|✨|Comenta la palabra/i);
     return splitText[0].trim().replace(/[\(\[\{\-\:\s]+$/, '');
   });
+
+  // 🔥 SOLUCIÓN PUNTO 1: Leer directamente de la Base de Datos antes que de la API
+  const linkHotelSeguro = $derived(deal?.url_hotel || links.hotel || 'https://www.stay22.com/allez/roam?aid=lumivia');
+  const linkToursSeguro = $derived(deal?.url_experiencia || links.tours);
+  const linkEsimSeguro = $derived(links.esim || 'https://airalo.tp.st/X2NqzYV9');
 </script>
 
 {#if abierto && deal}
@@ -106,7 +111,7 @@
           {@html cuerpoPostLimpiado}
         </div>
 
-        {#if links.esim && !esNacional}
+        {#if !esNacional}
           <div class="bg-[#eaf6f9] border border-[#00E5B5]/20 rounded-2xl p-5 mb-8 flex items-start gap-4">
             <span class="text-2xl">💡</span>
             <p class="text-gray-700 text-sm font-medium">
@@ -119,18 +124,26 @@
         <div class="mt-auto">
           <h4 class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4">Complementos de Viaje</h4>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            {#if links.esim && !esNacional}
-              <a href={links.esim} target="_blank" class="flex items-center gap-4 p-3 bg-white border border-gray-100 rounded-2xl hover:border-[#00E5B5] transition-all group">
+            
+            {#if !esNacional}
+              <a href={linkEsimSeguro} target="_blank" class="flex items-center gap-4 p-3 bg-white border border-gray-100 rounded-2xl hover:border-[#00E5B5] transition-all group shadow-sm">
                 <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-100 shrink-0"><img src="https://images.unsplash.com/photo-1488509082528-cefbba5ad692?auto=format&fit=crop&w=150" alt="eSIM" class="w-full h-full object-cover" /></div>
                 <div class="flex-1 min-w-0"><p class="text-[13px] font-black text-gray-900">Internet eSIM</p><p class="text-[11px] text-gray-500">Sin Roaming</p></div>
               </a>
             {/if}
-            {#if links.tours}
-              <a href={links.tours} target="_blank" class="flex items-center gap-4 p-3 bg-white border border-gray-100 rounded-2xl hover:border-[#00E5B5] transition-all group">
+            
+            <a href={linkHotelSeguro} target="_blank" class="flex items-center gap-4 p-3 bg-white border border-gray-100 rounded-2xl hover:border-[#00E5B5] transition-all group shadow-sm">
+              <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-100 shrink-0"><img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=150" alt="Hoteles" class="w-full h-full object-cover" /></div>
+              <div class="flex-1 min-w-0"><p class="text-[13px] font-black text-gray-900">Hospedaje</p><p class="text-[11px] text-gray-500">Mapa Interactivo</p></div>
+            </a>
+
+            {#if linkToursSeguro}
+              <a href={linkToursSeguro} target="_blank" class="flex items-center gap-4 p-3 bg-white border border-gray-100 rounded-2xl hover:border-[#00E5B5] transition-all group shadow-sm">
                 <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-100 shrink-0"><img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=150" alt="Tours" class="w-full h-full object-cover" /></div>
                 <div class="flex-1 min-w-0"><p class="text-[13px] font-black text-gray-900">Tours & Guías</p><p class="text-[11px] text-gray-500">En español</p></div>
               </a>
             {/if}
+
           </div>
 
           <div class="flex items-center justify-between border-t border-gray-100 pt-6">
