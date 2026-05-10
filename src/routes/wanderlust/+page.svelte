@@ -93,10 +93,7 @@
                   <span class="text-[9px] text-gray-400 font-bold mt-1 uppercase tracking-wider">Desde {deal.origen_nombre}</span>
                 </div>
 
-                <button 
-                  type="button"
-                  class="bg-gray-900 hover:bg-[#00E5B5] text-white hover:text-gray-900 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-md"
-                >
+                <button type="button" class="bg-gray-900 hover:bg-[#00E5B5] text-white hover:text-gray-900 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-md">
                   Ver Oferta
                 </button>
               </div>
@@ -104,24 +101,12 @@
           </article>
         {/each}
       </div>
-
-      {#if data.totalPages > 1}
-        <div class="mt-16 flex justify-center gap-2">
-          {#each Array(data.totalPages) as _, i}
-            <a 
-              href="?pais={data.pais}&page={i + 1}"
-              class={`w-10 h-10 flex items-center justify-center rounded-full font-bold text-sm transition-all ${data.page === i + 1 ? 'bg-[#00E5B5] text-gray-900 shadow-md' : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'}`}
-            >
-              {i + 1}
-            </a>
-          {/each}
-        </div>
-      {/if}
     {/if}
   </main>
 
   <Footer />
+</div>
 
-</div> {#if modalAbierto && dealSeleccionado}
+{#if modalAbierto && dealSeleccionado}
   <ModalWanderlust deal={dealSeleccionado} abierto={modalAbierto} cerrar={cerrarModal} />
 {/if}
