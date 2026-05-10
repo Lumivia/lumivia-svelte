@@ -55,9 +55,9 @@
         <span class="hidden sm:inline">Escapadas</span>
       </a>
 
-      <a href="/wanderlust?pais={paisUpper}" class="group hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full hover:border-lumiCyan hover:shadow-lg hover:shadow-lumiCyan/20 transition-all duration-300">
-        <svg class="w-4 h-4 text-lumiDark group-hover:text-lumiCyan transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8l2.586-2.586a2 2 0 00-2.828-2.828L13.172 5.172M16 8A4 4 0 108 16a4 4 0 008-8z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16l-2.586 2.586a2 2 0 002.828 2.828L10.828 18.828"></path></svg>
-        <span class="text-xs font-bold uppercase tracking-widest text-lumiDark group-hover:text-lumiCyan transition-colors">Wanderlust</span>
+      <a href="/wanderlust?pais={paisUpper}" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+        <span class="hidden sm:inline">Wanderlust</span>
       </a>
 
       <div class="h-5 w-px bg-gray-200 hidden sm:block"></div>
