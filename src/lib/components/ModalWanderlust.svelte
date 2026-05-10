@@ -1,187 +1,127 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { obtenerImagen } from '$lib/utils/imagenes';
-  import { formatDatesLumivia } from '$lib/utils/formatters';
+  import Header from '$lib/components/Header.svelte'; 
+  import Footer from '$lib/components/Footer.svelte'; 
+  import ModalWanderlust from '$lib/components/ModalWanderlust.svelte';
 
-  const { deal, abierto, cerrar } = $props();
-  let links = $state({ tours: '', hotel: '', esim: '', seguro: '' });
+  let { data } = $props();
+  let ofertas = $derived(data.deals || []);
 
-  function handleKey(e: KeyboardEvent) { if (e.key === 'Escape') cerrar(); }
+  let modalAbierto = $state(false);
+  let dealSeleccionado = $state<any | null>(null);
 
-  onMount(() => {
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  });
-
-  function formatoAviasales(fechaIso: any) {
-    if (!fechaIso) return '';
-    const partes = String(fechaIso).split('T')[0].split('-');
-    return partes.length === 3 ? `${partes[2]}${partes[1]}` : '';
+  function abrirModal(deal: any) { 
+    dealSeleccionado = deal; 
+    modalAbierto = true; 
   }
-
-  const destinosNacionales: Record<string, string[]> = {
-    MX: ['CUN', 'CANCUN', 'MID', 'MERIDA', 'SJD', 'LOS CABOS', 'PVR', 'PUERTO VALLARTA', 'PXM', 'PUERTO ESCONDIDO', 'OAX', 'OAXACA', 'TRC', 'TORREON', 'CUU', 'CHIHUAHUA', 'MEX', 'CIUDAD DE MEXICO', 'CDMX', 'GDL', 'GUADALAJARA', 'MTY', 'MONTERREY', 'TIJ', 'TIJUANA'],
-    CO: ['CTG', 'CARTAGENA', 'SMR', 'SANTA MARTA', 'ADZ', 'SAN ANDRES', 'BGA', 'BUCARAMANGA', 'PEI', 'PEREIRA', 'BOG', 'BOGOTA', 'MDE', 'MEDELLIN', 'CLO', 'CALI'],
-    CL: ['CJC', 'CALAMA', 'PUQ', 'PUNTA ARENAS', 'PMC', 'PUERTO MONTT', 'IQQ', 'IQUIQUE', 'SCL', 'SANTIAGO', 'LSC', 'LA SERENA', 'ZCO', 'TEMUCO', 'BBA', 'BALMACEDA'],
-    CR: ['SJO', 'SAN JOSE', 'LIR', 'LIBERIA']
-  };
-
-  const normalizar = (texto: any) => String(texto || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
-
-  const imgFinal = $derived(obtenerImagen(deal));
   
-  function handleImageError(e: Event) {
-    const img = e.target as HTMLImageElement;
-    img.onerror = null;
-    img.src = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
+  function cerrarModal() { 
+    modalAbierto = false; 
+    setTimeout(() => { dealSeleccionado = null; }, 200); 
   }
-
-  const origenNombre = $derived(String(deal?.origen_nombre || deal?.origen || '').toUpperCase());
-  const destinoNombre = $derived(String(deal?.destino_nombre || deal?.destino || '').toUpperCase());
-  const fechasCortas = $derived(deal ? formatDatesLumivia(deal.fecha_salida, deal.fecha_regreso) : '');
-  
-  const monedaDeal = $derived.by(() => {
-    if (deal?.moneda) return String(deal.moneda).toUpperCase();
-    if (deal?.currency) return String(deal.currency).toUpperCase();
-    return 'MXN';
-  });
-
-  const ciudadExtraida = $derived.by(() => {
-    if (!deal?.titulo_gancho) return deal?.destino_nombre || deal?.destino || '';
-    const match = String(deal.titulo_gancho).match(/:\s*(.*?)\s*desde/i);
-    return match && match[1] ? match[1].trim() : (deal?.destino_nombre || deal?.destino || '');
-  });
-  
-  const esNacional = $derived.by(() => {
-    if (!deal) return false;
-    let mercado = deal.pais ? String(deal.pais).toUpperCase() : 'MX';
-    const listaLocal = destinosNacionales[mercado] || [];
-    const destinoNorm = normalizar(deal.destino);
-    const tituloNorm = normalizar(deal.titulo_gancho);
-    return listaLocal.some(keyword => destinoNorm.includes(keyword) || tituloNorm.includes(keyword));
-  });
-
-  $effect(() => {
-    if (abierto && deal) {
-      const params = new URLSearchParams({
-        destino: deal.destino || '', ciudad: ciudadExtraida || '', pais: deal.pais || 'MX',
-        salida: deal.fecha_salida || '', regreso: deal.fecha_regreso || '', url_hotel: deal.url_hotel || ''
-      });
-      fetch(`/api/links?${params.toString()}`).then(res => res.json()).then(data => links = data).catch(err => console.error(err));
-    }
-  });
-
-  const linkVuelo = $derived.by(() => {
-    if (!deal) return '#';
-    const origen = String(deal.origen || '').toUpperCase();
-    const destino = String(deal.destino || '').toUpperCase();
-    const searchParam = `${origen}${formatoAviasales(deal.fecha_salida)}${destino}${formatoAviasales(deal.fecha_regreso)}1`;
-    return `https://vuelos.lumivia.app/?flightSearch=${searchParam}`;
-  });
-
-  const cuerpoPostLimpiado = $derived.by(() => {
-    let original = String(deal?.cuerpo_post || deal?.descripcion || "");
-    const splitText = original.split(/👉|👇|✨|Comenta la palabra/i);
-    return splitText[0].trim().replace(/[\(\[\{\-\:\s]+$/, '');
-  });
 </script>
 
-{#if abierto && deal}
-  <div class="fixed inset-0 bg-black/60 backdrop-blur-md z-[999]" onclick={cerrar} role="button" tabindex="0" onkeydown={handleKey} aria-label="Cerrar modal"></div>
+<svelte:head>
+  <title>Wanderlust | Colección Lumivia</title>
+  <meta name="description" content="Acceso a rutas aéreas exclusivas y optimizadas." />
+</svelte:head>
 
-  <div class="fixed inset-0 z-[1000] flex items-center justify-center p-4 pointer-events-none">
-    <div class="bg-[#161616] border border-white/10 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] max-w-2xl w-full max-h-[90vh] overflow-y-auto relative animate-fadeIn pointer-events-auto flex flex-col">
-      
-      <button class="absolute top-4 right-4 bg-black/40 backdrop-blur-md hover:bg-white text-white hover:text-black p-2.5 rounded-full shadow-lg z-20 transition-all duration-300" onclick={cerrar} aria-label="Cerrar ventana">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-      </button>
+<div class="bg-gray-50 min-h-screen flex flex-col relative overflow-x-hidden">
+  
+  <Header paisUpper={data.pais} />
 
-      <div class="h-64 w-full overflow-hidden relative flex-shrink-0 bg-gray-900">
-        <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" onerror={handleImageError} />
-        <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#161616] via-[#161616]/60 to-transparent"></div>
-        
-        <div class="absolute bottom-6 left-8">
-          <div class="inline-flex items-center gap-2 mb-3 px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-lg shadow-sm">
-            <span class="text-[12px] font-black uppercase tracking-widest">{origenNombre}</span>
-            <svg class="w-4 h-4 text-[#00E5B5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-            <span class="text-[12px] font-black uppercase tracking-widest">{destinoNombre}</span>
-          </div>
-          <h2 class="text-4xl font-black text-white leading-tight drop-shadow-xl">{deal?.titulo_gancho || ''}</h2>
-        </div>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full relative z-10">
+    
+    <div class="mb-12 text-center sm:text-left">
+      <h1 class="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase mb-4 italic">
+        WANDERLUST <span class="text-[#00E5B5] not-italic">COLECCIÓN</span>
+      </h1>
+      <p class="text-gray-500 max-w-2xl text-sm md:text-base font-medium">
+        Selección de itinerarios aéreos optimizados. Diseñados para maximizar tiempo y confort en los destinos más demandados.
+      </p>
+    </div>
+
+    {#if ofertas.length === 0}
+      <div class="bg-white border border-gray-200 shadow-sm rounded-3xl p-20 text-center">
+        <svg class="w-16 h-16 text-gray-300 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">Buscando nuevas rutas...</h3>
+        <p class="text-gray-500">Estamos verificando las mejores conexiones de este momento.</p>
       </div>
-
-      <div class="px-8 pb-8 pt-2 relative z-10 flex-grow flex flex-col">
-        
-        <div class="flex items-center gap-2 mb-6">
-          <div class="bg-[#00E5B5]/10 px-3 py-1.5 rounded-full border border-[#00E5B5]/20 text-[#00E5B5] font-black uppercase tracking-widest text-[11px]">
-            {fechasCortas}
-          </div>
-        </div>
-
-        <div class="text-[15px] text-gray-300 leading-relaxed font-medium whitespace-pre-line mb-8">
-          {@html cuerpoPostLimpiado}
-        </div>
-
-        {#if links.esim && !esNacional}
-          <div class="bg-[#0A0A0A] border border-[#00E5B5]/30 rounded-2xl p-5 mb-8 flex items-start gap-4 shadow-inner">
-            <span class="text-[#00E5B5] text-2xl">💡</span>
-            <p class="text-gray-300 text-sm leading-relaxed font-medium">
-              <strong class="text-white block mb-1 text-[15px]">Beneficios Lumivia en Airalo:</strong>
-              Nuevos usuarios: <span class="text-[#00E5B5] font-black px-1">LUMIVIA</span> (15% OFF) <br class="sm:hidden">
-              <span class="hidden sm:inline">|</span> Recurrentes: <span class="text-[#00E5B5] font-black px-1">LUMIVIA10</span> (10% OFF)
-            </p>
-          </div>
-        {/if}
-
-        <div class="mt-auto">
-          <h4 class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4">Complementos de Viaje</h4>
+    {:else}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {#each ofertas as deal (deal.id)}
           
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            {#if links.esim && !esNacional}
-              <a href={links.esim} target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-3 bg-[#0A0A0A] border border-white/5 rounded-2xl hover:border-[#00E5B5]/50 hover:bg-[#111111] transition-all group">
-                <div class="w-12 h-12 rounded-full bg-gray-800 overflow-hidden flex-shrink-0 border border-white/10"><img src="https://images.unsplash.com/photo-1488509082528-cefbba5ad692?q=80&w=2070&auto=format&fit=crop" alt="eSIM" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /></div>
-                <div class="flex-1 min-w-0"><p class="text-[13px] font-black text-white mb-0.5">Internet eSIM</p><p class="text-[11px] text-gray-400">Sin Roaming</p></div>
-              </a>
-            {/if}
-            {#if links.tours}
-              <a href={links.tours} target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-3 bg-[#0A0A0A] border border-white/5 rounded-2xl hover:border-[#00E5B5]/50 hover:bg-[#111111] transition-all group">
-                <div class="w-12 h-12 rounded-full bg-gray-800 overflow-hidden flex-shrink-0 border border-white/10"><img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=150&q=80" alt="Tours" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /></div>
-                <div class="flex-1 min-w-0"><p class="text-[13px] font-black text-white mb-0.5">Tours & Guías</p><p class="text-[11px] text-gray-400">En español</p></div>
-              </a>
-            {/if}
-            {#if links.hotel}
-              <a href={links.hotel} target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-3 bg-[#0A0A0A] border border-white/5 rounded-2xl hover:border-[#00E5B5]/50 hover:bg-[#111111] transition-all group">
-                <div class="w-12 h-12 rounded-full bg-gray-800 overflow-hidden flex-shrink-0 border border-white/10"><img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=150&q=80" alt="Hoteles" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /></div>
-                <div class="flex-1 min-w-0"><p class="text-[13px] font-black text-white mb-0.5">Hospedaje</p><p class="text-[11px] text-gray-400">Mapa Interactivo</p></div>
-              </a>
-            {/if}
-            {#if links.seguro && !esNacional}
-              <a href={links.seguro} target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-3 bg-[#0A0A0A] border border-white/5 rounded-2xl hover:border-[#00E5B5]/50 hover:bg-[#111111] transition-all group">
-                <div class="w-12 h-12 rounded-full bg-gray-800 overflow-hidden flex-shrink-0 border border-white/10"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=150&q=80" alt="Seguro Viaje" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /></div>
-                <div class="flex-1 min-w-0"><p class="text-[13px] font-black text-white mb-0.5">Asistencia</p><p class="text-[11px] text-gray-400">Seguro Global</p></div>
-              </a>
-            {/if}
-          </div>
-
-          <div class="flex items-center justify-between border-t border-white/10 pt-6">
-            <div>
-              <p class="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1">Vuelo Id / Vt</p>
-              <div class="text-3xl sm:text-4xl font-black text-white leading-none">
-                ${Number(deal?.precio ?? 0).toLocaleString('en-US')}
-                <span class="text-[12px] font-bold text-gray-500 uppercase ml-1">{monedaDeal}</span>
+          <article 
+            class="flex flex-col bg-white rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_8px_40px_rgba(0,229,181,0.15)] hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+            onclick={() => abrirModal(deal)}
+            role="presentation"
+          >
+            
+            <div class="relative h-56 w-full overflow-hidden bg-gray-100">
+              <img src={deal.url_imagen || deal.imagen_fallback} alt={deal.destino_nombre} class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              
+              <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/40 to-transparent"></div>
+              
+              <div class="absolute top-4 left-4 right-4 flex justify-between items-start">
+                <div class="flex flex-col gap-1">
+                   <span class="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1.5 w-fit border border-white/20">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg>
+                    DIRECTO
+                  </span>
+                </div>
+                <div class="bg-[#00E5B5] text-[#0A0A0A] text-[9px] font-black px-3 py-1.5 rounded-full shadow-md uppercase tracking-widest">
+                  SELECCIÓN AUDITADA
+                </div>
               </div>
             </div>
-            <a href={linkVuelo} target="_blank" rel="noopener noreferrer" class="bg-[#00E5B5] hover:bg-white text-[#0A0A0A] font-black px-8 py-4 rounded-full transition-all shadow-[0_10px_30px_rgba(0,229,181,0.2)] hover:shadow-[0_10px_30px_rgba(255,255,255,0.3)] active:scale-95 text-[13px] uppercase tracking-widest flex items-center gap-2">
-              Ver Vuelo <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-{/if}
 
-<style>
-  .animate-fadeIn { animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
-  @keyframes fadeIn { from { opacity: 0; transform: scale(0.98) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-</style>
+            <div class="p-6 flex flex-col flex-grow bg-white">
+              <h2 class="text-2xl font-black text-gray-900 uppercase tracking-tight mb-1">
+                {deal.destino_nombre} <span class="text-gray-400 font-bold text-base">({deal.destino})</span>
+              </h2>
+
+              <div class="text-[#00E5B5] text-xs font-bold uppercase tracking-widest mb-4">{deal.titulo_gancho}</div>
+
+              <div class="text-gray-500 text-[14px] leading-relaxed mb-6 flex-grow line-clamp-3 font-medium">{deal.cuerpo_post}</div>
+
+              <div class="flex items-end justify-between border-t border-gray-100 pt-5 mt-auto">
+                <div class="flex flex-col">
+                  <span class="text-gray-400 text-[10px] font-bold tracking-widest uppercase mb-0.5">Precio Ancla</span>
+                  <div class="text-gray-900 text-2xl font-black leading-none">
+                    ${deal.precio?.toLocaleString('en-US')} 
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">{deal.moneda || data.pais === 'MX' ? 'MXN' : 'USD'}</span>
+                  </div>
+                  <span class="text-[9px] text-gray-400 font-bold mt-1 uppercase tracking-wider">Desde {deal.origen_nombre}</span>
+                </div>
+
+                <button 
+                  type="button"
+                  class="bg-gray-900 hover:bg-[#00E5B5] text-white hover:text-gray-900 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-md"
+                >
+                  Ver Oferta
+                </button>
+              </div>
+            </div>
+          </article>
+        {/each}
+      </div>
+
+      {#if data.totalPages > 1}
+        <div class="mt-16 flex justify-center gap-2">
+          {#each Array(data.totalPages) as _, i}
+            <a 
+              href="?pais={data.pais}&page={i + 1}"
+              class={`w-10 h-10 flex items-center justify-center rounded-full font-bold text-sm transition-all ${data.page === i + 1 ? 'bg-[#00E5B5] text-gray-900 shadow-md' : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+            >
+              {i + 1}
+            </a>
+          {/each}
+        </div>
+      {/if}
+    {/if}
+  </main>
+
+  <Footer />
+
+</div> {#if modalAbierto && dealSeleccionado}
+  <ModalWanderlust deal={dealSeleccionado} abierto={modalAbierto} cerrar={cerrarModal} />
+{/if}
