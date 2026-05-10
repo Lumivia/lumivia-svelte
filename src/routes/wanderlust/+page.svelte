@@ -1,12 +1,24 @@
 <script lang="ts">
   import Header from '$lib/components/Header.svelte'; 
   import Footer from '$lib/components/Footer.svelte'; 
+  import ModalWanderlust from '$lib/components/ModalWanderlust.svelte';
 
-  // Recibimos los datos del servidor
   let { data } = $props();
-  
-  // Extraemos la lista de vuelos
   let ofertas = $derived(data.deals || []);
+
+  // Controladores del Modal
+  let modalAbierto = $state(false);
+  let dealSeleccionado = $state<any | null>(null);
+
+  function abrirModal(deal: any) { 
+    dealSeleccionado = deal; 
+    modalAbierto = true; 
+  }
+  
+  function cerrarModal() { 
+    modalAbierto = false; 
+    setTimeout(() => { dealSeleccionado = null; }, 200); 
+  }
 </script>
 
 <svelte:head>
@@ -35,18 +47,13 @@
         <p class="text-gray-500">Estamos verificando las mejores conexiones de este momento.</p>
       </div>
     {:else}
-      
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {#each ofertas as deal (deal.id)}
           
           <article class="flex flex-col bg-[#0A0A0A] rounded-[24px] overflow-hidden shadow-2xl group transition-all duration-300 border border-white/5 hover:border-[#00E5B5]/30 hover:-translate-y-1">
             
-            <div class="relative h-56 w-full overflow-hidden bg-gray-900">
-              <img 
-                src={deal.url_imagen || deal.imagen_fallback} 
-                alt={deal.destino_nombre} 
-                class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-              />
+            <div class="relative h-56 w-full overflow-hidden bg-gray-900 cursor-pointer" onclick={() => abrirModal(deal)} role="presentation">
+              <img src={deal.url_imagen || deal.imagen_fallback} alt={deal.destino_nombre} class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60"></div>
               
               <div class="absolute top-4 left-4 right-4 flex justify-between items-start">
@@ -57,26 +64,18 @@
                   </span>
                   <span class="text-white/80 text-[8px] font-medium tracking-widest uppercase ml-1">Unsplash</span>
                 </div>
-                
-                <div class="bg-[#00E5B5] text-[#0A0A0A] text-[9px] font-black px-3 py-1.5 rounded-full shadow-lg">
-                  SELECCIÓN AUDITADA
-                </div>
+                <div class="bg-[#00E5B5] text-[#0A0A0A] text-[9px] font-black px-3 py-1.5 rounded-full shadow-lg">SELECCIÓN AUDITADA</div>
               </div>
             </div>
 
             <div class="p-6 flex flex-col flex-grow bg-[#0A0A0A]">
-              
               <h2 class="text-3xl font-black text-white uppercase tracking-tight mb-1">
                 {deal.destino_nombre} <span class="text-gray-500 font-bold text-lg">({deal.destino})</span>
               </h2>
 
-              <div class="text-[#00E5B5] text-xs font-bold uppercase tracking-widest mb-4">
-                {deal.titulo_gancho}
-              </div>
+              <div class="text-[#00E5B5] text-xs font-bold uppercase tracking-widest mb-4">{deal.titulo_gancho}</div>
 
-              <div class="text-gray-400 text-sm leading-relaxed mb-6 flex-grow line-clamp-3">
-                {deal.cuerpo_post}
-              </div>
+              <div class="text-gray-400 text-sm leading-relaxed mb-6 flex-grow line-clamp-3">{deal.cuerpo_post}</div>
 
               <div class="flex items-end justify-between border-t border-white/10 pt-5 mt-auto">
                 <div class="flex flex-col">
@@ -88,15 +87,15 @@
                   <span class="text-[9px] text-gray-600 font-bold mt-1">Desde {deal.origen_nombre}</span>
                 </div>
 
-                <a 
-                  href={`?vuelo=${deal.id}`} 
-                  class="bg-white/5 hover:bg-[#00E5B5] text-white hover:text-[#0A0A0A] border border-white/10 hover:border-[#00E5B5] px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300"
+                <button 
+                  type="button"
+                  onclick={() => abrirModal(deal)} 
+                  class="bg-white/5 hover:bg-[#00E5B5] text-white hover:text-[#0A0A0A] border border-white/10 hover:border-[#00E5B5] px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 cursor-pointer"
                 >
                   Ver Oferta
-                </a>
+                </button>
               </div>
             </div>
-            
           </article>
         {/each}
       </div>
@@ -113,9 +112,12 @@
           {/each}
         </div>
       {/if}
-
     {/if}
   </div>
 </main>
 
 <Footer />
+
+{#if modalAbierto && dealSeleccionado}
+  <ModalWanderlust deal={dealSeleccionado} abierto={modalAbierto} cerrar={cerrarModal} />
+{/if}
