@@ -5,9 +5,11 @@
   import type { PageData } from './$types';
   
   import { supabase } from '$lib/supabaseClient';
+  import Header from '$lib/components/Header.svelte';
   import ModalWanderlust from '$lib/components/ModalWanderlust.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
+  import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
   import { obtenerImagen } from '$lib/utils/imagenes'; 
 
   let { data } = $props<PageData>();
@@ -19,6 +21,7 @@
     CR: { moneda: 'USD', bandera: 'https://flagcdn.com/w20/cr.png' }
   };
 
+  // 🛡️ BLINDAJE ANTIBALAS: Limpiamos la variable por si la URL trae "?admin=true" pegado al país
   const paisActual = $derived(String(data.pais || 'MX').split('?')[0].split('&')[0].toUpperCase());
   const monedaActual = $derived(configMercado[paisActual]?.moneda ?? 'MXN');
   const banderaActual = $derived(configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png');
@@ -27,7 +30,6 @@
   let modalAbierto = $state(false);
   let dealSeleccionado = $state<any | null>(null);
 
-  // Módulos de Captación (Newsletter / Radar)
   let leadNombre = $state('');
   let leadOrigen = $state('');
   let leadDestino = $state('');
@@ -42,10 +44,65 @@
   let nlEnviando = $state(false);
 
   let mesesDisponibles = $state<string[]>([]);
-  
-  // Módulo Administrador
+  let vuelosReportados = $state(new Set<number | string>());
+
+  // 🕵️ MODO DIOS: Lee si la URL tiene ?admin=true o &admin=true
   const isAdminModo = $derived($page.url.searchParams.get('admin') === 'true');
   let cargandoAdmin = $state(false);
+
+  // 💀 Función para evaluar si una oferta específica está muerta
+  function checarSiEstaMuerta(deal: any, reportados: Set<number | string>) {
+    if (deal?.expirada_manualmente) return true;
+    if (reportados.has(deal.id)) return true;
+    if (!deal?.fecha_salida) return false;
+    try {
+      const fechaStr = String(deal.fecha_salida).split('T')[0];
+      const partes = fechaStr.split(/[-/]/);
+      if (partes.length === 3) {
+        let y, m, d;
+        if (partes[0].length === 4) { y = partes[0]; m = partes[1]; d = partes[2]; }
+        else if (partes[2].length === 4) { y = partes[2]; m = partes[1]; d = partes[0]; }
+        else return false;
+        const fechaSalida = new Date(Number(y), Number(m)-1, Number(d));
+        const hoy = new Date();
+        hoy.setHours(0,0,0,0);
+        return fechaSalida < hoy;
+      }
+    } catch(e) {}
+    return false;
+  }
+
+  // 💣 Función para disparar el misil al backend
+  async function handleMatarOferta(id: number | string, e: Event) {
+    e.stopPropagation();
+    const password = prompt("Ingresa la contraseña de administrador para matar esta oferta Wanderlust:");
+    if (!password) return;
+
+    cargandoAdmin = true;
+    try {
+      const res = await fetch('/api/matar-oferta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, secret: password })
+      });
+      
+      if (res.ok) {
+        alert("💀 Oferta Wanderlust aniquilada. Recarga la página.");
+        window.location.reload(); 
+      } else {
+        alert("Contraseña incorrecta o error en el servidor.");
+      }
+    } catch (error) {
+      alert("Error de conexión.");
+    }
+    cargandoAdmin = false;
+  }
+
+  function handleImageError(e: Event) {
+    const img = e.target as HTMLImageElement;
+    img.onerror = null;
+    img.src = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
+  }
 
   function toggleDropdown() { dropdownAbierto = !dropdownAbierto; }
   
@@ -65,7 +122,34 @@
     goto(`/wanderlust?pais=${paisActual.toUpperCase()}&page=${n}`);
   }
 
-  // Lógicas de Base de Datos para Módulos
+  function calcularTiempoTranscurrido(fechaISO: string | null) {
+    if (!fechaISO) return 'Recientemente';
+    const fechaCreacion = new Date(fechaISO);
+    const ahora = new Date();
+    const diferenciaSegundos = Math.floor((+ahora - +fechaCreacion) / 1000);
+    if (diferenciaSegundos < 60) return `Hace ${diferenciaSegundos} seg`;
+    const diferenciaMinutos = Math.floor(diferenciaSegundos / 60);
+    if (diferenciaMinutos < 60) return `Hace ${diferenciaMinutos} min`;
+    const diferenciaHoras = Math.floor(diferenciaMinutos / 60);
+    if (diferenciaHoras < 24) return `Hace ${diferenciaHoras} horas`;
+    const diferenciaDias = Math.floor(diferenciaHoras / 24);
+    return `Hace ${diferenciaDias} días`;
+  }
+
+  function formatearFechaCorta(fechaCadena: string | null) {
+    if (!fechaCadena) return '';
+    const str = String(fechaCadena);
+    if (!str.includes('-')) return str;
+    const partes = str.split('-');
+    if (partes.length !== 3) return str;
+    const año = parseInt(partes[0]);
+    const mes = parseInt(partes[1]) - 1;
+    const dia = parseInt(partes[2]);
+    const fechaObj = new Date(año, mes, dia);
+    const opciones: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
+    return fechaObj.toLocaleDateString('es-ES', opciones).replace('.', '');
+  }
+
   function handleSubmitNewsletter(e: Event) { e.preventDefault(); enviarNewsletter(); }
   function handleSubmitRadar(e: Event) { e.preventDefault(); enviarRadar(); }
 
@@ -73,7 +157,7 @@
     nlEnviando = true; nlMensaje = ''; nlEstado = '';
     const { error } = await supabase.from('suscriptores_radar').insert([{ email: nlEmail.toLowerCase(), pais: paisActual, nombre: 'Viajero WL' }]);
     nlEnviando = false;
-    if (!error) { nlMensaje = '¡Listo! Te avisaremos de las mejores gangas VIP.'; nlEstado = 'ok'; nlEmail = ''; } 
+    if (!error) { nlMensaje = '¡Listo! Te avisaremos de la selección VIP.'; nlEstado = 'ok'; nlEmail = ''; } 
     else if ((error as any).code === '23505') { nlMensaje = '¡Ya estás en nuestra lista!'; nlEstado = 'ya'; } 
     else { nlMensaje = 'Error de conexión. Intenta de nuevo.'; nlEstado = 'error'; }
   }
@@ -86,29 +170,18 @@
     else { alert('Hubo un error al guardar. Intenta de nuevo.'); console.error(error); }
   }
 
-  async function handleMatarOferta(id: number | string, e: Event) {
-    e.stopPropagation();
-    const password = prompt("Ingresa la contraseña de administrador para matar esta oferta Wanderlust:");
-    if (!password) return;
+  async function reportarCambioPrecio(id: number | string, e?: Event) {
+    if (e) e.stopPropagation();
+    if (vuelosReportados.has(id)) return;
+    const nuevoSet = new Set(vuelosReportados);
+    nuevoSet.add(id); vuelosReportados = nuevoSet;
+    try { const { error } = await supabase.rpc('incrementar_reporte', { p_deal_id: id.toString() }); if (error) throw error; } catch (err) { console.error('Error al reportar:', err); }
+  }
 
-    cargandoAdmin = true;
-    try {
-      const res = await fetch('/api/matar-oferta', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, secret: password })
-      });
-      
-      if (res.ok) {
-        alert("💀 Oferta aniquilada. Recarga la página.");
-        window.location.reload(); 
-      } else {
-        alert("Contraseña incorrecta o error en el servidor.");
-      }
-    } catch (error) {
-      alert("Error de conexión.");
-    }
-    cargandoAdmin = false;
+  async function copiarUrlUnica(id: number | string, e?: Event) {
+    if (e) e.stopPropagation();
+    const url = `${window.location.origin}/oferta/${id}`; 
+    try { await navigator.clipboard.writeText(url); alert('¡Enlace copiado! Listo para compartir.'); } catch (err) { console.error(err); }
   }
 
   function abrirModal(deal: any) { dealSeleccionado = deal; modalAbierto = true; }
@@ -135,12 +208,14 @@
 </script>
 
 <svelte:head>
-  <title>Wanderlust | Selección Lumivia</title>
-  <meta name="description" content="Descubre oportunidades únicas de vuelos VIP. Catálogo completo Wanderlust." />
+  <title>Lumivia | Colección Wanderlust</title>
+  <meta name="description" content="Descubre oportunidades únicas de vuelos VIP. Colección Wanderlust de tarifas optimizadas." />
+  {#if data.schemaJSON}
+    {@html `<script type="application/ld+json">${data.schemaJSON}</script>`}
+  {/if}
 </svelte:head>
 
-<div class="bg-gray-50 text-lumiDark min-h-screen flex flex-col relative overflow-x-hidden">
-  
+<div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col relative overflow-x-hidden">
   <header class="bg-white/70 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-200/50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-4">
@@ -149,20 +224,20 @@
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
         </a>
         
-        <span class="text-2xl font-extrabold tracking-tighter text-lumiDark">Lumivia <span class="text-[#00E5B5] font-light">| Wanderlust</span></span>
+        <span class="text-2xl font-extrabold tracking-tighter text-lumiDark">Lumivia <span class="text-lumiCyan font-light">| Wanderlust</span></span>
       </div>
 
       <div class="flex items-center gap-4">
         <a href="https://vuelos.lumivia.app/" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-lumiDark transition-colors hidden sm:flex">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg> Vuelos
         </a>
-        <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-[#00E5B5] transition-colors hidden sm:flex">
+        <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-lumiCyan transition-colors hidden sm:flex">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg> Hoteles
         </a>
         <div class="h-4 w-px bg-gray-200 hidden sm:block"></div>
 
         <div id="selector-pais-catalogo" class="relative inline-block text-left">
-          <button type="button" onclick={toggleDropdown} aria-expanded={dropdownAbierto} class="inline-flex items-center justify-center w-full rounded-full border border-gray-200 shadow-sm px-4 py-1.5 bg-white text-sm font-bold text-gray-600 hover:bg-gray-50 focus:outline-none focus:border-[#00E5B5] transition-colors gap-2 cursor-pointer">
+          <button type="button" onclick={toggleDropdown} aria-expanded={dropdownAbierto} class="inline-flex items-center justify-center w-full rounded-full border border-gray-200 shadow-sm px-4 py-1.5 bg-white text-sm font-bold text-gray-600 hover:bg-gray-50 focus:outline-none focus:border-lumiCyan transition-colors gap-2 cursor-pointer">
             <img src={banderaActual} alt={paisActual} class="w-4 h-auto rounded-sm shadow-sm" />
             <span>{monedaActual}</span>
             <svg class="w-3 h-3 text-gray-400 transition-transform" style={`transform: rotate(${dropdownAbierto ? '180deg' : '0deg'})`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
@@ -184,45 +259,50 @@
   </header>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full relative z-10">
-    
     <div class="mb-12 text-center relative z-10">
-      <h1 class="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase mb-4 italic">
-        WANDERLUST <span class="text-[#00E5B5] not-italic">COLECCIÓN</span>
-      </h1>
-      <p class="text-gray-500 max-w-2xl mx-auto text-sm md:text-base font-medium mb-8">
-        Selección de itinerarios aéreos optimizados. Diseñados para maximizar tiempo y confort en los destinos más demandados.
-      </p>
-
+      <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-6">Colección Wanderlust</h1>
       <div class="max-w-xl mx-auto mb-6 relative z-20 group">
-        <div class="bg-white/80 backdrop-blur-xl p-2 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-gray-200/60 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(0,229,181,0.15)]">
-          <div class="pl-4 text-gray-400 hidden sm:block"><svg class="w-5 h-5 text-[#00E5B5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div>
+        
+        <div class="bg-white/80 backdrop-blur-xl p-2 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-gray-200/60 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(0,210,255,0.12)]">
+          <div class="pl-4 text-gray-400 hidden sm:block"><svg class="w-5 h-5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div>
           <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
-            <input type="email" placeholder="Ingresa tu correo para recibir selección VIP..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" bind:value={nlEmail} />
-            <button type="submit" class="bg-gray-900 text-white hover:bg-[#00E5B5] hover:text-gray-900 px-6 py-2.5 rounded-full font-bold transition-all shadow-md active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto" disabled={nlEnviando}>{nlEnviando ? 'Guardando...' : 'Suscribirme Gratis'}</button>
+            <input type="email" placeholder="Ingresa tu correo para recibir nuestra selección VIP..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" bind:value={nlEmail} />
+            <button type="submit" class="bg-lumiDark text-white hover:bg-black px-6 py-2.5 rounded-full font-bold transition-all shadow-md active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto" disabled={nlEnviando}>{nlEnviando ? 'Guardando...' : 'Suscribirme Gratis'}</button>
           </form>
         </div>
         {#if nlEstado !== ''}
-          <p class="text-center text-sm font-bold mt-4 {nlEstado === 'ok' ? 'text-emerald-500' : nlEstado === 'ya' ? 'text-[#00E5B5]' : 'text-red-500'}">{nlMensaje}</p>
+          <p class="text-center text-sm font-bold mt-4 {nlEstado === 'ok' ? 'text-emerald-500' : nlEstado === 'ya' ? 'text-lumiCyan' : 'text-red-500'}">{nlMensaje}</p>
         {/if}
       </div>
     </div>
 
     <div id="hook-deals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20 relative z-10">
       {#if !data.deals || data.deals.length === 0}
-        <div class="col-span-full text-center text-gray-400 py-20 font-medium">Nuestro sistema está auditando nuevas rutas VIP. Vuelve más tarde.</div>
+        <div class="col-span-full text-center text-gray-400 py-20 font-medium">Aún no hay ofertas activas en la bóveda Wanderlust de {paisActual}.</div>
       {:else}
         {#each data.deals as deal (deal.id)}
-          <article 
-            class="flex flex-col bg-white rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_8px_40px_rgba(0,229,181,0.15)] hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative"
+          {@const estaMuerta = checarSiEstaMuerta(deal, vuelosReportados)}
+          {@const imgFinal = obtenerImagen(deal)}
+          {@const tiempoTranscurrido = calcularTiempoTranscurrido(deal.created_at)}
+          {@const fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`}
+          {@const esVip = deal.tipo_vuelo === 'directo' || deal.escalas === 0}
+          {@const monedaDeal = (deal.moneda || deal.currency || monedaActual).toUpperCase()}
+          {@const origenSeguro = String(deal.origen_nombre || deal.origen || '').toUpperCase()}
+          {@const destinoSeguro = String(deal.destino_nombre || deal.destino || '').toUpperCase()}
+
+          <div 
+            role="button" 
+            tabindex="0" 
+            aria-label="Ver detalles de la oferta {deal.titulo_gancho}"
+            class="card-minimal flex flex-col group/card hover:shadow-2xl transition-all duration-300 h-full bg-white rounded-2xl overflow-hidden border border-gray-100 cursor-pointer {estaMuerta ? 'opacity-50 grayscale hover:grayscale-0 focus:grayscale-0' : ''}" 
             onclick={() => abrirModal(deal)}
-            role="presentation"
+            onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
           >
-            <div class="relative h-56 w-full overflow-hidden bg-gray-100">
-              <img src={deal.url_imagen || deal.imagen_fallback || obtenerImagen(deal)} alt={deal.destino_nombre} class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-              
-              <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/40 to-transparent"></div>
-              
-              {#if isAdminModo}
+            <div class="relative h-56 overflow-hidden bg-gray-100 shrink-0">
+              <img src={imgFinal} alt={deal.titulo_gancho || 'Oferta Especial'} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
+              <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+
+              {#if isAdminModo && !estaMuerta}
                 <button 
                   type="button" 
                   onclick={(e) => handleMatarOferta(deal.id, e)} 
@@ -234,44 +314,74 @@
                 </button>
               {/if}
 
-              <div class="absolute top-4 left-4 right-4 flex justify-between items-start">
-                <div class="flex flex-col gap-1">
-                   <span class="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1.5 w-fit border border-white/20">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg>
-                    DIRECTO
-                  </span>
-                </div>
-                <div class="bg-[#00E5B5] text-[#0A0A0A] text-[9px] font-black px-3 py-1.5 rounded-full shadow-md uppercase tracking-widest">
-                  SELECCIÓN AUDITADA
-                </div>
-              </div>
-            </div>
-
-            <div class="p-6 flex flex-col flex-grow bg-white">
-              <h2 class="text-2xl font-black text-gray-900 uppercase tracking-tight mb-1">
-                {deal.destino_nombre} <span class="text-gray-400 font-bold text-base">({deal.destino})</span>
-              </h2>
-
-              <div class="text-[#00E5B5] text-xs font-bold uppercase tracking-widest mb-4">{deal.titulo_gancho}</div>
-
-              <div class="text-gray-500 text-[14px] leading-relaxed mb-6 flex-grow line-clamp-3 font-medium">{deal.cuerpo_post}</div>
-
-              <div class="flex items-end justify-between border-t border-gray-100 pt-5 mt-auto">
-                <div class="flex flex-col">
-                  <span class="text-gray-400 text-[10px] font-bold tracking-widest uppercase mb-0.5">Precio Ancla</span>
-                  <div class="text-gray-900 text-2xl font-black leading-none">
-                    ${deal.precio?.toLocaleString('en-US')} 
-                    <span class="text-[10px] font-bold text-gray-400 uppercase">{deal.moneda || data.pais === 'MX' ? 'MXN' : 'USD'}</span>
+              {#if estaMuerta}
+                <div class="absolute inset-0 flex items-center justify-center bg-black/40 z-20">
+                  <div class="bg-black/80 text-white font-black px-6 py-2 rounded-full uppercase tracking-widest text-[11px] shadow-2xl border border-white/20">
+                    Fechas Pasadas / Expirada
                   </div>
-                  <span class="text-[9px] text-gray-400 font-bold mt-1 uppercase tracking-wider">Desde {deal.origen_nombre}</span>
+                </div>
+              {/if}
+
+              {#if tiempoTranscurrido && !estaMuerta}
+                <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-lumiDark text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm tracking-wide border border-white/50 uppercase flex items-center gap-1">
+                  ⏱️ {tiempoTranscurrido}
+                </div>
+              {/if}
+
+              {#if esVip}
+                <div class="absolute top-4 right-4 bg-emerald-500/90 text-white text-[10px] font-black px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-emerald-400/50">
+                  <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Directo
+                </div>
+              {:else if typeof deal?.escalas === 'number'}
+                <div class="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-white/20">
+                  {deal.escalas} Escala{deal.escalas > 1 ? 's' : ''}
+                </div>
+              {/if}
+
+              {#if !estaMuerta}
+                <button type="button" onclick={(e) => { e.stopPropagation(); reportarCambioPrecio(deal.id, e); }} title="¿El precio subió? Repórtalo" class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 transition-colors z-10 cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-1 6-1-1H11.5l-1-1H5v10m0 0h4"/></svg>
+                </button>
+              {/if}
+            </div>
+
+            <div class="p-6 flex flex-col flex-grow bg-white relative">
+              <div class="flex items-start justify-between gap-3 mb-3">
+                <div class="text-[11px] sm:text-[12px] font-black text-lumiDark uppercase tracking-widest leading-snug break-words">
+                  {origenSeguro} <span class="text-gray-300 font-bold mx-1.5 text-[10px] align-middle">➔</span> {destinoSeguro}
+                </div>
+                <div class="shrink-0 text-[9.5px] font-extrabold text-gray-400 uppercase tracking-widest text-right mt-[2px]">
+                  {fechasCortas}
+                </div>
+              </div>
+
+              <h3 class="text-xl font-bold mb-4 text-gray-800 group-hover/card:text-lumiDark transition-colors leading-snug line-clamp-2">
+                {deal.titulo_gancho || 'Oferta Especial'}
+              </h3>
+
+              <AmenidadesLinea {deal} {paisActual} />
+
+              <div class="mt-auto pt-5 border-t border-gray-100 flex items-center justify-between">
+                <div>
+                  <p class="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">{estaMuerta ? 'Precio Histórico' : 'Vuelo Id/Vt'}</p>
+                  <p class="text-2xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tight">
+                    ${Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')} <span class="text-xs font-semibold text-gray-400">{monedaDeal}</span>
+                  </p>
                 </div>
 
-                <button type="button" class="bg-gray-900 hover:bg-[#00E5B5] text-white hover:text-gray-900 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-md">
-                  Ver Oferta
-                </button>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id, e); }} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan hover:bg-lumiCyan/10 transition-colors p-2.5 rounded-full cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                  </button>
+                  
+                  <div class="{estaMuerta ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-lumiDark text-white group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark'} px-5 py-2.5 rounded-full font-black text-[11px] sm:text-xs transition-all shadow-md group-hover/card:shadow-lg active:scale-95 cursor-pointer flex items-center gap-1.5 uppercase tracking-wider">
+                    {estaMuerta ? 'Ver Actuales' : 'Ver Vuelo'}
+                    <svg class="w-4 h-4 transition-transform group-hover/card:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                  </div>
+                </div>
               </div>
             </div>
-          </article>
+          </div>
         {/each}
       {/if}
     </div>
@@ -283,7 +393,7 @@
           {#each Array(data.totalPages) as _, i}
             {@const n = i + 1}
             {#if Math.abs(data.page - n) <= 2 || n === 1 || n === data.totalPages}
-              <button type="button" onclick={() => irAPagina(n)} class="w-9 h-9 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-[#00E5B5] text-gray-900 shadow' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">{n}</button>
+              <button type="button" onclick={() => irAPagina(n)} class="w-9 h-9 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-lumiCyan text-white shadow' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">{n}</button>
             {:else if Math.abs(data.page - n) === 3}
               <span class="text-gray-400 font-bold px-1">...</span>
             {/if}
@@ -295,26 +405,26 @@
 
     <section class="max-w-3xl mx-auto mb-24 relative z-10">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-        <h2 class="text-2xl font-black text-gray-900 mb-4 text-center">Radar Wanderlust</h2>
-        <p class="text-gray-500 text-center mb-8 text-sm leading-relaxed">¿Buscas un destino VIP en específico? Cuéntanos y te avisamos cuando aparezca una tarifa excepcional.</p>
+        <h2 class="text-2xl font-black text-lumiDark mb-4 text-center">Radar Wanderlust</h2>
+        <p class="text-gray-500 text-center mb-8 text-sm leading-relaxed">Cuéntanos qué destino VIP buscas y te avisamos cuando aparezca una tarifa excepcional.</p>
         <form class="space-y-6" onsubmit={handleSubmitRadar}>
           <div>
             <label for="radar-nombre" class="block text-xs font-semibold text-gray-400 mb-1">Tu Nombre</label>
-            <input id="radar-nombre" type="text" bind:value={leadNombre} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#00E5B5] focus:border-[#00E5B5] outline-none text-sm" placeholder="Ej. Ana" />
+            <input id="radar-nombre" type="text" bind:value={leadNombre} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm" placeholder="Ej. Ana" />
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label for="radar-origen" class="block text-xs font-semibold text-gray-400 mb-1">Origen</label>
-              <input id="radar-origen" type="text" bind:value={leadOrigen} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#00E5B5] focus:border-[#00E5B5] outline-none text-sm" placeholder="Ej. MEX" />
+              <input id="radar-origen" type="text" bind:value={leadOrigen} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm" placeholder="Ej. MEX" />
             </div>
             <div>
               <label for="radar-destino" class="block text-xs font-semibold text-gray-400 mb-1">Destino</label>
-              <input id="radar-destino" type="text" bind:value={leadDestino} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#00E5B5] focus:border-[#00E5B5] outline-none text-sm" placeholder="Ej. JFK" />
+              <input id="radar-destino" type="text" bind:value={leadDestino} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm" placeholder="Ej. JFK" />
             </div>
           </div>
           <div>
             <label for="radar-mes" class="block text-xs font-semibold text-gray-400 mb-1">Mes aproximado</label>
-            <select id="radar-mes" bind:value={leadMes} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#00E5B5] focus:border-[#00E5B5] outline-none text-sm bg-white">
+            <select id="radar-mes" bind:value={leadMes} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm bg-white">
               <option value="" disabled>Selecciona un mes</option>
               {#each mesesDisponibles as mes}
                 <option value={mes}>{mes}</option>
@@ -323,30 +433,46 @@
           </div>
           <div>
             <label for="radar-contacto" class="block text-xs font-semibold text-gray-400 mb-1">Correo Electrónico</label>
-            <input id="radar-contacto" type="email" bind:value={leadContacto} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#00E5B5] focus:border-[#00E5B5] outline-none text-sm" placeholder="ejemplo@correo.com" />
+            <input id="radar-contacto" type="email" bind:value={leadContacto} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm" placeholder="ejemplo@correo.com" />
           </div>
-          <button type="submit" class="w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-[#00E5B5] hover:text-gray-900 transition-all active:scale-95 shadow-md" disabled={radarEnviando}>
+          <button type="submit" class="w-full bg-lumiCyan text-white font-bold py-3 rounded-xl hover:bg-lumiDark transition-all active:scale-95 shadow-md" disabled={radarEnviando}>
             {radarEnviando ? 'Enviando...' : 'Activar Radar'}
           </button>
           {#if radarExito}
-            <p class="text-center text-[#00E5B5] font-bold text-sm mt-4">¡Radar activado! Te avisaremos cuando aparezca la oportunidad.</p>
+            <p class="text-center text-emerald-500 font-bold text-sm mt-4">¡Radar activado! Te avisaremos cuando aparezca la oportunidad.</p>
           {/if}
         </form>
       </div>
     </section>
-
   </main>
 
   <WhatsAppButton pais={paisActual} />
   <Footer />
 
+  {#if modalAbierto && dealSeleccionado}
+    <ModalWanderlust deal={dealSeleccionado} abierto={modalAbierto} cerrar={cerrarModal} />
+  {/if}
 </div>
 
-{#if modalAbierto && dealSeleccionado}
-  <ModalWanderlust deal={dealSeleccionado} abierto={modalAbierto} cerrar={cerrarModal} />
-{/if}
-
 <style>
-  .animate-fadeIn { animation: fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1); }
-  @keyframes fadeIn { from { opacity: 0; transform: scale(0.95) translateY(-5px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .card-minimal {
+    background: #ffffff;
+    border: 1px solid #f3f4f6;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card-minimal:hover {
+    transform: translateY(-4px);
+    border: 1px solid #e5e7eb;
+  }
+  .badge-vip-glass {
+    background: linear-gradient(135deg, rgba(194, 155, 87, 0.9) 0%, rgba(218, 186, 116, 0.95) 100%);
+    backdrop-filter: blur(8px);
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fadeIn {
+    animation: fadeIn 0.25s ease-out;
+  }
 </style>
