@@ -20,19 +20,24 @@ const rutasAiralo: Record<string, string> = {
   'LAS': 'united-states-esim', 'MCO': 'united-states-esim', 'EWR': 'united-states-esim', 
   'SFO': 'united-states-esim', 'ORD': 'united-states-esim', 'DFW': 'united-states-esim', 
   'ATL': 'united-states-esim', 'BOS': 'united-states-esim', 'HNL': 'united-states-esim',
+  'LGA': 'united-states-esim', 'NYC': 'united-states-esim',
   'YYZ': 'canada-esim', 'YVR': 'canada-esim', 'YUL': 'canada-esim', 'YYC': 'canada-esim',
   'CUN': 'mexico-esim', 'MEX': 'mexico-esim', 'GDL': 'mexico-esim', 'MTY': 'mexico-esim', 
   'SJD': 'mexico-esim', 'PVR': 'mexico-esim', 'TIJ': 'mexico-esim', 'MID': 'mexico-esim',
+  'NLU': 'mexico-esim', 'OAX': 'mexico-esim', 'TGZ': 'mexico-esim', 'VER': 'mexico-esim', 'CTM': 'mexico-esim',
 
   // LATAM Y CARIBE
   'BOG': 'colombia-esim', 'MDE': 'colombia-esim', 'CTG': 'colombia-esim', 'CLO': 'colombia-esim',
+  'SMR': 'colombia-esim', 'ADZ': 'colombia-esim', 'BAQ': 'colombia-esim', 'BGA': 'colombia-esim',
   'EZE': 'argentina-esim', 'AEP': 'argentina-esim', 'MDZ': 'argentina-esim', 'COR': 'argentina-esim',
   'SCL': 'chile-esim', 'CJC': 'chile-esim', 'PUQ': 'chile-esim',
-  'GRU': 'brazil-esim', 'GIG': 'brazil-esim', 'BSB': 'brazil-esim', 'SSA': 'brazil-esim',
+  'ANF': 'chile-esim', 'ARI': 'chile-esim', 'IPC': 'chile-esim', 'PNT': 'chile-esim', 'ZOS': 'chile-esim', 'IQQ': 'chile-esim',
+  'GRU': 'brazil-esim', 'GIG': 'brazil-esim', 'BSB': 'brazil-esim', 'SSA': 'brazil-esim', 'SAO': 'brazil-esim',
   'LIM': 'peru-esim', 'CUZ': 'peru-esim',
   'SJO': 'costa-rica-esim', 'LIR': 'costa-rica-esim',
   'PUJ': 'dominican-republic-esim', 'SDQ': 'dominican-republic-esim',
   'PTY': 'panama-esim', 'UIO': 'ecuador-esim', 'GYE': 'ecuador-esim',
+  'SJU': 'puerto-rico-esim', 'AUA': 'aruba-esim', 'GUA': 'guatemala-esim',
 
   // EUROPA
   'MAD': 'spain-esim', 'BCN': 'spain-esim', 'PMI': 'spain-esim', 'AGP': 'spain-esim', 'ALC': 'spain-esim', 'SVQ': 'spain-esim',
