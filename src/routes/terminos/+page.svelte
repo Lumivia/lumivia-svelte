@@ -39,6 +39,7 @@
     name="description"
     content="Términos de uso y condiciones de servicio de Lumivia. Información importante sobre nuestro buscador de vuelos."
   />
+  <link rel="canonical" href="https://www.lumivia.app/terminos" />
 </svelte:head>
 
 <div class="bg-gray-50 text-gray-600 antialiased selection:bg-lumiCyan selection:text-white relative min-h-screen flex flex-col">
