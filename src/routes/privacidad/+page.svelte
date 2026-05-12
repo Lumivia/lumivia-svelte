@@ -39,6 +39,7 @@
     name="description"
     content="Aviso de privacidad y políticas de protección de datos de Lumivia. Conoce cómo cuidamos y utilizamos tu información."
   />
+  <link rel="canonical" href="https://www.lumivia.app/privacidad" />
 </svelte:head>
 
 <div class="bg-gray-50 text-gray-600 antialiased selection:bg-lumiCyan selection:text-white relative min-h-screen flex flex-col">
