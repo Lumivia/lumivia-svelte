@@ -1,49 +1,47 @@
 <script>
-    import { onMount, tick } from 'svelte';
-
     let password = '';
     let isAuthenticated = false;
     let error = false;
 
-    // 🔐 LLAVE DE ACCESO (Cámbiala por la que quieras)
+    // 🔐 LLAVE DE ACCESO
     const CLAVE_MAESTRA = 'LUMIVIA_RADAR_2026'; 
 
-    async function handleLogin() {
+    // 🔥 EL HACK INFALIBLE: Empaquetamos el widget en un mini-documento HTML puro
+    const widgetHTML = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { margin: 0; padding: 0; background: transparent; display: flex; justify-content: center; }
+            </style>
+        </head>
+        <body>
+            <script async src="https://tpwidg.com/content?currency=mxn&trs=504500&shmarker=708095&lat=19.4270499&lng=-99.1275711&powered_by=true&search_host=vuelos.lumivia.app%2Fflights&locale=es&origin=MEX&value_min=0&value_max=1000000&round_trip=true&only_direct=false&radius=1&draggable=true&disable_zoom=false&show_logo=false&scrollwheel=false&primary=%23111827&secondary=%2300d2ff&light=%23ffffff&width=1200&height=600&zoom=2&promo_id=4054&campaign_id=100" charset="utf-8"><\/script>
+        </body>
+        </html>
+    `;
+
+    function handleLogin() {
         if (password === CLAVE_MAESTRA) {
             isAuthenticated = true;
             error = false;
-            
-            // Esperamos a que Svelte renderice el contenedor del mapa
-            await tick(); 
-            cargarMapa();
         } else {
             error = true;
             password = '';
         }
     }
-
-    function cargarMapa() {
-        const contenedor = document.getElementById('map-container');
-        if (!contenedor) return;
-
-        // Limpiamos por si acaso hay restos de una carga previa
-        contenedor.innerHTML = '';
-
-        const script = document.createElement('script');
-        script.async = true;
-        script.charset = "utf-8";
-        // Aquí va tu script del mapa con el locale=es forzado
-        script.src = "https://tpwidg.com/content?currency=mxn&trs=504500&shmarker=708095&lat=19.4270499&lng=-99.1275711&powered_by=true&search_host=vuelos.lumivia.app%2Fflights&locale=es&origin=MEX&value_min=0&value_max=1000000&round_trip=true&only_direct=false&radius=1&draggable=true&disable_zoom=false&show_logo=false&scrollwheel=false&primary=%23111827&secondary=%2300d2ff&light=%23ffffff&width=1200&height=600&zoom=2&promo_id=4054&campaign_id=100";
-        
-        contenedor.appendChild(script);
-    }
 </script>
+
+<svelte:head>
+    <title>Radar Secreto | Lumivia</title>
+</svelte:head>
 
 <div class="admin-wrapper">
     {#if !isAuthenticated}
         <section class="login-box">
             <div class="logo">🛰️ <span>RADAR</span> LUMIVIA</div>
-            <p>Ingresa la clave de acceso al centro de mando</p>
+            <p>Acceso restringido al centro de mando.</p>
             
             <div class="input-group">
                 <input 
@@ -62,18 +60,20 @@
     {:else}
         <section class="radar-dashboard">
             <header class="radar-header">
-                <div class="status"><span class="dot"></span> RADAR ACTIVO (MODO CAZA)</div>
+                <div class="status"><span class="dot"></span> RADAR ACTIVO (Aislado)</div>
                 <button class="logout" on:click={() => location.reload()}>CERRAR</button>
             </header>
             
             <div class="map-frame">
-                <div id="map-container">
-                    </div>
+                <iframe 
+                    srcdoc={widgetHTML} 
+                    title="Radar Travelpayouts"
+                    frameborder="0"
+                    width="100%"
+                    height="620px"
+                    scrolling="no"
+                ></iframe>
             </div>
-            
-            <footer class="radar-tips">
-                💡 <b>Tip de Caza:</b> Mueve el mapa hacia Europa y busca los puntos verdes. Si ves algo debajo de $11k MXN, es una joya.
-            </footer>
         </section>
     {/if}
 </div>
@@ -93,7 +93,6 @@
         padding: 20px;
     }
 
-    /* ESTILO LOGIN */
     .login-box {
         background: #161b2b;
         padding: 40px;
@@ -135,8 +134,7 @@
     button:hover { background: #3b82f6; color: white; }
     .error-msg { color: #f87171; font-size: 12px; margin-top: 15px; }
 
-    /* ESTILO DASHBOARD */
-    .radar-dashboard { width: 100%; max-width: 1200px; }
+    .radar-dashboard { width: 100%; max-width: 1240px; }
     
     .radar-header {
         display: flex;
@@ -156,20 +154,20 @@
         box-shadow: 0 0 10px #10b981;
     }
 
-    .logout { background: transparent; color: #6b7280; border: 1px solid #2d3748; width: auto; padding: 5px 15px; }
+    .logout { background: transparent; color: #6b7280; border: 1px solid #2d3748; width: auto; padding: 5px 15px; cursor: pointer; border-radius: 6px; }
 
     .map-frame {
         background: white;
         border-radius: 24px;
         padding: 10px;
-        min-height: 600px;
         box-shadow: 0 0 50px rgba(0, 210, 255, 0.1);
+        overflow: hidden;
     }
 
-    .radar-tips {
-        margin-top: 20px;
-        color: #94a3b8;
-        font-size: 13px;
-        text-align: center;
+    /* Evita que el iframe muestre bordes blancos feos o scrollbars innecesarios */
+    iframe {
+        display: block;
+        border: none;
+        overflow: hidden;
     }
 </style>
