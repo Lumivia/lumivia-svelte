@@ -1,26 +1,11 @@
 <script>
-    let password = '';
-    let isAuthenticated = false;
-    let error = false;
+    // 🔥 Usando Svelte 5 Runes para el estado
+    let password = $state('');
+    let isAuthenticated = $state(false);
+    let error = $state(false);
 
     // 🔐 LLAVE DE ACCESO
-    const CLAVE_MAESTRA = 'LUMIVIA_RADAR_2026'; 
-
-    // 🔥 EL HACK INFALIBLE: Empaquetamos el widget en un mini-documento HTML puro
-    const widgetHTML = `
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                body { margin: 0; padding: 0; background: transparent; display: flex; justify-content: center; }
-            </style>
-        </head>
-        <body>
-            <script async src="https://tpwidg.com/content?currency=mxn&trs=504500&shmarker=708095&lat=19.4270499&lng=-99.1275711&powered_by=true&search_host=vuelos.lumivia.app%2Fflights&locale=es&origin=MEX&value_min=0&value_max=1000000&round_trip=true&only_direct=false&radius=1&draggable=true&disable_zoom=false&show_logo=false&scrollwheel=false&primary=%23111827&secondary=%2300d2ff&light=%23ffffff&width=1200&height=600&zoom=2&promo_id=4054&campaign_id=100" charset="utf-8"><\/script>
-        </body>
-        </html>
-    `;
+    const CLAVE_MAESTRA = 'Radar2026'; 
 
     function handleLogin() {
         if (password === CLAVE_MAESTRA) {
@@ -48,9 +33,9 @@
                     type="password" 
                     bind:value={password} 
                     placeholder="Contraseña"
-                    on:keydown={(e) => e.key === 'Enter' && handleLogin()}
+                    onkeydown={(e) => e.key === 'Enter' && handleLogin()}
                 />
-                <button on:click={handleLogin}>ACCEDER</button>
+                <button onclick={handleLogin}>ACCEDER</button>
             </div>
             
             {#if error}
@@ -60,13 +45,13 @@
     {:else}
         <section class="radar-dashboard">
             <header class="radar-header">
-                <div class="status"><span class="dot"></span> RADAR ACTIVO (Aislado)</div>
-                <button class="logout" on:click={() => location.reload()}>CERRAR</button>
+                <div class="status"><span class="dot"></span> RADAR ACTIVO (Bypass Estático)</div>
+                <button class="logout" onclick={() => location.reload()}>CERRAR SESIÓN</button>
             </header>
             
             <div class="map-frame">
                 <iframe 
-                    srcdoc={widgetHTML} 
+                    src="/radar-widget.html" 
                     title="Radar Travelpayouts"
                     frameborder="0"
                     width="100%"
@@ -118,7 +103,10 @@
         color: white;
         text-align: center;
         font-size: 16px;
+        outline: none;
     }
+
+    input:focus { border-color: #00d2ff; }
 
     button {
         background: #00d2ff;
@@ -155,6 +143,7 @@
     }
 
     .logout { background: transparent; color: #6b7280; border: 1px solid #2d3748; width: auto; padding: 5px 15px; cursor: pointer; border-radius: 6px; }
+    .logout:hover { color: white; border-color: white; }
 
     .map-frame {
         background: white;
@@ -164,10 +153,5 @@
         overflow: hidden;
     }
 
-    /* Evita que el iframe muestre bordes blancos feos o scrollbars innecesarios */
-    iframe {
-        display: block;
-        border: none;
-        overflow: hidden;
-    }
+    iframe { display: block; border: none; }
 </style>
