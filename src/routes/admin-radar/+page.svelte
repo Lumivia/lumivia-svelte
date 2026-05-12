@@ -6,7 +6,7 @@
     let error = false;
 
     // 🔐 CONFIGURA TU CONTRASEÑA AQUÍ
-    const ADMIN_PASSWORD = 'R4darLumivia#53'; 
+    const ADMIN_PASSWORD = R4darLumivia#53; 
 
     function checkAccess() {
         if (password === ADMIN_PASSWORD) {
