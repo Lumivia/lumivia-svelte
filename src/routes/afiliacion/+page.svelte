@@ -39,6 +39,7 @@
     name="description"
     content="Transparencia Lumivia. Conoce cómo funcionan nuestros enlaces de afiliados y cómo mantenemos nuestra plataforma gratuita."
   />
+  <link rel="canonical" href="https://www.lumivia.app/afiliados" />
 </svelte:head>
 
 <div class="bg-gray-50 text-gray-600 antialiased selection:bg-lumiCyan selection:text-white relative min-h-screen flex flex-col">
