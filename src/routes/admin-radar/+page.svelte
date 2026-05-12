@@ -1,11 +1,10 @@
 <script>
-    // 🔥 Usando Svelte 5 Runes para el estado
     let password = $state('');
     let isAuthenticated = $state(false);
     let error = $state(false);
 
     // 🔐 LLAVE DE ACCESO
-    const CLAVE_MAESTRA = 'Radar2026'; 
+    const CLAVE_MAESTRA = 'LUMIVIA_RADAR_2026'; 
 
     function handleLogin() {
         if (password === CLAVE_MAESTRA) {
@@ -15,6 +14,24 @@
             error = true;
             password = '';
         }
+    }
+
+    // 🔥 LA MAGIA DE SVELTE: Acción directa al DOM
+    // Esto obliga a Svelte a inyectar el script exactamente cuando el contenedor está listo
+    function cargarRadar(node) {
+        const script = document.createElement('script');
+        script.src = "https://tpwidg.com/content?currency=mxn&trs=504500&shmarker=708095&lat=19.4270499&lng=-99.1275711&powered_by=true&search_host=vuelos.lumivia.app%2Fflights&locale=es&origin=MEX&value_min=0&value_max=1000000&round_trip=true&only_direct=false&radius=1&draggable=true&disable_zoom=false&show_logo=false&scrollwheel=false&primary=%23111827&secondary=%2300d2ff&light=%23ffffff&width=1200&height=600&zoom=2&promo_id=4054&campaign_id=100";
+        script.async = true;
+        script.charset = "utf-8";
+        
+        node.appendChild(script);
+
+        return {
+            destroy() {
+                // Limpiamos la memoria si cierras la sesión
+                node.innerHTML = '';
+            }
+        };
     }
 </script>
 
@@ -45,20 +62,12 @@
     {:else}
         <section class="radar-dashboard">
             <header class="radar-header">
-                <div class="status"><span class="dot"></span> RADAR ACTIVO (Bypass Estático)</div>
+                <div class="status"><span class="dot"></span> RADAR ACTIVO (Conexión Directa)</div>
                 <button class="logout" onclick={() => location.reload()}>CERRAR SESIÓN</button>
             </header>
             
-            <div class="map-frame">
-                <iframe 
-                    src="/radar-widget.html" 
-                    title="Radar Travelpayouts"
-                    frameborder="0"
-                    width="100%"
-                    height="620px"
-                    scrolling="no"
-                ></iframe>
-            </div>
+            <div class="map-frame" use:cargarRadar></div>
+            
         </section>
     {/if}
 </div>
@@ -150,8 +159,8 @@
         border-radius: 24px;
         padding: 10px;
         box-shadow: 0 0 50px rgba(0, 210, 255, 0.1);
-        overflow: hidden;
+        min-height: 600px;
+        display: flex;
+        justify-content: center;
     }
-
-    iframe { display: block; border: none; }
 </style>
