@@ -1,131 +1,175 @@
 <script>
-    import { onMount } from 'svelte';
+    import { onMount, tick } from 'svelte';
 
     let password = '';
     let isAuthenticated = false;
     let error = false;
 
-    // 🔐 CONFIGURA TU CONTRASEÑA AQUÍ
-    const ADMIN_PASSWORD = 'R4darLumivia#53'; 
+    // 🔐 LLAVE DE ACCESO (Cámbiala por la que quieras)
+    const CLAVE_MAESTRA = 'LUMIVIA_RADAR_2026'; 
 
-    function checkAccess() {
-        if (password === ADMIN_PASSWORD) {
+    async function handleLogin() {
+        if (password === CLAVE_MAESTRA) {
             isAuthenticated = true;
             error = false;
-            // Pequeño delay para asegurar que el DOM cargó antes de inyectar el script
-            setTimeout(injectMap, 100);
+            
+            // Esperamos a que Svelte renderice el contenedor del mapa
+            await tick(); 
+            cargarMapa();
         } else {
             error = true;
+            password = '';
         }
     }
 
-    function injectMap() {
-        const container = document.getElementById('map-target');
-        if (!container) return;
+    function cargarMapa() {
+        const contenedor = document.getElementById('map-container');
+        if (!contenedor) return;
+
+        // Limpiamos por si acaso hay restos de una carga previa
+        contenedor.innerHTML = '';
 
         const script = document.createElement('script');
         script.async = true;
-        script.src = "https://tpwidg.com/content?currency=mxn&trs=504500&shmarker=708095&lat=19.4270499&lng=-99.1275711&powered_by=true&search_host=vuelos.lumivia.app%2Fflights&locale=es&origin=MEX&value_min=0&value_max=1000000&round_trip=true&only_direct=false&radius=1&draggable=true&disable_zoom=false&show_logo=false&scrollwheel=false&primary=%23111827&secondary=%2300d2ff&light=%23ffffff&width=1200&height=600&zoom=2&promo_id=4054&campaign_id=100";
         script.charset = "utf-8";
-        container.appendChild(script);
+        // Aquí va tu script del mapa con el locale=es forzado
+        script.src = "https://tpwidg.com/content?currency=mxn&trs=504500&shmarker=708095&lat=19.4270499&lng=-99.1275711&powered_by=true&search_host=vuelos.lumivia.app%2Fflights&locale=es&origin=MEX&value_min=0&value_max=1000000&round_trip=true&only_direct=false&radius=1&draggable=true&disable_zoom=false&show_logo=false&scrollwheel=false&primary=%23111827&secondary=%2300d2ff&light=%23ffffff&width=1200&height=600&zoom=2&promo_id=4054&campaign_id=100";
+        
+        contenedor.appendChild(script);
     }
 </script>
 
-<div class="admin-container">
+<div class="admin-wrapper">
     {#if !isAuthenticated}
-        <div class="login-card">
-            <h1>🛰️ Radar Lumivia</h1>
-            <p>Acceso restringido al centro de mando.</p>
-            <input 
-                type="password" 
-                bind:value={password} 
-                placeholder="Ingresa la clave de acceso"
-                on:keydown={(e) => e.key === 'Enter' && checkAccess()}
-            />
-            <button on:click={checkAccess}>Entrar al Radar</button>
+        <section class="login-box">
+            <div class="logo">🛰️ <span>RADAR</span> LUMIVIA</div>
+            <p>Ingresa la clave de acceso al centro de mando</p>
+            
+            <div class="input-group">
+                <input 
+                    type="password" 
+                    bind:value={password} 
+                    placeholder="Contraseña"
+                    on:keydown={(e) => e.key === 'Enter' && handleLogin()}
+                />
+                <button on:click={handleLogin}>ACCEDER</button>
+            </div>
+            
             {#if error}
-                <p class="error">Clave incorrecta. Intenta de nuevo.</p>
+                <div class="error-msg">Clave incorrecta. Intento registrado.</div>
             {/if}
-        </div>
+        </section>
     {:else}
-        <div class="radar-view">
-            <header>
-                <h2>🛰️ Radar de Ofertas Activo</h2>
-                <button on:click={() => location.reload()}>Cerrar Sesión</button>
+        <section class="radar-dashboard">
+            <header class="radar-header">
+                <div class="status"><span class="dot"></span> RADAR ACTIVO (MODO CAZA)</div>
+                <button class="logout" on:click={() => location.reload()}>CERRAR</button>
             </header>
             
-            <div id="map-target" class="map-wrapper">
-                </div>
-        </div>
+            <div class="map-frame">
+                <div id="map-container">
+                    </div>
+            </div>
+            
+            <footer class="radar-tips">
+                💡 <b>Tip de Caza:</b> Mueve el mapa hacia Europa y busca los puntos verdes. Si ves algo debajo de $11k MXN, es una joya.
+            </footer>
+        </section>
     {/if}
 </div>
 
 <style>
     :global(body) {
+        background-color: #0b0f1a;
         margin: 0;
-        background-color: #0f172a;
         font-family: 'Inter', sans-serif;
     }
 
-    .admin-container {
+    .admin-wrapper {
         display: flex;
         justify-content: center;
         align-items: center;
         min-height: 100vh;
-        color: white;
+        padding: 20px;
     }
 
-    .login-card {
-        background: #1e293b;
+    /* ESTILO LOGIN */
+    .login-box {
+        background: #161b2b;
         padding: 40px;
-        border-radius: 20px;
-        box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+        border-radius: 24px;
+        border: 1px solid rgba(255,255,255,0.05);
         text-align: center;
         width: 100%;
-        max-width: 400px;
+        max-width: 380px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     }
 
+    .logo { color: white; font-weight: 900; font-size: 20px; margin-bottom: 10px; }
+    .logo span { color: #00d2ff; }
+    p { color: #6b7280; font-size: 14px; margin-bottom: 25px; }
+
+    .input-group { display: flex; flex-direction: column; gap: 12px; }
+
     input {
-        width: 100%;
-        padding: 12px;
-        margin: 20px 0;
-        border-radius: 8px;
-        border: 1px solid #334155;
-        background: #0f172a;
+        background: #0b0f1a;
+        border: 1px solid #2d3748;
+        padding: 14px;
+        border-radius: 12px;
         color: white;
-        box-sizing: border-box;
+        text-align: center;
+        font-size: 16px;
     }
 
     button {
         background: #00d2ff;
-        color: #0f172a;
+        color: #0b0f1a;
         border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
-        font-weight: bold;
+        padding: 14px;
+        border-radius: 12px;
+        font-weight: 800;
         cursor: pointer;
-        width: 100%;
+        transition: 0.2s;
     }
 
-    .error { color: #f87171; font-size: 14px; margin-top: 10px; }
+    button:hover { background: #3b82f6; color: white; }
+    .error-msg { color: #f87171; font-size: 12px; margin-top: 15px; }
 
-    .radar-view {
-        width: 95%;
-        max-width: 1400px;
-    }
-
-    header {
+    /* ESTILO DASHBOARD */
+    .radar-dashboard { width: 100%; max-width: 1200px; }
+    
+    .radar-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
         margin-bottom: 20px;
+        color: white;
+        font-weight: 700;
+        font-size: 12px;
     }
 
-    .map-wrapper {
+    .dot {
+        height: 8px; width: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+        box-shadow: 0 0 10px #10b981;
+    }
+
+    .logout { background: transparent; color: #6b7280; border: 1px solid #2d3748; width: auto; padding: 5px 15px; }
+
+    .map-frame {
         background: white;
-        border-radius: 15px;
+        border-radius: 24px;
         padding: 10px;
         min-height: 600px;
-        overflow: hidden;
+        box-shadow: 0 0 50px rgba(0, 210, 255, 0.1);
+    }
+
+    .radar-tips {
+        margin-top: 20px;
+        color: #94a3b8;
+        font-size: 13px;
+        text-align: center;
     }
 </style>
