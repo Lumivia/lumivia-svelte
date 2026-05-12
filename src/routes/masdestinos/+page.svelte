@@ -26,6 +26,10 @@
   const monedaActual = $derived(configMercado[paisActual]?.moneda ?? 'MXN');
   const banderaActual = $derived(configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png');
   
+  // 🎯 SEO: Consolidación de URLs con parámetros para evitar errores en Google Search Console
+  // Esto toma "https://www.lumivia.app" y le pega "/masdestinos", ignorando "?vuelo=X"
+  const urlCanonica = $derived(`https://www.lumivia.app${$page.url.pathname}`);
+  
   let dropdownAbierto = $state(false);
   let modalAbierto = $state(false);
   let dealSeleccionado = $state<any | null>(null);
@@ -210,6 +214,9 @@
 <svelte:head>
   <title>Lumivia | Catálogo de Oportunidades</title>
   <meta name="description" content="Descubre oportunidades únicas de vuelos baratos. Catálogo completo de tarifas ocultas." />
+  
+  <link rel="canonical" href={urlCanonica} />
+  
   {#if data.schemaJSON}
     {@html `<script type="application/ld+json">${data.schemaJSON}</script>`}
   {/if}
