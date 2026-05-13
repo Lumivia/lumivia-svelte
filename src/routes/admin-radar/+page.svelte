@@ -20,7 +20,7 @@
     // Esto obliga a Svelte a inyectar el script exactamente cuando el contenedor está listo
     function cargarRadar(node) {
         const script = document.createElement('script');
-        script.src = "https://tpwidg.com/content?currency=mxn&trs=504500&shmarker=708095&lat=19.4270499&lng=-99.1275711&powered_by=true&search_host=vuelos.lumivia.app%2Fflights&locale=es&origin=MEX&value_min=0&value_max=1000000&round_trip=true&only_direct=false&radius=1&draggable=true&disable_zoom=false&show_logo=false&scrollwheel=false&primary=%23111827&secondary=%2300d2ff&light=%23ffffff&width=1200&height=600&zoom=2&promo_id=4054&campaign_id=100";
+        script.src = "https://tpwidg.com/content?currency=mxn&trs=504500&shmarker=708095&lat=19.4270499&lng=-99.1275711&powered_by=true&search_host=vuelos.lumivia.app%2Fflights&locale=es&origin=GDL&value_min=0&value_max=1000000&round_trip=true&only_direct=false&radius=1&draggable=true&disable_zoom=false&show_logo=false&scrollwheel=false&primary=%23111827&secondary=%2300d2ff&light=%23ffffff&width=1200&height=600&zoom=2&promo_id=4054&campaign_id=100";
         script.async = true;
         script.charset = "utf-8";
         
