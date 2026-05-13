@@ -1,5 +1,6 @@
 <script lang="ts">
   import "../app.css"; 
+  import { page } from '$app/stores'; // 🔥 Agregado: Importamos el store de la página
   
   // 🔥 SVELTE 5: Extracción limpia
   let { data, children } = $props();
@@ -76,4 +77,6 @@
     height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe>
 </noscript>
 
-{@render children()}
+{#key $page.url.pathname}
+  {@render children()}
+{/key}
