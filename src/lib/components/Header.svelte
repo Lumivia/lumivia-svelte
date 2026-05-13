@@ -36,7 +36,7 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
     
     <div class="flex items-center">
-      <a href="/" class="text-2xl font-extrabold tracking-tighter text-lumiDark hover:text-lumiCyan transition-colors">Lumivia</a>
+      <a href="/" class="text-3xl font-black tracking-tighter text-lumiDark hover:text-lumiCyan transition-colors">Lumivia</a>
     </div>
 
     <div class="flex items-center gap-4 sm:gap-6">
