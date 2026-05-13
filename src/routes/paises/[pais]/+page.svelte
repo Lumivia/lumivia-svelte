@@ -35,6 +35,7 @@
   let radarMes = $state('');
   let radarContacto = $state('');
   let radarExito = $state(false);
+  let radarError = $state(false);
   let radarCargando = $state(false);
   let meses = $state<string[]>([]);
 
@@ -77,11 +78,15 @@
   }
 
   async function enviarRadar() {
-    radarCargando = true; radarExito = false;
+    radarCargando = true; radarExito = false; radarError = false;
     const { error } = await supabase.from('radares_personales').insert([{ nombre: radarNombre, origen: radarOrigen, destino: radarDestino, mes_esperado: radarMes, contacto: radarContacto, status: 'pendiente_verificacion' }]);
     radarCargando = false;
-    if (!error) { radarExito = true; radarNombre = radarOrigen = radarDestino = radarMes = radarContacto = ''; } 
-    else { alert("Hubo un error al guardar."); }
+    if (!error) { 
+      radarExito = true; 
+      radarNombre = radarOrigen = radarDestino = radarMes = radarContacto = ''; 
+    } else { 
+      radarError = true; 
+    }
   }
 
   function abrirModal(oferta: any) { ofertaSeleccionada = oferta; modalAbierto = true; }
@@ -95,6 +100,36 @@
   <meta name="description" content={description} />
 </svelte:head>
 
+{#snippet dealCardSkeleton()}
+  <div class="min-w-[300px] w-[300px] bg-white rounded-3xl p-4 shadow-sm border border-gray-100 flex flex-col gap-4 animate-pulse shrink-0">
+    <div class="w-full h-40 bg-gray-200 rounded-2xl"></div>
+    <div class="flex flex-col gap-3 mt-2">
+      <div class="flex gap-2">
+        <div class="h-5 w-16 bg-gray-200 rounded-md"></div>
+        <div class="h-5 w-24 bg-gray-200 rounded-md"></div>
+      </div>
+      <div class="h-7 w-3/4 bg-gray-200 rounded-md"></div>
+      <div class="h-8 w-1/2 bg-gray-300 rounded-md mt-2"></div>
+      <div class="h-10 w-full bg-gray-100 rounded-xl mt-4"></div>
+    </div>
+  </div>
+{/snippet}
+
+{#snippet radarItemSkeleton()}
+  <li class="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-pulse border-b border-gray-50 last:border-0">
+    <div class="flex items-center gap-4 w-full sm:w-2/3">
+      <div class="w-12 h-12 bg-gray-200 rounded-full shrink-0"></div>
+      <div class="flex flex-col gap-2 w-full">
+        <div class="h-5 w-1/2 bg-gray-200 rounded-md"></div>
+        <div class="h-4 w-1/3 bg-gray-100 rounded-md"></div>
+      </div>
+    </div>
+    <div class="flex flex-col items-start sm:items-end gap-2 w-full sm:w-1/3">
+      <div class="h-6 w-24 bg-gray-300 rounded-md"></div>
+      <div class="h-8 w-full sm:w-32 bg-gray-200 rounded-lg"></div>
+    </div>
+  </li>
+{/snippet}
 <div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col relative w-full">
   
   <Header paisUpper={data.paisUpper} mercado={data.mercado || { moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' }} />
@@ -136,13 +171,28 @@
 
     <div class="relative w-full mb-16 group z-10">
       <div use:carruselLogica onmouseenter={() => pausarCarrusel = true} onmouseleave={() => pausarCarrusel = false} ontouchstart={() => pausarCarrusel = true} ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)} class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth w-full">
-        {#if ofertasHook.length === 0}
-          <div class="w-full text-center text-gray-400 py-10 font-medium animate-pulse">Conectando con la base de datos...</div>
-        {:else}
+        
+        {#if !data || data.destacadas === undefined}
+          {@render dealCardSkeleton()}
+          {@render dealCardSkeleton()}
+          {@render dealCardSkeleton()}
+          {@render dealCardSkeleton()}
+        
+        {:else if ofertasHook.length > 0}
           {#each ofertasHook as deal (deal.id)}
             <DealCard {deal} monedaActual={data.mercado?.moneda} paisActual={data.paisUpper} onclick={() => abrirModal(deal)} />
           {/each}
+        
+        {:else}
+          <div class="w-full flex justify-center items-center py-6 px-4">
+            <div class="bg-white/60 backdrop-blur-md border border-gray-200 rounded-3xl p-8 text-center max-w-md shadow-sm w-full">
+              <div class="text-4xl mb-3">📡</div>
+              <h3 class="text-xl font-bold text-lumiDark mb-2">Afinando el radar global</h3>
+              <p class="text-gray-500 text-sm">Nuestro algoritmo de IA está escaneando tarifas ocultas en este momento. Revisa la sección de "Más Destinos" aquí abajo.</p>
+            </div>
+          </div>
         {/if}
+
       </div>
     </div>
 
@@ -152,13 +202,25 @@
 
     <div class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6 relative z-10 w-full">
       <ul class="divide-y divide-gray-100/80 w-full">
-        {#if ofertasRadar.length === 0}
-          <li class="p-6 text-gray-400 text-center">No hay más destinos por ahora.</li>
-        {:else}
+        
+        {#if !data || data.masDestinos === undefined}
+          {@render radarItemSkeleton()}
+          {@render radarItemSkeleton()}
+          {@render radarItemSkeleton()}
+
+        {:else if ofertasRadar.length > 0}
           {#each ofertasRadar as deal (deal.id)}
             <RadarItem {deal} monedaActual={data.mercado?.moneda} onclick={() => abrirModal(deal)} />
           {/each}
+
+        {:else}
+          <li class="p-10 flex flex-col items-center justify-center text-center">
+            <div class="text-3xl mb-3">🔍</div>
+            <h4 class="text-lg font-bold text-lumiDark">No hay destinos adicionales hoy</h4>
+            <p class="text-gray-500 text-sm mt-1">Activa tu radar personalizado abajo y te avisaremos en cuanto detectemos bajadas de precio.</p>
+          </li>
         {/if}
+
       </ul>
     </div>
 
@@ -219,6 +281,9 @@
           </button>
           {#if radarExito}
             <p class="text-emerald-400 text-sm font-semibold text-center mt-2">¡Radar activado! Revisa tu correo pronto.</p>
+          {/if}
+          {#if radarError}
+            <p class="text-red-400 text-sm font-semibold text-center mt-2">Hubo un error de conexión. Inténtalo de nuevo.</p>
           {/if}
         </form>
       </div>
