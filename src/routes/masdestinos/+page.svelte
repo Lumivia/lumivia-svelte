@@ -41,6 +41,7 @@
   let leadContacto = $state('');
   let radarEnviando = $state(false);
   let radarExito = $state(false);
+  let radarError = $state(false);
 
   let nlEmail = $state('');
   let nlMensaje = $state('');
@@ -167,11 +168,11 @@
   }
 
   async function enviarRadar() {
-    radarEnviando = true; radarExito = false;
+    radarEnviando = true; radarExito = false; radarError = false;
     const { error } = await supabase.from('radares_personales').insert([{ nombre: leadNombre, origen: leadOrigen, destino: leadDestino, mes_esperado: leadMes, contacto: leadContacto, status: 'pendiente_verificacion' }]);
     radarEnviando = false;
     if (!error) { radarExito = true; leadNombre = leadOrigen = leadDestino = leadMes = leadContacto = ''; } 
-    else { alert('Hubo un error al guardar. Intenta de nuevo.'); console.error(error); }
+    else { radarError = true; console.error(error); }
   }
 
   async function reportarCambioPrecio(id: number | string, e?: Event) {
@@ -274,7 +275,7 @@
           <div class="pl-4 text-gray-400 hidden sm:block"><svg class="w-5 h-5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div>
           <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
             <input type="email" placeholder="Ingresa tu correo para recibir nuestra selección..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" bind:value={nlEmail} />
-            <button type="submit" class="bg-lumiDark text-white hover:bg-black px-6 py-2.5 rounded-full font-bold transition-all shadow-md active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto" disabled={nlEnviando}>{nlEnviando ? 'Guardando...' : 'Suscribirme Gratis'}</button>
+            <button type="submit" class="bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark px-8 py-3 rounded-full font-black transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-[0_4px_15px_rgba(0,210,255,0.25)]" disabled={nlEnviando}>{nlEnviando ? 'Guardando...' : 'Suscribirme Gratis'}</button>
           </form>
         </div>
         {#if nlEstado !== ''}
@@ -336,11 +337,11 @@
               {/if}
 
               {#if esVip}
-                <div class="absolute top-4 right-4 bg-emerald-500/90 text-white text-[10px] font-black px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-emerald-400/50">
-                  <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Directo
+                <div class="absolute top-4 right-4 bg-white/95 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-emerald-200">
+                  <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Directo
                 </div>
               {:else if typeof deal?.escalas === 'number'}
-                <div class="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-white/20">
+                <div class="absolute top-4 right-4 bg-white/95 text-gray-700 text-[10px] font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-gray-200">
                   {deal.escalas} Escala{deal.escalas > 1 ? 's' : ''}
                 </div>
               {/if}
@@ -368,22 +369,22 @@
 
               <AmenidadesLinea {deal} {paisActual} />
 
-              <div class="mt-auto pt-5 border-t border-gray-100 flex items-center justify-between">
+              <div class="mt-auto pt-5 border-t border-gray-100 flex items-end justify-between">
                 <div>
-                  <p class="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">{estaMuerta ? 'Precio Histórico' : 'Vuelo Id/Vt'}</p>
-                  <p class="text-2xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tight">
-                    ${Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')} <span class="text-xs font-semibold text-gray-400">{monedaDeal}</span>
+                  <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">{estaMuerta ? 'Precio Histórico' : 'Vuelo Id/Vt'}</p>
+                  <p class="text-3xl sm:text-4xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tighter">
+                    <span class="text-lg font-bold text-gray-400 align-top mr-0.5">$</span>{Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')} <span class="text-sm font-bold text-gray-400 align-baseline ml-1">{monedaDeal}</span>
                   </p>
                 </div>
 
-                <div class="flex items-center gap-1.5">
-                  <button type="button" onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id, e); }} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan hover:bg-lumiCyan/10 transition-colors p-2.5 rounded-full cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id, e); }} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan transition-colors p-2 rounded-full cursor-pointer">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                   </button>
                   
-                  <div class="{estaMuerta ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-lumiDark text-white group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark'} px-5 py-2.5 rounded-full font-black text-[11px] sm:text-xs transition-all shadow-md group-hover/card:shadow-lg active:scale-95 cursor-pointer flex items-center gap-1.5 uppercase tracking-wider">
-                    {estaMuerta ? 'Ver Actuales' : 'Ver Vuelo'}
-                    <svg class="w-4 h-4 transition-transform group-hover/card:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                  <div class="{estaMuerta ? 'bg-gray-200 text-gray-500' : 'bg-lumiDark text-white group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark'} px-6 py-3 rounded-xl font-black text-[12px] sm:text-[13px] transition-all duration-300 shadow-md group-hover/card:shadow-lg active:scale-95 cursor-pointer flex items-center gap-2 uppercase tracking-wider">
+                    {estaMuerta ? 'Ver Actuales' : 'Ver Vuelo'} 
+                    <svg class="w-4 h-4 transition-transform duration-300 group-hover/card:translate-x-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                   </div>
                 </div>
               </div>
@@ -400,7 +401,7 @@
           {#each Array(data.totalPages) as _, i}
             {@const n = i + 1}
             {#if Math.abs(data.page - n) <= 2 || n === 1 || n === data.totalPages}
-              <button type="button" onclick={() => irAPagina(n)} class="w-9 h-9 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-lumiCyan text-white shadow' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">{n}</button>
+              <button type="button" onclick={() => irAPagina(n)} class="w-9 h-9 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-lumiCyan text-lumiDark shadow-md' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">{n}</button>
             {:else if Math.abs(data.page - n) === 3}
               <span class="text-gray-400 font-bold px-1">...</span>
             {/if}
@@ -410,47 +411,58 @@
       </div>
     {/if}
 
-    <section class="max-w-3xl mx-auto mb-24 relative z-10">
-      <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-        <h2 class="text-2xl font-black text-lumiDark mb-4 text-center">Radar Personal</h2>
-        <p class="text-gray-500 text-center mb-8 text-sm leading-relaxed">Cuéntanos qué vuelo buscas y te avisamos cuando aparezca una ganga real.</p>
-        <form class="space-y-6" onsubmit={handleSubmitRadar}>
+    <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10 w-full mb-20 mx-auto">
+      <div class="relative z-10 md:w-5/12 text-center md:text-left">
+        <h3 class="text-3xl font-black text-white mb-4 tracking-tight">¿No ves tu destino soñado?</h3>
+        <p class="text-gray-400 font-medium leading-relaxed text-sm">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos el momento perfecto.</p>
+      </div>
+      <div class="relative z-10 md:w-7/12 w-full bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10">
+        <form class="space-y-5 w-full" onsubmit={handleSubmitRadar}>
           <div>
-            <label for="radar-nombre" class="block text-xs font-semibold text-gray-400 mb-1">Tu Nombre</label>
-            <input id="radar-nombre" type="text" bind:value={leadNombre} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm" placeholder="Ej. Ana" />
+            <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Tu Nombre</label>
+            <input type="text" bind:value={leadNombre} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label for="radar-origen" class="block text-xs font-semibold text-gray-400 mb-1">Origen</label>
-              <input id="radar-origen" type="text" bind:value={leadOrigen} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm" placeholder="Ej. MEX" />
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Origen</label>
+              <input type="text" bind:value={leadOrigen} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
             </div>
             <div>
-              <label for="radar-destino" class="block text-xs font-semibold text-gray-400 mb-1">Destino</label>
-              <input id="radar-destino" type="text" bind:value={leadDestino} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm" placeholder="Ej. JFK" />
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Destino</label>
+              <input type="text" bind:value={leadDestino} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
             </div>
           </div>
-          <div>
-            <label for="radar-mes" class="block text-xs font-semibold text-gray-400 mb-1">Mes aproximado</label>
-            <select id="radar-mes" bind:value={leadMes} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm bg-white">
-              <option value="" disabled>Selecciona un mes</option>
-              {#each mesesDisponibles as mes}
-                <option value={mes}>{mes}</option>
-              {/each}
-            </select>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Mes aproximado</label>
+              <select bind:value={leadMes} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm appearance-none cursor-pointer">
+                <option value="" disabled>Elige un mes...</option>
+                {#each mesesDisponibles as m}
+                  <option value={m} class="bg-lumiDark text-white">{m}</option>
+                {/each}
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Correo Electrónico</label>
+              <input type="email" bind:value={leadContacto} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+            </div>
           </div>
-          <div>
-            <label for="radar-contacto" class="block text-xs font-semibold text-gray-400 mb-1">Correo Electrónico</label>
-            <input id="radar-contacto" type="email" bind:value={leadContacto} required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-lumiCyan focus:border-lumiCyan outline-none text-sm" placeholder="ejemplo@correo.com" />
-          </div>
-          <button type="submit" class="w-full bg-lumiCyan text-white font-bold py-3 rounded-xl hover:bg-lumiDark transition-all active:scale-95 shadow-md" disabled={radarEnviando}>
-            {radarEnviando ? 'Enviando...' : 'Activar Radar'}
+          
+          <button type="submit" class="w-full bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark font-black py-4 rounded-xl transition-all shadow-[0_4px_15px_rgba(0,210,255,0.2)] hover:shadow-[0_6px_20px_rgba(0,210,255,0.3)] mt-4 active:scale-95 flex items-center justify-center gap-2 uppercase tracking-widest text-sm" disabled={radarEnviando}>
+            {radarEnviando ? 'Activando...' : 'Activar mi Radar'}
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
           </button>
+          
           {#if radarExito}
-            <p class="text-center text-emerald-500 font-bold text-sm mt-4">¡Radar activado! Te avisaremos cuando aparezca una ganga.</p>
+            <p class="text-emerald-400 text-sm font-bold text-center mt-3 bg-emerald-400/10 py-2 rounded-lg border border-emerald-400/20">¡Radar activado! Revisa tu correo pronto.</p>
+          {/if}
+          {#if radarError}
+            <p class="text-red-400 text-sm font-bold text-center mt-3 bg-red-400/10 py-2 rounded-lg border border-red-400/20">Hubo un error de conexión. Inténtalo de nuevo.</p>
           {/if}
         </form>
       </div>
-    </section>
+    </div>
+
   </main>
 
   <WhatsAppButton pais={paisActual} />
