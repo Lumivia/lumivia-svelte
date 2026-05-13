@@ -130,13 +130,14 @@
     </div>
   </li>
 {/snippet}
+
 <div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col relative w-full">
   
   <Header paisUpper={data.paisUpper} mercado={data.mercado || { moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' }} />
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full relative">
 
-    <div class="text-center max-w-3xl mx-auto mb-10 relative z-10 w-full">
+    <div class="text-center max-w-3xl mx-auto mb-16 relative z-10 w-full">
       <h1 class="text-4xl md:text-5xl font-black tracking-tighter mb-4 text-lumiDark leading-tight drop-shadow-sm mt-4">
         Viajes para tus recuerdos.<br>
         <span class="bg-clip-text text-transparent bg-gradient-to-r from-lumiCyan to-blue-500">
@@ -149,20 +150,6 @@
           Dedícate a planear tu próxima gran historia; nosotros nos aseguramos de que el precio sea el mejor posible.
         </strong>
       </p>
-    </div>
-
-    <div class="max-w-xl mx-auto mb-16 relative z-20 group w-full">
-      <div class="bg-white/80 backdrop-blur-xl p-1.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-gray-200/60 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(0,210,255,0.12)]">
-        <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
-          <input type="email" bind:value={emailNewsletter} placeholder="Recibe nuestra selección del día..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" />
-          <button type="submit" class="bg-lumiDark text-white hover:bg-black px-6 py-2 rounded-full font-bold transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-md" disabled={newsletterCargando}>
-            {newsletterCargando ? 'Guardando...' : 'Suscribirme Gratis'}
-          </button>
-        </form>
-        {#if newsletterMensaje}
-          <p class="text-center text-sm font-bold mt-3 {newsletterClase}">{newsletterMensaje}</p>
-        {/if}
-      </div>
     </div>
 
     <div class="mb-6 flex items-center justify-between relative z-10 w-full">
@@ -194,6 +181,26 @@
         {/if}
 
       </div>
+    </div>
+
+    <div class="max-w-2xl mx-auto mb-16 relative z-20 group w-full">
+      <div class="text-center mb-4">
+        <h3 class="text-lg font-bold text-lumiDark">¿Aún no tienes fechas exactas?</h3>
+        <p class="text-sm text-gray-500">Deja que nuestro radar busque por ti y recibe nuestra selección del día.</p>
+      </div>
+      
+      <div class="bg-white/80 backdrop-blur-xl p-2 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-gray-200/60 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 group-hover:shadow-[0_8px_40px_rgba(0,210,255,0.12)]">
+        <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
+          <input type="email" bind:value={emailNewsletter} placeholder="Tu mejor correo electrónico..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-5 py-3 text-sm outline-none" />
+          
+          <button type="submit" class="bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark px-8 py-3 rounded-full font-black transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-[0_4px_15px_rgba(0,210,255,0.25)]" disabled={newsletterCargando}>
+            {newsletterCargando ? 'Guardando...' : 'Suscribirme Gratis'}
+          </button>
+        </form>
+      </div>
+      {#if newsletterMensaje}
+        <p class="text-center text-sm font-bold mt-4 {newsletterClase}">{newsletterMensaje}</p>
+      {/if}
     </div>
 
     <div class="mb-6 mt-4 relative z-10 w-full">
