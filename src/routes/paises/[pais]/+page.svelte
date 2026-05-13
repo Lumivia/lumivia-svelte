@@ -237,41 +237,44 @@
       </a>
     </div>
 
-    <div class="bg-lumiDark text-white border border-gray-800 rounded-3xl px-8 py-8 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 mb-20 z-10 w-full">
+    <div class="bg-lumiDark text-white border border-gray-800 rounded-3xl px-8 py-10 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 mb-12 z-10 w-full">
       <div class="relative z-10 text-center md:text-left flex-grow">
-        <h3 class="text-2xl font-bold mb-2">¿Tienes un viaje específico en mente?</h3>
-        <p class="text-gray-400 text-sm font-light">Explora nuestro buscador global y compara todas las aerolíneas en milisegundos.</p>
+        <h3 class="text-2xl font-black mb-2 tracking-tight">¿Tienes un viaje específico en mente?</h3>
+        <p class="text-gray-400 text-sm font-medium">Explora nuestro buscador global y compara todas las aerolíneas en milisegundos.</p>
       </div>
-      <div class="relative z-10 whitespace-nowrap">
-        <a href="https://vuelos.lumivia.app/" target="_blank" class="inline-flex items-center justify-center bg-white text-lumiDark hover:bg-lumiCyan hover:text-white px-8 py-3 rounded-2xl font-extrabold transition-all shadow-[0_0_20px_rgba(0,210,255,0.3)] active:scale-95 text-sm uppercase tracking-wide">Abrir Buscador</a>
+      <div class="relative z-10 whitespace-nowrap w-full md:w-auto">
+        <a href="https://vuelos.lumivia.app/" target="_blank" class="flex items-center justify-center gap-2 bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark px-8 py-3.5 rounded-2xl font-black transition-all shadow-[0_0_20px_rgba(0,210,255,0.3)] active:scale-95 text-sm uppercase tracking-widest w-full md:w-auto">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          Abrir Buscador
+        </a>
       </div>
     </div>
 
-    <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10 w-full">
-      <div class="relative z-10 md:w-1/2 text-center md:text-left">
-        <h3 class="text-3xl font-bold text-white mb-4">¿No ves tu destino soñado?</h3>
-        <p class="text-gray-400 font-light leading-relaxed">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos el momento perfecto.</p>
+    <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10 w-full mb-20">
+      <div class="relative z-10 md:w-5/12 text-center md:text-left">
+        <h3 class="text-3xl font-black text-white mb-4 tracking-tight">¿No ves tu destino soñado?</h3>
+        <p class="text-gray-400 font-medium leading-relaxed text-sm">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos el momento perfecto.</p>
       </div>
-      <div class="relative z-10 md:w-1/2 w-full bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
-        <form class="space-y-4 w-full" onsubmit={handleSubmitRadar}>
+      <div class="relative z-10 md:w-7/12 w-full bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10">
+        <form class="space-y-5 w-full" onsubmit={handleSubmitRadar}>
           <div>
-            <label class="block text-xs font-semibold text-gray-400 mb-1">Tu Nombre</label>
-            <input type="text" bind:value={radarNombre} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
+            <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Tu Nombre</label>
+            <input type="text" bind:value={radarNombre} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
           </div>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label class="block text-xs font-semibold text-gray-400 mb-1">Origen</label>
-              <input type="text" bind:value={radarOrigen} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Origen</label>
+              <input type="text" bind:value={radarOrigen} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-gray-400 mb-1">Destino</label>
-              <input type="text" bind:value={radarDestino} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Destino</label>
+              <input type="text" bind:value={radarDestino} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
             </div>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label class="block text-xs font-semibold text-gray-400 mb-1">Mes aproximado</label>
-              <select bind:value={radarMes} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-lumiCyan transition">
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Mes aproximado</label>
+              <select bind:value={radarMes} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm appearance-none cursor-pointer">
                 <option value="" disabled>Elige un mes...</option>
                 {#each meses as m}
                   <option value={m} class="bg-lumiDark text-white">{m}</option>
@@ -279,18 +282,21 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-gray-400 mb-1">Correo Electrónico</label>
-              <input type="email" bind:value={radarContacto} required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan transition" />
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Correo Electrónico</label>
+              <input type="email" bind:value={radarContacto} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
             </div>
           </div>
-          <button type="submit" class="w-full bg-lumiCyan hover:bg-lumiCyanDark text-lumiDark font-bold py-3 rounded-lg transition-colors shadow-lg mt-2" disabled={radarCargando}>
-            {radarCargando ? 'Activando...' : 'Activar mi Radar 🎯'}
+          
+          <button type="submit" class="w-full bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark font-black py-4 rounded-xl transition-all shadow-[0_4px_15px_rgba(0,210,255,0.2)] hover:shadow-[0_6px_20px_rgba(0,210,255,0.3)] mt-4 active:scale-95 flex items-center justify-center gap-2 uppercase tracking-widest text-sm" disabled={radarCargando}>
+            {radarCargando ? 'Activando...' : 'Activar mi Radar'}
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
           </button>
+          
           {#if radarExito}
-            <p class="text-emerald-400 text-sm font-semibold text-center mt-2">¡Radar activado! Revisa tu correo pronto.</p>
+            <p class="text-emerald-400 text-sm font-bold text-center mt-3 bg-emerald-400/10 py-2 rounded-lg border border-emerald-400/20">¡Radar activado! Revisa tu correo pronto.</p>
           {/if}
           {#if radarError}
-            <p class="text-red-400 text-sm font-semibold text-center mt-2">Hubo un error de conexión. Inténtalo de nuevo.</p>
+            <p class="text-red-400 text-sm font-bold text-center mt-3 bg-red-400/10 py-2 rounded-lg border border-red-400/20">Hubo un error de conexión. Inténtalo de nuevo.</p>
           {/if}
         </form>
       </div>
