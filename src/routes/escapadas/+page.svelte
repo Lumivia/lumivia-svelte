@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { page } from '$app/stores'; 
+  import { afterNavigate } from '$app/navigation'; // 🔥 Inyección nuclear
   import type { PageData } from './$types';
   
   import { supabase } from '$lib/supabaseClient';
@@ -40,6 +41,13 @@
   const isAdminModo = $derived($page.url.searchParams.get('admin') === 'true');
   let cargandoAdmin = $state(false);
   let vuelosReportados: Set<number | string> = $state(new Set());
+
+  // 🔥 OPCIÓN NUCLEAR: Fuerza una recarga nativa si el usuario presiona "Atrás"
+  afterNavigate(({ type }) => {
+    if (type === 'popstate') {
+      window.location.reload();
+    }
+  });
 
   // 🔥 ALGORITMO ANTI-CONSECUTIVOS
   function aplicarAntiConsecutivos(ofertas: any[]) {
@@ -211,7 +219,7 @@
         <div class="h-5 w-px bg-gray-200 hidden sm:block"></div>
 
         <div id="selector-pais-escapadas" class="relative inline-block text-left">
-          <button type="button" onclick={toggleDropdown} class="inline-flex items-center justify-center w-full rounded-full border border-gray-200 shadow-sm px-4 py-1.5 bg-white text-sm font-bold text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-lumiCyan/50 transition-all gap-2 cursor-pointer">
+          <button type="button" onclick={toggleDropdown} class="inline-flex items-center justify-center w-full rounded-full border border-gray-200 shadow-sm px-4 py-1.5 bg-white text-sm font-bold text-gray-600 hover:bg-gray-50 focus:outline-none focus:border-lumiCyan transition-colors gap-2 cursor-pointer">
             <img src={banderaActual} alt={paisActual} class="w-4 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" />
             <span class="text-xs font-black text-lumiDark tracking-wide">{monedaActual}</span>
             <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" style={`transform: rotate(${dropdownAbierto ? '180deg' : '0deg'})`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
@@ -327,7 +335,7 @@
           {#each Array(data.totalPages) as _, i}
             {@const n = i + 1}
             {#if Math.abs(data.page - n) <= 2 || n === 1 || n === data.totalPages}
-              <button type="button" onclick={() => irAPagina(n)} class="w-9 h-9 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-lumiCyan text-lumiDark shadow' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">{n}</button>
+              <button type="button" onclick={() => irAPagina(n)} class="w-9 h-9 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-lumiCyan text-lumiDark shadow-md' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">{n}</button>
             {:else if Math.abs(data.page - n) === 3}
               <span class="text-gray-400 font-bold px-1">...</span>
             {/if}
