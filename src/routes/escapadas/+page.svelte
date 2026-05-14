@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
   import { page } from '$app/stores'; 
   import type { PageData } from './$types';
   
@@ -26,6 +25,17 @@
   let dropdownAbierto = $state(false);
   let modalAbierto = $state(false);
   let dealSeleccionado: any = $state(null);
+
+  // 🔥 ESTADO DEL RADAR PERSONAL
+  let leadNombre = $state('');
+  let leadOrigen = $state('');
+  let leadDestino = $state('');
+  let leadMes = $state('');
+  let leadContacto = $state('');
+  let radarEnviando = $state(false);
+  let radarExito = $state(false);
+  let radarError = $state(false);
+  let mesesDisponibles = $state<string[]>([]);
 
   const isAdminModo = $derived($page.url.searchParams.get('admin') === 'true');
   let cargandoAdmin = $state(false);
@@ -81,15 +91,16 @@
     if (!target.closest('#selector-pais-escapadas')) dropdownAbierto = false;
   }
 
+  // 🔥 FIX NAVEGACIÓN SPA: window.location.href reemplaza a goto() para forzar recargas reales
   function seleccionarPais(codigoPais: string) {
     dropdownAbierto = false;
     localStorage.setItem('lumivia_pais', codigoPais);
-    goto(`/escapadas?pais=${codigoPais.toUpperCase()}&page=1`);
+    window.location.href = `/escapadas?pais=${codigoPais.toUpperCase()}&page=1`;
   }
 
   function irAPagina(n: number) {
     if (n < 1 || n > data.totalPages) return;
-    goto(`/escapadas?pais=${paisActual.toUpperCase()}&page=${n}`);
+    window.location.href = `/escapadas?pais=${paisActual.toUpperCase()}&page=${n}`;
   }
 
   function checarSiEstaMuerta(deal: any, reportados: Set<number | string>) {
@@ -131,10 +142,32 @@
   function abrirModal(deal: any) { dealSeleccionado = deal; modalAbierto = true; }
   function cerrarModal() { modalAbierto = false; setTimeout(() => { dealSeleccionado = null; }, 200); }
 
+  // 🔥 LÓGICA DEL RADAR PERSONAL
+  function handleSubmitRadar(e: Event) { e.preventDefault(); enviarRadar(); }
+
+  async function enviarRadar() {
+    radarEnviando = true; radarExito = false; radarError = false;
+    const { error } = await supabase.from('radares_personales').insert([{ nombre: leadNombre, origen: leadOrigen, destino: leadDestino, mes_esperado: leadMes, contacto: leadContacto, status: 'pendiente_verificacion' }]);
+    radarEnviando = false;
+    if (!error) { radarExito = true; leadNombre = leadOrigen = leadDestino = leadMes = leadContacto = ''; } 
+    else { radarError = true; console.error(error); }
+  }
+
   $effect(() => { if (paisActual) localStorage.setItem('lumivia_pais', paisActual); });
 
   onMount(() => {
     window.addEventListener('click', handleClickOutside);
+    
+    // Poblar los meses para el Radar
+    const fechaActual = new Date();
+    const meses: string[] = [];
+    for (let i = 0; i < 12; i++) {
+      const fechaFutura = new Date(fechaActual.getFullYear(), fechaActual.getMonth() + i, 1);
+      const mesTexto = fechaFutura.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+      meses.push(mesTexto.charAt(0).toUpperCase() + mesTexto.slice(1));
+    }
+    mesesDisponibles = meses;
+
     return () => { window.removeEventListener('click', handleClickOutside); };
   });
 </script>
@@ -145,40 +178,52 @@
 
 <div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col relative w-full">
   
-  <header class="bg-white/70 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-200/50 w-full">
+  <header class="bg-white/80 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-100 w-full">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between w-full">
       
       <div class="flex items-center gap-4">
-        <a href={`/paises/${paisActual.toLowerCase()}`} data-sveltekit-reload class="text-gray-400 hover:text-lumiDark transition-colors cursor-pointer flex items-center" title="Volver a los destinos">
+        <a href={`/paises/${paisActual.toLowerCase()}`} data-sveltekit-reload class="text-gray-400 hover:text-lumiCyan transition-colors cursor-pointer flex items-center" title="Volver a los destinos">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
         </a>
-        <span class="text-2xl font-extrabold tracking-tighter text-lumiDark flex items-center">
+        <span class="text-3xl font-black tracking-tighter text-lumiDark flex items-center">
           Lumivia <span class="text-lumiCyan font-light ml-1 hidden sm:inline">| Escapadas</span>
         </span>
       </div>
 
-      <div class="flex items-center gap-4">
-        <a href="https://vuelos.lumivia.app/" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-lumiDark transition-colors hidden sm:flex">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg> Vuelos
+      <div class="flex items-center gap-4 sm:gap-6">
+        <a href="https://vuelos.lumivia.app/" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden sm:flex">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg> 
+          <span class="hidden sm:inline">Vuelos</span>
         </a>
-        <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-lumiCyan transition-colors hidden sm:flex">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg> Hoteles
+        <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden sm:flex">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg> 
+          <span class="hidden sm:inline">Hoteles</span>
         </a>
-        <div class="h-4 w-px bg-gray-200 hidden sm:block"></div>
+        <a href="/escapadas?pais={paisActual}" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden lg:flex">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          <span class="hidden lg:inline">Escapadas</span>
+        </a>
+        <a href="/wanderlust?pais={paisActual}" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden lg:flex">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+          <span class="hidden lg:inline">Wanderlust</span>
+        </a>
+
+        <div class="h-5 w-px bg-gray-200 hidden sm:block"></div>
 
         <div id="selector-pais-escapadas" class="relative inline-block text-left">
-          <button type="button" onclick={toggleDropdown} class="inline-flex items-center justify-center w-full rounded-full border border-gray-200 shadow-sm px-4 py-1.5 bg-white text-sm font-bold text-gray-600 hover:bg-gray-50 focus:outline-none focus:border-lumiCyan transition-colors gap-2 cursor-pointer">
-            <img src={banderaActual} alt={paisActual} class="w-4 h-auto rounded-sm shadow-sm" />
-            <span>{monedaActual}</span>
-            <svg class="w-3 h-3 text-gray-400 transition-transform" style={`transform: rotate(${dropdownAbierto ? '180deg' : '0deg'})`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          <button type="button" onclick={toggleDropdown} class="inline-flex items-center justify-center w-full rounded-full border border-gray-200 shadow-sm px-4 py-1.5 bg-white text-sm font-bold text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-lumiCyan/50 transition-all gap-2 cursor-pointer">
+            <img src={banderaActual} alt={paisActual} class="w-4 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" />
+            <span class="text-xs font-black text-lumiDark tracking-wide">{monedaActual}</span>
+            <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" style={`transform: rotate(${dropdownAbierto ? '180deg' : '0deg'})`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
           </button>
 
           {#if dropdownAbierto}
-            <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-xl shadow-lg bg-white ring-1 ring-black/5 focus:outline-none z-50 overflow-hidden border border-gray-100 animate-fadeIn">
+            <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-2xl shadow-xl bg-white ring-1 ring-black/5 focus:outline-none z-50 overflow-hidden border border-gray-100 animate-fadeIn">
               <div class="py-1">
-                <button type="button" onclick={() => seleccionarPais('MX')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/mx.png" class="w-5 h-auto rounded-sm shadow-sm" /> México</button>
-                <button type="button" onclick={() => seleccionarPais('CO')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/co.png" class="w-5 h-auto rounded-sm shadow-sm" /> Colombia</button>
-                <button type="button" onclick={() => seleccionarPais('CL')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/cl.png" class="w-5 h-auto rounded-sm shadow-sm" /> Chile</button>
+                <button type="button" onclick={() => seleccionarPais('MX')} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left border-b border-gray-50"><img src="https://flagcdn.com/w20/mx.png" class="w-5 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" /> México <span class="text-gray-400 text-xs font-semibold ml-auto">MXN</span></button>
+                <button type="button" onclick={() => seleccionarPais('CO')} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left border-b border-gray-50"><img src="https://flagcdn.com/w20/co.png" class="w-5 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" /> Colombia <span class="text-gray-400 text-xs font-semibold ml-auto">COP</span></button>
+                <button type="button" onclick={() => seleccionarPais('CL')} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left border-b border-gray-50"><img src="https://flagcdn.com/w20/cl.png" class="w-5 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" /> Chile <span class="text-gray-400 text-xs font-semibold ml-auto">CLP</span></button>
+                <button type="button" onclick={() => seleccionarPais('CR')} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left border-b border-gray-50"><img src="https://flagcdn.com/w20/cr.png" class="w-5 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" /> Costa Rica <span class="text-gray-400 text-xs font-semibold ml-auto">USD</span></button>
               </div>
             </div>
           {/if}
@@ -282,7 +327,7 @@
           {#each Array(data.totalPages) as _, i}
             {@const n = i + 1}
             {#if Math.abs(data.page - n) <= 2 || n === 1 || n === data.totalPages}
-              <button type="button" onclick={() => irAPagina(n)} class="w-9 h-9 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-lumiCyan text-white shadow' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">{n}</button>
+              <button type="button" onclick={() => irAPagina(n)} class="w-9 h-9 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-lumiCyan text-lumiDark shadow' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">{n}</button>
             {:else if Math.abs(data.page - n) === 3}
               <span class="text-gray-400 font-bold px-1">...</span>
             {/if}
@@ -291,6 +336,59 @@
         <button type="button" onclick={() => irAPagina(data.page + 1)} disabled={data.page >= data.totalPages} class="px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-sm">Siguiente →</button>
       </div>
     {/if}
+
+    <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10 w-full mb-20 mx-auto">
+      <div class="relative z-10 md:w-5/12 text-center md:text-left">
+        <h3 class="text-3xl font-black text-white mb-4 tracking-tight">¿No ves tu destino soñado?</h3>
+        <p class="text-gray-400 font-medium leading-relaxed text-sm">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos el momento perfecto.</p>
+      </div>
+      <div class="relative z-10 md:w-7/12 w-full bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10">
+        <form class="space-y-5 w-full" onsubmit={handleSubmitRadar}>
+          <div>
+            <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Tu Nombre</label>
+            <input type="text" bind:value={leadNombre} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Origen</label>
+              <input type="text" bind:value={leadOrigen} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Destino</label>
+              <input type="text" bind:value={leadDestino} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Mes aproximado</label>
+              <select bind:value={leadMes} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm appearance-none cursor-pointer">
+                <option value="" disabled>Elige un mes...</option>
+                {#each mesesDisponibles as m}
+                  <option value={m} class="bg-lumiDark text-white">{m}</option>
+                {/each}
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Correo Electrónico</label>
+              <input type="email" bind:value={leadContacto} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+            </div>
+          </div>
+          
+          <button type="submit" class="w-full bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark font-black py-4 rounded-xl transition-all shadow-[0_4px_15px_rgba(0,210,255,0.2)] hover:shadow-[0_6px_20px_rgba(0,210,255,0.3)] mt-4 active:scale-95 flex items-center justify-center gap-2 uppercase tracking-widest text-sm" disabled={radarEnviando}>
+            {radarEnviando ? 'Activando...' : 'Activar mi Radar'}
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+          </button>
+          
+          {#if radarExito}
+            <p class="text-emerald-400 text-sm font-bold text-center mt-3 bg-emerald-400/10 py-2 rounded-lg border border-emerald-400/20">¡Radar activado! Revisa tu correo pronto.</p>
+          {/if}
+          {#if radarError}
+            <p class="text-red-400 text-sm font-bold text-center mt-3 bg-red-400/10 py-2 rounded-lg border border-red-400/20">Hubo un error de conexión. Inténtalo de nuevo.</p>
+          {/if}
+        </form>
+      </div>
+    </div>
+
   </main>
 
   <WhatsAppButton pais={paisActual} />
