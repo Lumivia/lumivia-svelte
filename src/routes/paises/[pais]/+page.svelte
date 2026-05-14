@@ -30,6 +30,7 @@
   let newsletterClase = $state('');
   let newsletterCargando = $state(false);
 
+  // 🔥 Variables sincronizadas correctamente para el build
   let radarNombre = $state('');
   let radarOrigen = $state('');
   let radarDestino = $state('');
@@ -267,22 +268,22 @@
         <form class="space-y-5 w-full" onsubmit={handleSubmitRadar}>
           <div>
             <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Tu Nombre</label>
-            <input type="text" bind:value={leadNombre} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+            <input type="text" bind:value={radarNombre} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Origen</label>
-              <input type="text" bind:value={leadOrigen} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+              <input type="text" bind:value={radarOrigen} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
             </div>
             <div>
               <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Destino</label>
-              <input type="text" bind:value={leadDestino} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+              <input type="text" bind:value={radarDestino} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Mes aproximado</label>
-              <select bind:value={leadMes} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm appearance-none cursor-pointer">
+              <select bind:value={radarMes} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm appearance-none cursor-pointer">
                 <option value="" disabled>Elige un mes...</option>
                 {#each meses as m}
                   <option value={m} class="bg-lumiDark text-white">{m}</option>
@@ -291,7 +292,7 @@
             </div>
             <div>
               <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Correo Electrónico</label>
-              <input type="email" bind:value={leadContacto} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+              <input type="email" bind:value={radarContacto} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
             </div>
           </div>
           
