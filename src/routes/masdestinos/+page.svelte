@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
   import { page } from '$app/stores'; 
   import type { PageData } from './$types';
   
@@ -21,13 +20,10 @@
     CR: { moneda: 'USD', bandera: 'https://flagcdn.com/w20/cr.png' }
   };
 
-  // 🛡️ BLINDAJE ANTIBALAS: Limpiamos la variable por si la URL trae "?admin=true" pegado al país
   const paisActual = $derived(String(data.pais || 'MX').split('?')[0].split('&')[0].toUpperCase());
   const monedaActual = $derived(configMercado[paisActual]?.moneda ?? 'MXN');
   const banderaActual = $derived(configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png');
   
-  // 🎯 SEO: Consolidación de URLs con parámetros para evitar errores en Google Search Console
-  // Esto toma "https://www.lumivia.app" y le pega "/masdestinos", ignorando "?vuelo=X"
   const urlCanonica = $derived(`https://www.lumivia.app${$page.url.pathname}`);
   
   let dropdownAbierto = $state(false);
@@ -51,11 +47,9 @@
   let mesesDisponibles = $state<string[]>([]);
   let vuelosReportados = $state(new Set<number | string>());
 
-  // 🕵️ MODO DIOS: Lee si la URL tiene ?admin=true o &admin=true
   const isAdminModo = $derived($page.url.searchParams.get('admin') === 'true');
   let cargandoAdmin = $state(false);
 
-  // 💀 Función para evaluar si una oferta específica está muerta
   function checarSiEstaMuerta(deal: any, reportados: Set<number | string>) {
     if (deal?.expirada_manualmente) return true;
     if (reportados.has(deal.id)) return true;
@@ -77,7 +71,6 @@
     return false;
   }
 
-  // 💣 Función para disparar el misil al backend
   async function handleMatarOferta(id: number | string, e: Event) {
     e.stopPropagation();
     const password = prompt("Ingresa la contraseña de administrador para matar esta oferta:");
@@ -116,15 +109,16 @@
     if (!target.closest('#selector-pais-catalogo')) dropdownAbierto = false;
   }
 
+  // 🔥 FIX NAVEGACIÓN SPA: window.location.href reemplaza a goto() para forzar recargas reales
   function seleccionarPais(codigoPais: string) {
     dropdownAbierto = false;
     localStorage.setItem('lumivia_pais', codigoPais);
-    goto(`/masdestinos?pais=${codigoPais.toUpperCase()}&page=1`);
+    window.location.href = `/masdestinos?pais=${codigoPais.toUpperCase()}&page=1`;
   }
 
   function irAPagina(n: number) {
     if (n < 1 || n > data.totalPages) return;
-    goto(`/masdestinos?pais=${paisActual.toUpperCase()}&page=${n}`);
+    window.location.href = `/masdestinos?pais=${paisActual.toUpperCase()}&page=${n}`;
   }
 
   function calcularTiempoTranscurrido(fechaISO: string | null) {
@@ -224,40 +218,55 @@
 </svelte:head>
 
 <div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col relative overflow-x-hidden">
-  <header class="bg-white/70 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-200/50">
+  
+  <header class="bg-white/80 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-4">
         
-        <a href={`/paises/${paisActual.toLowerCase()}`} class="text-gray-400 hover:text-lumiDark transition-colors cursor-pointer" title="Volver a los destinos de {paisActual}">
+        <a data-sveltekit-reload href={`/paises/${paisActual.toLowerCase()}`} class="text-gray-400 hover:text-lumiCyan transition-colors cursor-pointer" title="Volver a los destinos de {paisActual}">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
         </a>
         
-        <span class="text-2xl font-extrabold tracking-tighter text-lumiDark">Lumivia <span class="text-lumiCyan font-light">| Catálogo</span></span>
+        <span class="text-3xl font-black tracking-tighter text-lumiDark">Lumivia <span class="text-lumiCyan font-light">| Catálogo</span></span>
       </div>
 
-      <div class="flex items-center gap-4">
-        <a href="https://vuelos.lumivia.app/" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-lumiDark transition-colors hidden sm:flex">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg> Vuelos
+      <div class="flex items-center gap-4 sm:gap-6">
+        <a href="https://vuelos.lumivia.app/" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden sm:flex">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <span class="hidden sm:inline">Vuelos</span>
         </a>
-        <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-lumiCyan transition-colors hidden sm:flex">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg> Hoteles
+
+        <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden sm:flex">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+          <span class="hidden sm:inline">Hoteles</span>
         </a>
-        <div class="h-4 w-px bg-gray-200 hidden sm:block"></div>
+
+        <a href="/escapadas?pais={paisActual}" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden lg:flex">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          <span class="hidden lg:inline">Escapadas</span>
+        </a>
+
+        <a href="/wanderlust?pais={paisActual}" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden lg:flex">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+          <span class="hidden lg:inline">Wanderlust</span>
+        </a>
+
+        <div class="h-5 w-px bg-gray-200 hidden sm:block"></div>
 
         <div id="selector-pais-catalogo" class="relative inline-block text-left">
-          <button type="button" onclick={toggleDropdown} aria-expanded={dropdownAbierto} class="inline-flex items-center justify-center w-full rounded-full border border-gray-200 shadow-sm px-4 py-1.5 bg-white text-sm font-bold text-gray-600 hover:bg-gray-50 focus:outline-none focus:border-lumiCyan transition-colors gap-2 cursor-pointer">
-            <img src={banderaActual} alt={paisActual} class="w-4 h-auto rounded-sm shadow-sm" />
-            <span>{monedaActual}</span>
-            <svg class="w-3 h-3 text-gray-400 transition-transform" style={`transform: rotate(${dropdownAbierto ? '180deg' : '0deg'})`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          <button type="button" onclick={toggleDropdown} aria-expanded={dropdownAbierto} class="inline-flex items-center justify-center w-full rounded-full border border-gray-200 shadow-sm px-4 py-1.5 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-lumiCyan/50 transition-all gap-2 cursor-pointer">
+            <img src={banderaActual} alt={paisActual} class="w-4 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" />
+            <span class="text-xs font-black text-lumiDark tracking-wide">{monedaActual}</span>
+            <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" style={`transform: rotate(${dropdownAbierto ? '180deg' : '0deg'})`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
           </button>
 
           {#if dropdownAbierto}
-            <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-xl shadow-lg bg-white ring-1 ring-black/5 focus:outline-none z-50 overflow-hidden border border-gray-100 animate-fadeIn" role="menu">
+            <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-2xl shadow-xl bg-white ring-1 ring-black/5 z-50 overflow-hidden border border-gray-100 animate-fadeIn" role="menu">
               <div class="py-1">
-                <button type="button" onclick={() => seleccionarPais('MX')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/mx.png" alt="MX" class="w-5 h-auto rounded-sm shadow-sm" /> México (MXN)</button>
-                <button type="button" onclick={() => seleccionarPais('CO')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/co.png" alt="CO" class="w-5 h-auto rounded-sm shadow-sm" /> Colombia (COP)</button>
-                <button type="button" onclick={() => seleccionarPais('CL')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/cl.png" alt="CL" class="w-5 h-auto rounded-sm shadow-sm" /> Chile (CLP)</button>
-                <button type="button" onclick={() => seleccionarPais('CR')} class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/cr.png" alt="CR" class="w-5 h-auto rounded-sm shadow-sm" /> Costa Rica (USD)</button>
+                <button type="button" onclick={() => seleccionarPais('MX')} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left border-b border-gray-50"><img src="https://flagcdn.com/w20/mx.png" alt="MX" class="w-5 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" /> México <span class="text-gray-400 text-xs font-semibold ml-auto">MXN</span></button>
+                <button type="button" onclick={() => seleccionarPais('CO')} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left border-b border-gray-50"><img src="https://flagcdn.com/w20/co.png" alt="CO" class="w-5 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" /> Colombia <span class="text-gray-400 text-xs font-semibold ml-auto">COP</span></button>
+                <button type="button" onclick={() => seleccionarPais('CL')} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left border-b border-gray-50"><img src="https://flagcdn.com/w20/cl.png" alt="CL" class="w-5 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" /> Chile <span class="text-gray-400 text-xs font-semibold ml-auto">CLP</span></button>
+                <button type="button" onclick={() => seleccionarPais('CR')} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/cr.png" alt="CR" class="w-5 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" /> Costa Rica <span class="text-gray-400 text-xs font-semibold ml-auto">USD</span></button>
               </div>
             </div>
           {/if}
