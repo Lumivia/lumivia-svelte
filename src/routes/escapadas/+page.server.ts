@@ -26,7 +26,6 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
   const page = pageParam ? parseInt(pageParam) : 1;
   const itemsPerPage = 21; // Múltiplo de 3 para el grid
   const start = (page - 1) * itemsPerPage;
-  const end = start + itemsPerPage - 1;
 
   const supabaseUrl = env.PUBLIC_SUPABASE_URL;
   const supabaseKey = env.PUBLIC_SUPABASE_ANON_KEY;
@@ -43,26 +42,48 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
   let ofertasEnriquecidas: any[] = [];
   let totalItems = 0;
 
-  // 🔥 BLINDAJE 1: Try/Catch global para evitar Error 500 si la DB falla
+  // 🔥 Try/Catch global para evitar Error 500 si la DB falla
   try {
-    const { data: ofertasCrudas, count, error: err } = await supabase
+    const { data: ofertasCrudas, error: err } = await supabase
       .from('publicaciones_lumivia')
-      .select('*', { count: 'exact' })
+      .select('*')
       .eq('activo', true)
       .eq('pais_mercado', paisUpper)
       .eq('tipo_vuelo', 'escapada_finde') 
-      .order('created_at', { ascending: false })
-      .range(start, end);
+      .order('created_at', { ascending: false });
 
     if (err) {
       console.error('Error fetching escapadas:', err);
     } else {
-      ofertasEnriquecidas = ofertasCrudas || [];
-      totalItems = count || 0;
+      const crudas = ofertasCrudas || [];
+
+      // 🔥 ESCUDO MATEMÁTICO ULTRA ESTRICTO DE BACKEND 🔥
+      // Filtra y destruye cualquier registro que dure más de 4 días o menos de 1 día
+      const ofertasValidas = crudas.filter(deal => {
+        if (!deal.fecha_salida || !deal.fecha_regreso) return false;
+        try {
+          const salida = new Date(String(deal.fecha_salida).split('T')[0]);
+          const regreso = new Date(String(deal.fecha_regreso).split('T')[0]);
+          
+          // Cálculo preciso en milisegundos convertido a días enteros
+          const diferenciaTiempo = regreso.getTime() - salida.getTime();
+          const diferenciaDias = Math.ceil(diferenciaTiempo / (1000 * 60 * 60 * 24));
+          
+          return diferenciaDias >= 1 && diferenciaDias <= 4;
+        } catch {
+          return false;
+        }
+      });
+
+      // El conteo real se basa en el conjunto de datos limpio
+      totalItems = ofertasValidas.length;
+      
+      // Aplicamos la paginación limpia sobre el arreglo filtrado
+      ofertasEnriquecidas = ofertasValidas.slice(start, start + itemsPerPage);
     }
 
     if (ofertasEnriquecidas.length > 0) {
-      // 🔥 BLINDAJE 2: .filter(Boolean) aniquila los nulls antes de llamar a Diccionario
+      // .filter(Boolean) aniquila los nulls antes de llamar a Diccionario
       const codigosIata = [...new Set([
         ...ofertasEnriquecidas.map(o => o.origen),
         ...ofertasEnriquecidas.map(o => o.destino)
@@ -93,7 +114,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
 
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  // 🔥 BLINDAJE 3: Metadatos SEO Únicos y Paginación Perfecta
+  // Metadatos SEO Únicos y Paginación Perfecta
   const metaTitle = `Escapadas de Fin de Semana desde ${mercadoInfo.nombre} | Lumivia`;
   const metaDescription = `Descubre vuelos baratos y escapadas curadas para viajar el fin de semana desde ${mercadoInfo.nombre}. Poco presupuesto, máxima desconexión.`;
   
