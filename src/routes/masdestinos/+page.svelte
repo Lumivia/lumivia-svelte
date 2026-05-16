@@ -142,18 +142,21 @@
     return `Hace ${diferenciaDias} días`;
   }
 
+  // 🔥 FIX: Fechas limpias a prueba de zonas horarias
   function formatearFechaCorta(fechaCadena: string | null) {
     if (!fechaCadena) return '';
-    const str = String(fechaCadena);
-    if (!str.includes('-')) return str;
-    const partes = str.split('-');
-    if (partes.length !== 3) return str;
-    const año = parseInt(partes[0]);
-    const mes = parseInt(partes[1]) - 1;
-    const dia = parseInt(partes[2]);
-    const fechaObj = new Date(año, mes, dia);
-    const opciones: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
-    return fechaObj.toLocaleDateString('es-ES', opciones).replace('.', '');
+    try {
+      const soloFecha = String(fechaCadena).split('T')[0];
+      const partes = soloFecha.split('-');
+      if (partes.length !== 3) return soloFecha;
+      const año = parseInt(partes[0]);
+      const mes = parseInt(partes[1]) - 1;
+      const dia = parseInt(partes[2]);
+      const fechaObj = new Date(año, mes, dia);
+      return fechaObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }).replace('.', '').toUpperCase();
+    } catch {
+      return String(fechaCadena);
+    }
   }
 
   function handleSubmitNewsletter(e: Event) { e.preventDefault(); enviarNewsletter(); }
@@ -273,7 +276,7 @@
                 <button type="button" onclick={() => seleccionarPais('MX')} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left border-b border-gray-50"><img src="https://flagcdn.com/w20/mx.png" alt="MX" class="w-5 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" /> México <span class="text-gray-400 text-xs font-semibold ml-auto">MXN</span></button>
                 <button type="button" onclick={() => seleccionarPais('CO')} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left border-b border-gray-50"><img src="https://flagcdn.com/w20/co.png" alt="CO" class="w-5 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" /> Colombia <span class="text-gray-400 text-xs font-semibold ml-auto">COP</span></button>
                 <button type="button" onclick={() => seleccionarPais('CL')} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left border-b border-gray-50"><img src="https://flagcdn.com/w20/cl.png" alt="CL" class="w-5 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" /> Chile <span class="text-gray-400 text-xs font-semibold ml-auto">CLP</span></button>
-                <button type="button" onclick={() => seleccionarPais('CR')} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left border-b border-gray-50"><img src="https://flagcdn.com/w20/cr.png" alt="CR" class="w-5 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" /> Costa Rica <span class="text-gray-400 text-xs font-semibold ml-auto">USD</span></button>
+                <button type="button" onclick={() => seleccionarPais('CR')} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 font-bold gap-3 transition-colors text-left"><img src="https://flagcdn.com/w20/cr.png" alt="CR" class="w-5 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" /> Costa Rica <span class="text-gray-400 text-xs font-semibold ml-auto">USD</span></button>
               </div>
             </div>
           {/if}
@@ -411,7 +414,7 @@
     </div>
 
     {#if data.totalPages > 1}
-      <div class="flex justify-center items-center gap-3 mt-10 mb-20 relative z-10 w-full">
+      <div class="flex justify-center items-center gap-3 mt-10 mb-20 relative z-10">
         <button type="button" onclick={() => irAPagina(data.page - 1)} disabled={data.page <= 1} class="px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-sm">← Anterior</button>
         <div class="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
           {#each Array(data.totalPages) as _, i}
