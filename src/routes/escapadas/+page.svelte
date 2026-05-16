@@ -8,6 +8,7 @@
   import ModalOferta from '$lib/components/ModalOferta.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
+  import { obtenerImagen } from '$lib/utils/imagenes'; // 🔥 Sabueso de imágenes invocado
 
   let { data }: { data: PageData } = $props();
 
@@ -255,7 +256,7 @@
       {:else}
         {#each dealsFiltrados as deal (deal.id)}
           {@const estaMuerta = checarSiEstaMuerta(deal, vuelosReportados)}
-          {@const imgFinal = deal.imagen_url_verificada || deal.imagen_fallback || 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80'}
+          {@const imgFinal = obtenerImagen(deal)}
           {@const esVip = deal.tipo_vuelo === 'directo' || deal.escalas === 0}
           {@const origenSeguro = String(deal.origen_nombre || deal.origen || '').toUpperCase()}
           {@const destinoSeguro = String(deal.destino_nombre || deal.destino || '').toUpperCase()}
