@@ -232,18 +232,16 @@
 <svelte:head>
   <title>Lumivia | Catálogo de Oportunidades Premium</title>
   <meta name="description" content="Descubre oportunidades únicas de vuelos baratos. Catálogo completo de tarifas ocultas." />
-  
   <link rel="canonical" href={urlCanonica} />
-  
   {#if data.schemaJSON}
     {@html `<script type="application/ld+json">${data.schemaJSON}</script>`}
-  { {/if}
+  {/if}
 </svelte:head>
 
-<div class="bg-gradient-to-b from-[#f0f9ff] via-white to-white text-lumiDark min-h-screen flex flex-col relative overflow-x-hidden">
+<div class="bg-gradient-to-b from-[#f8fafc] via-white to-white text-lumiDark min-h-screen flex flex-col relative overflow-x-hidden">
   
-  <header class="bg-white/90 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-100/50">
-    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+  <header class="bg-white/90 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-100/80 shadow-sm">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-4">
         <a data-sveltekit-reload href={`/paises/${paisActual.toLowerCase()}`} class="text-gray-400 hover:text-lumiCyan transition-colors cursor-pointer" title="Volver a los destinos de {paisActual}">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -262,20 +260,10 @@
           <span class="hidden sm:inline">Hoteles</span>
         </a>
 
-        <a href="/escapadas?pais={paisActual}" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden lg:flex">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-          <span class="hidden lg:inline">Escapadas</span>
-        </a>
-
-        <a href="/wanderlust?pais={paisActual}" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden lg:flex">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
-          <span class="hidden lg:inline">Wanderlust</span>
-        </a>
-
         <div class="h-5 w-px bg-gray-200 hidden sm:block"></div>
 
         <div id="selector-pais-catalogo" class="relative inline-block text-left">
-          <button type="button" onclick={toggleDropdown} aria-expanded={dropdownAbierto} class="inline-flex items-center justify-center w-full rounded-full border border-gray-100 px-4 py-1.5 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-lumiCyan/50 transition-all gap-2 cursor-pointer shadow-sm">
+          <button type="button" onclick={toggleDropdown} aria-expanded={dropdownAbierto} class="inline-flex items-center justify-center w-full rounded-full border border-gray-200 px-4 py-1.5 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-lumiCyan/50 transition-all gap-2 cursor-pointer shadow-sm">
             <img src={banderaActual} alt={paisActual} class="w-4 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" />
             <span class="text-xs font-black text-lumiDark tracking-wide">{monedaActual}</span>
             <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" style={`transform: rotate(${dropdownAbierto ? '180deg' : '0deg'})`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
@@ -296,16 +284,15 @@
     </div>
   </header>
 
-  <main class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full relative z-10">
+  <main class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full relative z-10">
     
     <div class="mb-12 text-center relative z-10">
-      <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-6 leading-tight">Encuentra Tu Próxima Aventura <span class="text-lumiCyan">Al Mejor Precio</span></h1>
+      <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-6 leading-tight">Catálogo de Oportunidades</h1>
       <div class="max-w-xl mx-auto mb-6 relative z-20 group">
-        <div class="bg-white/80 backdrop-blur-xl p-2 rounded-full shadow-lg border border-white/50 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 hover:shadow-xl hover:shadow-lumiCyan/10 hover:-translate-y-0.5">
-          <div class="pl-4 text-gray-400 hidden sm:block"><svg class="w-5 h-5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div>
+        <div class="bg-white/80 backdrop-blur-xl p-2 rounded-full shadow-lg border border-gray-200 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5">
           <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
-            <input type="email" placeholder="Ingresa tu correo para recibir nuestra selección VIP..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" bind:value={nlEmail} />
-            <button type="submit" class="bg-lumiGradient hover:brightness-105 text-white px-8 py-3 rounded-full font-black transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-md shadow-lumiCyan/20" disabled={nlEnviando}>{nlEnviando ? 'Guardando...' : 'Suscribirme Gratis'}</button>
+            <input type="email" placeholder="Ingresa tu correo para recibir nuestra selección VIP..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-5 py-2 text-sm outline-none" bind:value={nlEmail} />
+            <button type="submit" class="bg-gradient-to-r from-[#00d2ff] to-[#0096ff] text-white px-8 py-3 rounded-full font-black transition-all hover:brightness-110 active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-md" disabled={nlEnviando}>{nlEnviando ? 'Guardando...' : 'Suscribirme Gratis'}</button>
           </form>
         </div>
         {#if nlEstado !== ''}
@@ -316,23 +303,21 @@
 
     <div class="flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
       
-      <aside class="w-full lg:w-[280px] shrink-0 flex flex-col gap-6 lg:sticky lg:top-24 z-20">
-        
+      <aside class="w-full lg:w-[250px] shrink-0 flex flex-col gap-6 lg:sticky lg:top-24 z-20">
         <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-4">
           <div class="flex items-center gap-2.5 pb-3 border-b border-gray-100 mb-1">
-             <svg class="w-5 h-5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-             <h3 class="text-sm font-extrabold text-lumiDark uppercase tracking-widest">Filtrar por Origen</h3>
+             <h3 class="text-xs font-extrabold text-gray-400 uppercase tracking-widest">Filtrar por Origen</h3>
           </div>
           
-          <div class="flex flex-col gap-1.5 max-h-[55vh] overflow-y-auto custom-scrollbar pr-2">
-            <button type="button" onclick={() => aplicarFiltro(null)} class="text-left px-4 py-3 rounded-xl text-sm transition-all flex items-center gap-2.5 {origenFiltroActual === null ? 'bg-lumiGradient text-white font-black shadow-md shadow-lumiCyan/20' : 'text-gray-600 hover:bg-gray-50 font-semibold'}">
+          <div class="flex flex-col gap-1.5 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+            <button type="button" onclick={() => aplicarFiltro(null)} class="text-left px-4 py-3 rounded-xl text-sm transition-all flex items-center gap-2.5 {origenFiltroActual === null ? 'bg-[#00d2ff]/10 text-[#0096ff] font-black border border-[#00d2ff]/30 shadow-sm' : 'text-gray-600 hover:bg-gray-50 font-semibold'}">
               <span>Mostrar Todos</span>
             </button>
             
             {#each origenesDisponibles as origen}
-              <button type="button" onclick={() => aplicarFiltro(origen.codigo)} class="text-left px-4 py-3 rounded-xl text-sm transition-all flex items-center justify-between {origenFiltroActual === origen.codigo ? 'bg-lumiGradient text-white font-black shadow-md shadow-lumiCyan/20' : 'text-gray-600 hover:bg-gray-50 font-semibold'}">
+              <button type="button" onclick={() => aplicarFiltro(origen.codigo)} class="text-left px-4 py-3 rounded-xl text-sm transition-all flex items-center justify-between {origenFiltroActual === origen.codigo ? 'bg-[#00d2ff]/10 text-[#0096ff] font-black border border-[#00d2ff]/30 shadow-sm' : 'text-gray-600 hover:bg-gray-50 font-semibold'}">
                 <span class="truncate pr-2">{origen.nombre}</span>
-                <span class="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded shadow-inner shrink-0 {origenFiltroActual === origen.codigo ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500 border border-gray-200'}">{origen.codigo}</span>
+                <span class="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded shadow-inner shrink-0 {origenFiltroActual === origen.codigo ? 'bg-[#0096ff] text-white' : 'bg-gray-100 text-gray-500 border border-gray-200'}">{origen.codigo}</span>
               </button>
             {/each}
           </div>
@@ -343,7 +328,6 @@
         <div id="hook-deals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20 relative z-10">
           {#if !data.deals || data.deals.length === 0}
             <div class="col-span-full text-center text-gray-400 py-32 font-medium bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col items-center gap-4">
-              <svg class="w-16 h-16 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
               <span>No hay ofertas activas desde este origen actualmente.<br/>Prueba seleccionando otro en el menú izquierdo.</span>
             </div>
           {:else}
@@ -360,89 +344,70 @@
               <div 
                 role="button" 
                 tabindex="0" 
-                aria-label="Ver detalles de la oferta {deal.titulo_gancho}"
-                class="card-minimal flex flex-col group/card bg-white rounded-3xl overflow-hidden border border-gray-100 cursor-pointer shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-gray-200/60 {estaMuerta ? 'opacity-60 grayscale hover:grayscale-0 focus:grayscale-0' : ''}" 
+                class="flex flex-col group/card bg-white rounded-[24px] overflow-hidden border border-gray-200 cursor-pointer shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-gray-300 {estaMuerta ? 'opacity-60 grayscale hover:grayscale-0' : ''}" 
                 onclick={() => abrirModal(deal)}
                 onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
               >
                 <div class="relative h-60 overflow-hidden bg-gray-100 shrink-0">
-                  <img src={imgFinal} alt={deal.titulo_gancho || 'Oferta Especial'} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
+                  <img src={imgFinal} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
                   
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"></div>
-
                   {#if isAdminModo && !estaMuerta}
-                    <button 
-                      type="button" 
-                      onclick={(e) => handleMatarOferta(deal.id, e)} 
-                      disabled={cargandoAdmin}
-                      class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600/90 hover:bg-red-700 text-white backdrop-blur-md px-4 py-1.5 rounded-full font-black text-[10px] shadow-lg border border-red-400 z-30 uppercase tracking-widest flex items-center gap-1 transition-all"
-                    >
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <button type="button" onclick={(e) => handleMatarOferta(deal.id, e)} disabled={cargandoAdmin} class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-full font-black text-[10px] shadow-lg z-30 uppercase">
                       {cargandoAdmin ? '...' : 'MATAR OFERTA'}
                     </button>
                   {/if}
 
                   {#if estaMuerta}
-                    <div class="absolute inset-0 flex items-center justify-center bg-black/50 z-20 backdrop-blur-[1.5px]">
-                      <div class="bg-black/80 text-white font-black px-6 py-2.5 rounded-full uppercase tracking-widest text-[11px] shadow-2xl border border-white/20">
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
+                      <div class="bg-black/80 text-white font-black px-6 py-2.5 rounded-full uppercase tracking-widest text-[11px]">
                         Fechas Pasadas / Expirada
                       </div>
                     </div>
                   {/if}
 
                   {#if tiempoTranscurrido && !estaMuerta}
-                    <div class="absolute top-4 left-4 bg-white/90 text-lumiDark backdrop-blur-[6px] text-[10px] font-bold px-3 py-2 rounded-xl shadow-md border border-white/50 uppercase flex items-center gap-1.5 tracking-wide">
-                      <svg class="w-3.5 h-3.5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div class="absolute top-4 left-4 bg-white/95 text-lumiDark text-[10px] font-bold px-3 py-2 rounded-xl shadow-md uppercase tracking-wide">
                       {tiempoTranscurrido}
                     </div>
                   {/if}
 
                   {#if esVip}
-                    <div class="absolute top-4 right-4 bg-white/90 text-emerald-800 backdrop-blur-[6px] text-[10px] font-black px-3 py-2 rounded-xl z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-md border border-emerald-100">
-                      <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Directo
+                    <div class="absolute top-4 right-4 bg-white/95 text-emerald-800 text-[10px] font-black px-3 py-2 rounded-xl z-10 uppercase tracking-widest shadow-md border border-emerald-100">
+                      Directo
                     </div>
                   {:else if typeof deal?.escalas === 'number'}
-                    <div class="absolute top-4 right-4 bg-white/90 text-gray-800 backdrop-blur-[6px] text-[10px] font-bold px-3 py-2 rounded-xl z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-md border border-gray-100">
+                    <div class="absolute top-4 right-4 bg-white/95 text-gray-800 text-[10px] font-bold px-3 py-2 rounded-xl z-10 uppercase tracking-widest shadow-md border border-gray-100">
                       {deal.escalas} Escala{deal.escalas > 1 ? 's' : ''}
                     </div>
-                  {/if}
-
-                  {#if !estaMuerta}
-                    <button type="button" onclick={(e) => { e.stopPropagation(); reportarCambioPrecio(deal.id, e); }} title="¿El precio subió? Repórtalo" class="absolute bottom-3.5 right-3.5 bg-white/70 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-[6px] p-2.5 rounded-full shadow-md border border-white/50 transition-all z-10 cursor-pointer active:scale-95 hover:shadow-lg">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-1 6-1-1H11.5l-1-1H5v10m0 0h4"/></svg>
-                    </button>
                   {/if}
                 </div>
 
                 <div class="p-6 flex flex-col flex-grow bg-white relative">
-                  
-                  <div class="flex items-center gap-4 mb-4 pb-4 border-b border-gray-100/70">
+                  <div class="flex items-center gap-4 mb-4 pb-4 border-b border-gray-100">
                       <div class="flex flex-col items-center shrink-0">
                           <span class="text-2xl sm:text-3xl font-extrabold text-lumiDark tracking-tighter leading-none">{deal.origen}</span>
                           <span class="text-[10px] text-gray-400 font-semibold truncate max-w-[70px] uppercase mt-1 tracking-wider">{origenSeguro}</span>
                       </div>
-                      
                       <div class="flex-grow flex items-center gap-1.5 text-gray-300">
                           <div class="h-px flex-grow bg-gray-200"></div>
-                          <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                          <svg class="w-5 h-5 shrink-0 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                           <div class="h-px flex-grow bg-gray-200"></div>
                       </div>
-
                       <div class="flex flex-col items-center shrink-0">
                           <span class="text-2xl sm:text-3xl font-extrabold text-lumiDark tracking-tighter leading-none">{deal.destino}</span>
                           <span class="text-[10px] text-gray-400 font-semibold truncate max-w-[70px] uppercase mt-1 tracking-wider">{destinoSeguro}</span>
                       </div>
                   </div>
 
-                  <h3 class="text-lg font-extrabold mb-4 text-gray-900 group-hover/card:text-lumiCyan transition-colors leading-tight line-clamp-2 h-11 flex items-center">
-                    {deal.titulo_gancho || 'Oferta Especial de Temporada'}
+                  <h3 class="text-lg font-extrabold mb-4 text-gray-900 group-hover/card:text-[#0096ff] transition-colors leading-tight line-clamp-2 h-11 flex items-center">
+                    {deal.titulo_gancho || 'Oferta Especial'}
                   </h3>
 
                   <AmenidadesLinea {deal} {paisActual} />
 
                   <div class="mt-auto pt-6 border-t border-gray-100 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 sm:gap-0">
                     <div class="flex flex-col">
-                      <p class="text-[10px] text-gray-400 uppercase tracking-widest font-extrabold mb-1">{estaMuerta ? 'Precio Pasado' : 'Precio Final Id/Vt'}</p>
+                      <p class="text-[10px] text-gray-400 uppercase tracking-widest font-extrabold mb-1">{estaMuerta ? 'Precio Pasado' : 'Precio Id/Vt'}</p>
                       <p class="text-4xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tighter flex items-start">
                         <span class="text-lg font-bold text-gray-400 mt-1.5 mr-1">$</span>
                         {Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')} 
@@ -451,11 +416,7 @@
                     </div>
 
                     <div class="flex items-center gap-2.5">
-                      <button type="button" onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id, e); }} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan hover:bg-lumiCyan/10 transition-colors p-3 rounded-full cursor-pointer active:scale-95 shadow-inner border border-gray-100">
-                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
-                      </button>
-                      
-                      <div class="{estaMuerta ? 'bg-gray-200 text-gray-500' : 'bg-lumiGradient text-white hover:brightness-105 shadow-md shadow-lumiCyan/20'} px-8 py-3.5 rounded-2xl font-black text-xs sm:text-sm transition-all duration-300 active:scale-95 cursor-pointer flex items-center gap-2.5 uppercase tracking-widest">
+                      <div class="{estaMuerta ? 'bg-gray-200 text-gray-500' : 'bg-gradient-to-r from-[#00d2ff] to-[#0096ff] text-white hover:brightness-110 shadow-md'} px-8 py-3.5 rounded-2xl font-black text-xs sm:text-sm transition-all duration-300 active:scale-95 flex items-center gap-2.5 uppercase tracking-widest">
                         {estaMuerta ? 'Ver Actuales' : 'Ver Vuelo'} 
                         <svg class="w-4 h-4 transition-transform duration-300 group-hover/card:translate-x-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                       </div>
@@ -468,13 +429,13 @@
         </div>
 
         {#if data.totalPages > 1}
-          <div class="flex justify-center items-center gap-3 mb-20 relative z-10 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm w-fit mx-auto">
+          <div class="flex justify-center items-center gap-3 mb-20 relative z-10 p-4 bg-white rounded-2xl border border-gray-200 shadow-sm w-fit mx-auto">
             <button type="button" onclick={() => irAPagina(data.page - 1)} disabled={data.page <= 1} class="px-5 py-2.5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-xs uppercase tracking-wider">Anterior</button>
             <div class="flex items-center gap-2 max-w-[200px] sm:max-w-none overflow-x-auto custom-scrollbar-h pb-2 sm:pb-0">
               {#each Array(data.totalPages) as _, i}
                 {@const n = i + 1}
                 {#if Math.abs(data.page - n) <= 2 || n === 1 || n === data.totalPages}
-                  <button type="button" onclick={() => irAPagina(n)} class="w-10 h-10 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-lumiGradient text-white shadow-md shadow-lumiCyan/20' : 'bg-white hover:bg-gray-50 text-gray-600'}">{n}</button>
+                  <button type="button" onclick={() => irAPagina(n)} class="w-10 h-10 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-gradient-to-r from-[#00d2ff] to-[#0096ff] text-white shadow-md' : 'bg-white hover:bg-gray-50 text-gray-600'}">{n}</button>
                 {:else if Math.abs(data.page - n) === 3}
                   <span class="text-gray-400 font-bold px-1 self-center">...</span>
                 {/if}
@@ -485,61 +446,62 @@
         {/if}
       </div>
     </div>
-
-    <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10 w-full mb-10 mx-auto mt-10">
-      <div class="absolute -top-10 -right-10 w-60 h-60 bg-lumiCyan/10 rounded-full blur-3xl opacity-50"></div>
-      <div class="relative z-10 md:w-5/12 text-center md:text-left">
-        <h3 class="text-3xl font-black text-white mb-4 tracking-tightLeading-tight">¿No Encuentras Tu Destino Soñado?</h3>
-        <p class="text-gray-400 font-medium leading-relaxed text-sm">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos una tarifa oculta para ti.</p>
-      </div>
-      <div class="relative z-10 md:w-7/12 w-full bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10">
-        <form class="space-y-5 w-full" onsubmit={handleSubmitRadar}>
-          <div>
-            <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Tu Nombre Completo</label>
-            <input type="text" bind:value={leadNombre} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Ciudad de Origen</label>
-              <input type="text" bind:value={leadOrigen} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Ciudad de Destino</label>
-              <input type="text" bind:value={leadDestino} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
-            </div>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Mes Aproximado</label>
-              <select bind:value={leadMes} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm appearance-none cursor-pointer">
-                <option value="" disabled>Selecciona un mes...</option>
-                {#each mesesDisponibles as m}
-                  <option value={m} class="bg-lumiDark text-white">{m}</option>
-                {/each}
-              </select>
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Correo Electrónico</label>
-              <input type="email" bind:value={leadContacto} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
-            </div>
-          </div>
-          
-          <button type="submit" class="w-full bg-lumiGradient hover:brightness-105 text-lumiDark font-black py-4 rounded-xl transition-all shadow-md shadow-lumiCyan/20 mt-4 active:scale-95 flex items-center justify-center gap-2.5 uppercase tracking-widest text-sm" disabled={radarEnviando}>
-            {radarEnviando ? 'Activando...' : 'Activar mi Radar de Precios'}
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-          </button>
-          
-          {#if radarExito}
-            <p class="text-emerald-400 text-sm font-bold text-center mt-3 bg-emerald-400/10 py-2.5 rounded-lg border border-emerald-400/20">¡Radar activado con éxito! Revisa tu correo pronto.</p>
-          {/if}
-          {#if radarError}
-            <p class="text-red-400 text-sm font-bold text-center mt-3 bg-red-400/10 py-2.5 rounded-lg border border-red-400/20">Hubo un error de conexión. Inténtalo de nuevo.</p>
-          {/if}
-        </form>
-      </div>
-    </div>
-
   </main>
+
+  <div class="w-full bg-[#f8fafc] pb-20">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6">
+        <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10 w-full mt-10">
+          <div class="relative z-10 md:w-5/12 text-center md:text-left">
+            <h3 class="text-3xl font-black text-white mb-4 tracking-tight leading-tight">¿No Encuentras Tu Destino?</h3>
+            <p class="text-gray-400 font-medium leading-relaxed text-sm">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos una tarifa oculta para ti.</p>
+          </div>
+          <div class="relative z-10 md:w-7/12 w-full bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10">
+            <form class="space-y-5 w-full" onsubmit={handleSubmitRadar}>
+              <div>
+                <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Tu Nombre Completo</label>
+                <input type="text" bind:value={leadNombre} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Ciudad de Origen</label>
+                  <input type="text" bind:value={leadOrigen} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Ciudad de Destino</label>
+                  <input type="text" bind:value={leadDestino} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Mes Aproximado</label>
+                  <select bind:value={leadMes} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm appearance-none cursor-pointer">
+                    <option value="" disabled>Selecciona un mes...</option>
+                    {#each mesesDisponibles as m}
+                      <option value={m} class="bg-lumiDark text-white">{m}</option>
+                    {/each}
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Correo Electrónico</label>
+                  <input type="email" bind:value={leadContacto} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+                </div>
+              </div>
+              
+              <button type="submit" class="w-full bg-gradient-to-r from-[#00d2ff] to-[#0096ff] hover:brightness-110 text-white font-black py-4 rounded-xl transition-all shadow-md mt-4 active:scale-95 flex items-center justify-center gap-2.5 uppercase tracking-widest text-sm" disabled={radarEnviando}>
+                {radarEnviando ? 'Activando...' : 'Activar mi Radar'}
+              </button>
+              
+              {#if radarExito}
+                <p class="text-emerald-400 text-sm font-bold text-center mt-3 bg-emerald-400/10 py-2.5 rounded-lg border border-emerald-400/20">¡Radar activado con éxito! Revisa tu correo pronto.</p>
+              {/if}
+              {#if radarError}
+                <p class="text-red-400 text-sm font-bold text-center mt-3 bg-red-400/10 py-2.5 rounded-lg border border-red-400/20">Hubo un error de conexión. Inténtalo de nuevo.</p>
+              {/if}
+            </form>
+          </div>
+        </div>
+      </div>
+  </div>
 
   <WhatsAppButton pais={paisActual} />
   <Footer />
@@ -550,20 +512,6 @@
 </div>
 
 <style>
-  /* 🔥 CAMBIO: Sutilización de la tarjeta (shadow-sm base, heavy shadow hover) */
-  .card-minimal {
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .animate-fadeIn {
-    animation: fadeIn 0.3s ease-out forwards;
-  }
-
-  /* 🔥 CAMBIO: Barra de desplazamiento premium estilizada */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
   }
@@ -578,8 +526,6 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
   }
-
-  /* Barra horizontal para paginación */
   .custom-scrollbar-h::-webkit-scrollbar {
     height: 4px;
   }
