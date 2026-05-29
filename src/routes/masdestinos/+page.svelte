@@ -230,19 +230,19 @@
 </script>
 
 <svelte:head>
-  <title>Lumivia | Catálogo de Oportunidades</title>
+  <title>Lumivia | Catálogo de Oportunidades Premium</title>
   <meta name="description" content="Descubre oportunidades únicas de vuelos baratos. Catálogo completo de tarifas ocultas." />
   
   <link rel="canonical" href={urlCanonica} />
   
   {#if data.schemaJSON}
     {@html `<script type="application/ld+json">${data.schemaJSON}</script>`}
-  {/if}
+  { {/if}
 </svelte:head>
 
-<div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col relative overflow-x-hidden">
+<div class="bg-gradient-to-b from-[#f0f9ff] via-white to-white text-lumiDark min-h-screen flex flex-col relative overflow-x-hidden">
   
-  <header class="bg-white/80 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-100">
+  <header class="bg-white/90 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-100/50">
     <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-4">
         <a data-sveltekit-reload href={`/paises/${paisActual.toLowerCase()}`} class="text-gray-400 hover:text-lumiCyan transition-colors cursor-pointer" title="Volver a los destinos de {paisActual}">
@@ -275,7 +275,7 @@
         <div class="h-5 w-px bg-gray-200 hidden sm:block"></div>
 
         <div id="selector-pais-catalogo" class="relative inline-block text-left">
-          <button type="button" onclick={toggleDropdown} aria-expanded={dropdownAbierto} class="inline-flex items-center justify-center w-full rounded-full border border-gray-200 shadow-sm px-4 py-1.5 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-lumiCyan/50 transition-all gap-2 cursor-pointer">
+          <button type="button" onclick={toggleDropdown} aria-expanded={dropdownAbierto} class="inline-flex items-center justify-center w-full rounded-full border border-gray-100 px-4 py-1.5 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-lumiCyan/50 transition-all gap-2 cursor-pointer shadow-sm">
             <img src={banderaActual} alt={paisActual} class="w-4 h-auto rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]" />
             <span class="text-xs font-black text-lumiDark tracking-wide">{monedaActual}</span>
             <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" style={`transform: rotate(${dropdownAbierto ? '180deg' : '0deg'})`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
@@ -299,37 +299,40 @@
   <main class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full relative z-10">
     
     <div class="mb-12 text-center relative z-10">
-      <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-6">Catálogo de Oportunidades</h1>
+      <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-6 leading-tight">Encuentra Tu Próxima Aventura <span class="text-lumiCyan">Al Mejor Precio</span></h1>
       <div class="max-w-xl mx-auto mb-6 relative z-20 group">
-        <div class="bg-white/80 backdrop-blur-xl p-2 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-gray-200/60 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(0,210,255,0.12)]">
+        <div class="bg-white/80 backdrop-blur-xl p-2 rounded-full shadow-lg border border-white/50 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 hover:shadow-xl hover:shadow-lumiCyan/10 hover:-translate-y-0.5">
           <div class="pl-4 text-gray-400 hidden sm:block"><svg class="w-5 h-5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div>
           <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
-            <input type="email" placeholder="Ingresa tu correo para recibir nuestra selección..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" bind:value={nlEmail} />
-            <button type="submit" class="bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark px-8 py-3 rounded-full font-black transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-[0_4px_15px_rgba(0,210,255,0.25)]" disabled={nlEnviando}>{nlEnviando ? 'Guardando...' : 'Suscribirme Gratis'}</button>
+            <input type="email" placeholder="Ingresa tu correo para recibir nuestra selección VIP..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" bind:value={nlEmail} />
+            <button type="submit" class="bg-lumiGradient hover:brightness-105 text-white px-8 py-3 rounded-full font-black transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-md shadow-lumiCyan/20" disabled={nlEnviando}>{nlEnviando ? 'Guardando...' : 'Suscribirme Gratis'}</button>
           </form>
         </div>
         {#if nlEstado !== ''}
-          <p class="text-center text-sm font-bold mt-4 {nlEstado === 'ok' ? 'text-emerald-500' : nlEstado === 'ya' ? 'text-lumiCyan' : 'text-red-500'}">{nlMensaje}</p>
+          <p class="text-center text-sm font-bold mt-4 {nlEstado === 'ok' ? 'text-emerald-600' : nlEstado === 'ya' ? 'text-lumiCyan' : 'text-red-500'}">{nlMensaje}</p>
         {/if}
       </div>
     </div>
 
     <div class="flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
       
-      <aside class="w-full lg:w-[260px] shrink-0 flex flex-col gap-6 lg:sticky lg:top-24 z-20">
+      <aside class="w-full lg:w-[280px] shrink-0 flex flex-col gap-6 lg:sticky lg:top-24 z-20">
         
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-          <h3 class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4">Filtrar por Salida</h3>
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-4">
+          <div class="flex items-center gap-2.5 pb-3 border-b border-gray-100 mb-1">
+             <svg class="w-5 h-5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+             <h3 class="text-sm font-extrabold text-lumiDark uppercase tracking-widest">Filtrar por Origen</h3>
+          </div>
           
-          <div class="flex flex-col gap-1 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
-            <button type="button" onclick={() => aplicarFiltro(null)} class="text-left px-3 py-2.5 rounded-xl text-[13px] transition-colors flex items-center gap-2 {origenFiltroActual === null ? 'bg-lumiCyan/20 text-lumiDark font-black' : 'text-gray-600 hover:bg-gray-50 font-semibold'}">
-              Mostrar Todos
+          <div class="flex flex-col gap-1.5 max-h-[55vh] overflow-y-auto custom-scrollbar pr-2">
+            <button type="button" onclick={() => aplicarFiltro(null)} class="text-left px-4 py-3 rounded-xl text-sm transition-all flex items-center gap-2.5 {origenFiltroActual === null ? 'bg-lumiGradient text-white font-black shadow-md shadow-lumiCyan/20' : 'text-gray-600 hover:bg-gray-50 font-semibold'}">
+              <span>Mostrar Todos</span>
             </button>
             
             {#each origenesDisponibles as origen}
-              <button type="button" onclick={() => aplicarFiltro(origen.codigo)} class="text-left px-3 py-2.5 rounded-xl text-[13px] transition-colors flex items-center justify-between {origenFiltroActual === origen.codigo ? 'bg-lumiCyan/20 text-lumiDark font-black' : 'text-gray-600 hover:bg-gray-50 font-semibold'}">
+              <button type="button" onclick={() => aplicarFiltro(origen.codigo)} class="text-left px-4 py-3 rounded-xl text-sm transition-all flex items-center justify-between {origenFiltroActual === origen.codigo ? 'bg-lumiGradient text-white font-black shadow-md shadow-lumiCyan/20' : 'text-gray-600 hover:bg-gray-50 font-semibold'}">
                 <span class="truncate pr-2">{origen.nombre}</span>
-                <span class="text-[9px] bg-gray-100 text-gray-500 font-bold px-1.5 py-0.5 rounded shadow-sm border border-gray-200 shrink-0">{origen.codigo}</span>
+                <span class="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded shadow-inner shrink-0 {origenFiltroActual === origen.codigo ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500 border border-gray-200'}">{origen.codigo}</span>
               </button>
             {/each}
           </div>
@@ -339,8 +342,9 @@
       <div class="flex-grow w-full min-w-0 relative z-10">
         <div id="hook-deals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20 relative z-10">
           {#if !data.deals || data.deals.length === 0}
-            <div class="col-span-full text-center text-gray-400 py-32 font-medium bg-white rounded-3xl border border-gray-100 shadow-sm">
-              No hay ofertas activas desde este origen. <br/>Selecciona otra opción en el menú.
+            <div class="col-span-full text-center text-gray-400 py-32 font-medium bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col items-center gap-4">
+              <svg class="w-16 h-16 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+              <span>No hay ofertas activas desde este origen actualmente.<br/>Prueba seleccionando otro en el menú izquierdo.</span>
             </div>
           {:else}
             {#each data.deals as deal (deal.id)}
@@ -357,13 +361,14 @@
                 role="button" 
                 tabindex="0" 
                 aria-label="Ver detalles de la oferta {deal.titulo_gancho}"
-                class="card-minimal flex flex-col group/card hover:shadow-2xl transition-all duration-300 h-full bg-white rounded-2xl overflow-hidden border border-gray-100 cursor-pointer {estaMuerta ? 'opacity-50 grayscale hover:grayscale-0 focus:grayscale-0' : ''}" 
+                class="card-minimal flex flex-col group/card bg-white rounded-3xl overflow-hidden border border-gray-100 cursor-pointer shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-gray-200/60 {estaMuerta ? 'opacity-60 grayscale hover:grayscale-0 focus:grayscale-0' : ''}" 
                 onclick={() => abrirModal(deal)}
                 onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
               >
-                <div class="relative h-56 overflow-hidden bg-gray-100 shrink-0">
+                <div class="relative h-60 overflow-hidden bg-gray-100 shrink-0">
                   <img src={imgFinal} alt={deal.titulo_gancho || 'Oferta Especial'} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
-                  <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+                  
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"></div>
 
                   {#if isAdminModo && !estaMuerta}
                     <button 
@@ -378,68 +383,81 @@
                   {/if}
 
                   {#if estaMuerta}
-                    <div class="absolute inset-0 flex items-center justify-center bg-black/40 z-20">
-                      <div class="bg-black/80 text-white font-black px-6 py-2 rounded-full uppercase tracking-widest text-[11px] shadow-2xl border border-white/20">
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/50 z-20 backdrop-blur-[1.5px]">
+                      <div class="bg-black/80 text-white font-black px-6 py-2.5 rounded-full uppercase tracking-widest text-[11px] shadow-2xl border border-white/20">
                         Fechas Pasadas / Expirada
                       </div>
                     </div>
                   {/if}
 
                   {#if tiempoTranscurrido && !estaMuerta}
-                    <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-lumiDark text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm tracking-wide border border-white/50 uppercase flex items-center gap-1">
+                    <div class="absolute top-4 left-4 bg-white/90 text-lumiDark backdrop-blur-[6px] text-[10px] font-bold px-3 py-2 rounded-xl shadow-md border border-white/50 uppercase flex items-center gap-1.5 tracking-wide">
+                      <svg class="w-3.5 h-3.5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                       {tiempoTranscurrido}
                     </div>
                   {/if}
 
                   {#if esVip}
-                    <div class="absolute top-4 right-4 bg-white/95 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-emerald-200">
-                      <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Directo
+                    <div class="absolute top-4 right-4 bg-white/90 text-emerald-800 backdrop-blur-[6px] text-[10px] font-black px-3 py-2 rounded-xl z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-md border border-emerald-100">
+                      <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Directo
                     </div>
                   {:else if typeof deal?.escalas === 'number'}
-                    <div class="absolute top-4 right-4 bg-white/95 text-gray-700 text-[10px] font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-gray-200">
+                    <div class="absolute top-4 right-4 bg-white/90 text-gray-800 backdrop-blur-[6px] text-[10px] font-bold px-3 py-2 rounded-xl z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-md border border-gray-100">
                       {deal.escalas} Escala{deal.escalas > 1 ? 's' : ''}
                     </div>
                   {/if}
 
                   {#if !estaMuerta}
-                    <button type="button" onclick={(e) => { e.stopPropagation(); reportarCambioPrecio(deal.id, e); }} title="¿El precio subió? Repórtalo" class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 transition-colors z-10 cursor-pointer">
+                    <button type="button" onclick={(e) => { e.stopPropagation(); reportarCambioPrecio(deal.id, e); }} title="¿El precio subió? Repórtalo" class="absolute bottom-3.5 right-3.5 bg-white/70 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-[6px] p-2.5 rounded-full shadow-md border border-white/50 transition-all z-10 cursor-pointer active:scale-95 hover:shadow-lg">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-1 6-1-1H11.5l-1-1H5v10m0 0h4"/></svg>
                     </button>
                   {/if}
                 </div>
 
                 <div class="p-6 flex flex-col flex-grow bg-white relative">
-                  <div class="flex items-start justify-between gap-3 mb-3">
-                    <div class="text-[11px] sm:text-[12px] font-black text-lumiDark uppercase tracking-widest leading-snug break-words">
-                      {origenSeguro} <span class="text-gray-300 font-bold mx-1.5 text-[10px] align-middle">➔</span> {destinoSeguro}
-                    </div>
-                    <div class="shrink-0 text-[9.5px] font-extrabold text-gray-400 uppercase tracking-widest text-right mt-[2px]">
-                      {fechasCortas}
-                    </div>
+                  
+                  <div class="flex items-center gap-4 mb-4 pb-4 border-b border-gray-100/70">
+                      <div class="flex flex-col items-center shrink-0">
+                          <span class="text-2xl sm:text-3xl font-extrabold text-lumiDark tracking-tighter leading-none">{deal.origen}</span>
+                          <span class="text-[10px] text-gray-400 font-semibold truncate max-w-[70px] uppercase mt-1 tracking-wider">{origenSeguro}</span>
+                      </div>
+                      
+                      <div class="flex-grow flex items-center gap-1.5 text-gray-300">
+                          <div class="h-px flex-grow bg-gray-200"></div>
+                          <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                          <div class="h-px flex-grow bg-gray-200"></div>
+                      </div>
+
+                      <div class="flex flex-col items-center shrink-0">
+                          <span class="text-2xl sm:text-3xl font-extrabold text-lumiDark tracking-tighter leading-none">{deal.destino}</span>
+                          <span class="text-[10px] text-gray-400 font-semibold truncate max-w-[70px] uppercase mt-1 tracking-wider">{destinoSeguro}</span>
+                      </div>
                   </div>
 
-                  <h3 class="text-xl font-bold mb-4 text-gray-800 group-hover/card:text-lumiDark transition-colors leading-snug line-clamp-2">
-                    {deal.titulo_gancho || 'Oferta Especial'}
+                  <h3 class="text-lg font-extrabold mb-4 text-gray-900 group-hover/card:text-lumiCyan transition-colors leading-tight line-clamp-2 h-11 flex items-center">
+                    {deal.titulo_gancho || 'Oferta Especial de Temporada'}
                   </h3>
 
                   <AmenidadesLinea {deal} {paisActual} />
 
-                  <div class="mt-auto pt-5 border-t border-gray-100 flex items-end justify-between">
-                    <div>
-                      <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">{estaMuerta ? 'Precio Histórico' : 'Vuelo Id/Vt'}</p>
-                      <p class="text-3xl sm:text-4xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tighter">
-                        <span class="text-lg font-bold text-gray-400 align-top mr-0.5">$</span>{Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')} <span class="text-sm font-bold text-gray-400 align-baseline ml-1">{monedaDeal}</span>
+                  <div class="mt-auto pt-6 border-t border-gray-100 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 sm:gap-0">
+                    <div class="flex flex-col">
+                      <p class="text-[10px] text-gray-400 uppercase tracking-widest font-extrabold mb-1">{estaMuerta ? 'Precio Pasado' : 'Precio Final Id/Vt'}</p>
+                      <p class="text-4xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tighter flex items-start">
+                        <span class="text-lg font-bold text-gray-400 mt-1.5 mr-1">$</span>
+                        {Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')} 
+                        <span class="text-xs font-bold text-gray-400 align-baseline ml-1.5 self-end pb-0.5">{monedaDeal}</span>
                       </p>
                     </div>
 
-                    <div class="flex items-center gap-2">
-                      <button type="button" onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id, e); }} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan transition-colors p-2 rounded-full cursor-pointer">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                    <div class="flex items-center gap-2.5">
+                      <button type="button" onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id, e); }} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan hover:bg-lumiCyan/10 transition-colors p-3 rounded-full cursor-pointer active:scale-95 shadow-inner border border-gray-100">
+                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
                       </button>
                       
-                      <div class="{estaMuerta ? 'bg-gray-200 text-gray-500' : 'bg-lumiDark text-white group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark'} px-6 py-3 rounded-xl font-black text-[12px] sm:text-[13px] transition-all duration-300 shadow-md group-hover/card:shadow-lg active:scale-95 cursor-pointer flex items-center gap-2 uppercase tracking-wider">
+                      <div class="{estaMuerta ? 'bg-gray-200 text-gray-500' : 'bg-lumiGradient text-white hover:brightness-105 shadow-md shadow-lumiCyan/20'} px-8 py-3.5 rounded-2xl font-black text-xs sm:text-sm transition-all duration-300 active:scale-95 cursor-pointer flex items-center gap-2.5 uppercase tracking-widest">
                         {estaMuerta ? 'Ver Actuales' : 'Ver Vuelo'} 
-                        <svg class="w-4 h-4 transition-transform duration-300 group-hover/card:translate-x-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        <svg class="w-4 h-4 transition-transform duration-300 group-hover/card:translate-x-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                       </div>
                     </div>
                   </div>
@@ -450,50 +468,51 @@
         </div>
 
         {#if data.totalPages > 1}
-          <div class="flex justify-center items-center gap-3 mb-20 relative z-10">
-            <button type="button" onclick={() => irAPagina(data.page - 1)} disabled={data.page <= 1} class="px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-sm">← Anterior</button>
-            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
+          <div class="flex justify-center items-center gap-3 mb-20 relative z-10 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm w-fit mx-auto">
+            <button type="button" onclick={() => irAPagina(data.page - 1)} disabled={data.page <= 1} class="px-5 py-2.5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-xs uppercase tracking-wider">Anterior</button>
+            <div class="flex items-center gap-2 max-w-[200px] sm:max-w-none overflow-x-auto custom-scrollbar-h pb-2 sm:pb-0">
               {#each Array(data.totalPages) as _, i}
                 {@const n = i + 1}
                 {#if Math.abs(data.page - n) <= 2 || n === 1 || n === data.totalPages}
-                  <button type="button" onclick={() => irAPagina(n)} class="w-9 h-9 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-lumiCyan text-lumiDark shadow-md' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">{n}</button>
+                  <button type="button" onclick={() => irAPagina(n)} class="w-10 h-10 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-lumiGradient text-white shadow-md shadow-lumiCyan/20' : 'bg-white hover:bg-gray-50 text-gray-600'}">{n}</button>
                 {:else if Math.abs(data.page - n) === 3}
-                  <span class="text-gray-400 font-bold px-1">...</span>
+                  <span class="text-gray-400 font-bold px-1 self-center">...</span>
                 {/if}
               {/each}
             </div>
-            <button type="button" onclick={() => irAPagina(data.page + 1)} disabled={data.page >= data.totalPages} class="px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-sm">Siguiente →</button>
+            <button type="button" onclick={() => irAPagina(data.page + 1)} disabled={data.page >= data.totalPages} class="px-5 py-2.5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-xs uppercase tracking-wider">Siguiente</button>
           </div>
         {/if}
       </div>
     </div>
 
-    <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10 w-full mb-10 mx-auto mt-10">
+    <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10 w-full mb-10 mx-auto mt-10">
+      <div class="absolute -top-10 -right-10 w-60 h-60 bg-lumiCyan/10 rounded-full blur-3xl opacity-50"></div>
       <div class="relative z-10 md:w-5/12 text-center md:text-left">
-        <h3 class="text-3xl font-black text-white mb-4 tracking-tight">¿No ves tu destino soñado?</h3>
-        <p class="text-gray-400 font-medium leading-relaxed text-sm">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos el momento perfecto.</p>
+        <h3 class="text-3xl font-black text-white mb-4 tracking-tightLeading-tight">¿No Encuentras Tu Destino Soñado?</h3>
+        <p class="text-gray-400 font-medium leading-relaxed text-sm">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos una tarifa oculta para ti.</p>
       </div>
       <div class="relative z-10 md:w-7/12 w-full bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10">
         <form class="space-y-5 w-full" onsubmit={handleSubmitRadar}>
           <div>
-            <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Tu Nombre</label>
-            <input type="text" bind:value={leadNombre} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+            <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Tu Nombre Completo</label>
+            <input type="text" bind:value={leadNombre} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Origen</label>
-              <input type="text" bind:value={leadOrigen} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Ciudad de Origen</label>
+              <input type="text" bind:value={leadOrigen} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
             </div>
             <div>
-              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Destino</label>
-              <input type="text" bind:value={leadDestino} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Ciudad de Destino</label>
+              <input type="text" bind:value={leadDestino} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Mes aproximado</label>
-              <select bind:value={leadMes} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm appearance-none cursor-pointer">
-                <option value="" disabled>Elige un mes...</option>
+              <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Mes Aproximado</label>
+              <select bind:value={leadMes} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm appearance-none cursor-pointer">
+                <option value="" disabled>Selecciona un mes...</option>
                 {#each mesesDisponibles as m}
                   <option value={m} class="bg-lumiDark text-white">{m}</option>
                 {/each}
@@ -501,20 +520,20 @@
             </div>
             <div>
               <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Correo Electrónico</label>
-              <input type="email" bind:value={leadContacto} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+              <input type="email" bind:value={leadContacto} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
             </div>
           </div>
           
-          <button type="submit" class="w-full bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark font-black py-4 rounded-xl transition-all shadow-[0_4px_15px_rgba(0,210,255,0.2)] hover:shadow-[0_6px_20px_rgba(0,210,255,0.3)] mt-4 active:scale-95 flex items-center justify-center gap-2 uppercase tracking-widest text-sm" disabled={radarEnviando}>
-            {radarEnviando ? 'Activando...' : 'Activar mi Radar'}
+          <button type="submit" class="w-full bg-lumiGradient hover:brightness-105 text-lumiDark font-black py-4 rounded-xl transition-all shadow-md shadow-lumiCyan/20 mt-4 active:scale-95 flex items-center justify-center gap-2.5 uppercase tracking-widest text-sm" disabled={radarEnviando}>
+            {radarEnviando ? 'Activando...' : 'Activar mi Radar de Precios'}
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
           </button>
           
           {#if radarExito}
-            <p class="text-emerald-400 text-sm font-bold text-center mt-3 bg-emerald-400/10 py-2 rounded-lg border border-emerald-400/20">¡Radar activado! Revisa tu correo pronto.</p>
+            <p class="text-emerald-400 text-sm font-bold text-center mt-3 bg-emerald-400/10 py-2.5 rounded-lg border border-emerald-400/20">¡Radar activado con éxito! Revisa tu correo pronto.</p>
           {/if}
           {#if radarError}
-            <p class="text-red-400 text-sm font-bold text-center mt-3 bg-red-400/10 py-2 rounded-lg border border-red-400/20">Hubo un error de conexión. Inténtalo de nuevo.</p>
+            <p class="text-red-400 text-sm font-bold text-center mt-3 bg-red-400/10 py-2.5 rounded-lg border border-red-400/20">Hubo un error de conexión. Inténtalo de nuevo.</p>
           {/if}
         </form>
       </div>
@@ -531,33 +550,25 @@
 </div>
 
 <style>
+  /* 🔥 CAMBIO: Sutilización de la tarjeta (shadow-sm base, heavy shadow hover) */
   .card-minimal {
-    background: #ffffff;
-    border: 1px solid #f3f4f6;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
   }
-  .card-minimal:hover {
-    transform: translateY(-4px);
-    border: 1px solid #e5e7eb;
-  }
-  .badge-vip-glass {
-    background: linear-gradient(135deg, rgba(194, 155, 87, 0.9) 0%, rgba(218, 186, 116, 0.95) 100%);
-    backdrop-filter: blur(8px);
-  }
+  
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
   .animate-fadeIn {
-    animation: fadeIn 0.25s ease-out;
+    animation: fadeIn 0.3s ease-out forwards;
   }
 
-  /* CSS NUEVO: Barra de desplazamiento premium para el filtro */
+  /* 🔥 CAMBIO: Barra de desplazamiento premium estilizada */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 5px;
+    width: 6px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f8fafc;
+    background: #f1f5f9;
     border-radius: 8px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
@@ -566,5 +577,18 @@
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+  }
+
+  /* Barra horizontal para paginación */
+  .custom-scrollbar-h::-webkit-scrollbar {
+    height: 4px;
+  }
+  .custom-scrollbar-h::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 8px;
+  }
+  .custom-scrollbar-h::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 8px;
   }
 </style>
