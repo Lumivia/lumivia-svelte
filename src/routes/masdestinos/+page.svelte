@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { page } from '$app/stores'; 
-  import { afterNavigate } from '$app/navigation'; // 🔥 Inyección nuclear
+  import { afterNavigate } from '$app/navigation'; 
   import type { PageData } from './$types';
   
   import { supabase } from '$lib/supabaseClient';
@@ -51,7 +51,11 @@
   const isAdminModo = $derived($page.url.searchParams.get('admin') === 'true');
   let cargandoAdmin = $state(false);
 
-  // 🔥 OPCIÓN NUCLEAR: Fuerza una recarga nativa si el usuario presiona "Atrás"
+  // 🔥 NUEVO: Variables y Estado del Filtro de Origen
+  let dropdownFiltroAbierto = $state(false);
+  const origenFiltroActual = $derived(data.origenFiltroActual);
+  const origenesDisponibles = $derived(data.origenesDisponibles || []);
+
   afterNavigate(({ type }) => {
     if (type === 'popstate') {
       window.location.reload();
@@ -112,9 +116,14 @@
 
   function toggleDropdown() { dropdownAbierto = !dropdownAbierto; }
   
+  // 🔥 NUEVO: Función para alternar el filtro
+  function toggleFiltro() { dropdownFiltroAbierto = !dropdownFiltroAbierto; }
+
   function handleClickOutside(event: MouseEvent) {
     const target = event.target as HTMLElement;
     if (!target.closest('#selector-pais-catalogo')) dropdownAbierto = false;
+    // 🔥 NUEVO: Cerrar el filtro de origen al hacer clic fuera
+    if (!target.closest('#filtro-origen-catalogo')) dropdownFiltroAbierto = false;
   }
 
   function seleccionarPais(codigoPais: string) {
@@ -123,9 +132,32 @@
     window.location.href = `/masdestinos?pais=${codigoPais.toUpperCase()}&page=1`;
   }
 
+  // 🔥 NUEVO: Aplicar el filtro inyectándolo en la URL y reseteando página
+  function aplicarFiltro(origenIata: string | null) {
+      dropdownFiltroAbierto = false;
+      const url = new URL(window.location.href);
+      url.searchParams.set('page', '1'); 
+      if (origenIata) {
+          url.searchParams.set('origen', origenIata);
+      } else {
+          url.searchParams.delete('origen'); 
+      }
+      window.location.href = url.toString();
+  }
+
+  // 🔥 NUEVO: Obtener el nombre bonito del origen actual para el botón
+  function getNombreOrigen(codigo: string) {
+      if (!codigo) return 'Todos los Orígenes';
+      const origenObj = origenesDisponibles.find((o: any) => o.codigo === codigo);
+      return origenObj ? origenObj.nombre : codigo;
+  }
+
+  // 🔥 MODIFICADO: Mantiene los parámetros actuales (origen) al cambiar de página
   function irAPagina(n: number) {
     if (n < 1 || n > data.totalPages) return;
-    window.location.href = `/masdestinos?pais=${paisActual.toUpperCase()}&page=${n}`;
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', n.toString());
+    window.location.href = url.toString();
   }
 
   function calcularTiempoTranscurrido(fechaISO: string | null) {
@@ -142,7 +174,6 @@
     return `Hace ${diferenciaDias} días`;
   }
 
-  // 🔥 FIX: Fechas limpias a prueba de zonas horarias
   function formatearFechaCorta(fechaCadena: string | null) {
     if (!fechaCadena) return '';
     try {
@@ -288,24 +319,55 @@
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full relative z-10">
     <div class="mb-12 text-center relative z-10">
       <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-6">Catálogo de Oportunidades</h1>
-      <div class="max-w-xl mx-auto mb-6 relative z-20 group">
-        
-        <div class="bg-white/80 backdrop-blur-xl p-2 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-gray-200/60 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(0,210,255,0.12)]">
-          <div class="pl-4 text-gray-400 hidden sm:block"><svg class="w-5 h-5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div>
-          <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
-            <input type="email" placeholder="Ingresa tu correo para recibir nuestra selección..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" bind:value={nlEmail} />
-            <button type="submit" class="bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark px-8 py-3 rounded-full font-black transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-[0_4px_15px_rgba(0,210,255,0.25)]" disabled={nlEnviando}>{nlEnviando ? 'Guardando...' : 'Suscribirme Gratis'}</button>
-          </form>
-        </div>
-        {#if nlEstado !== ''}
-          <p class="text-center text-sm font-bold mt-4 {nlEstado === 'ok' ? 'text-emerald-500' : nlEstado === 'ya' ? 'text-lumiCyan' : 'text-red-500'}">{nlMensaje}</p>
-        {/if}
+      
+      <div class="max-w-3xl mx-auto flex flex-col md:flex-row gap-4 justify-center items-center mb-6 relative z-30">
+          
+          <div id="filtro-origen-catalogo" class="relative inline-block text-left w-full sm:w-auto min-w-[200px]">
+            <button type="button" onclick={toggleFiltro} aria-expanded={dropdownFiltroAbierto} class="inline-flex items-center justify-between w-full rounded-full border border-gray-200 shadow-[0_4px_15px_rgba(0,0,0,0.04)] px-5 py-3.5 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-lumiCyan/50 transition-all gap-3 cursor-pointer">
+              <div class="flex flex-col items-start leading-none">
+                  <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Filtrar por Salida</span>
+                  <span class="text-sm font-black text-lumiDark flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    {getNombreOrigen(origenFiltroActual)}
+                  </span>
+              </div>
+              <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 ml-2" style={`transform: rotate(${dropdownFiltroAbierto ? '180deg' : '0deg'})`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+
+            {#if dropdownFiltroAbierto}
+              <div class="origin-top absolute left-0 mt-2 w-full sm:w-64 rounded-2xl shadow-xl bg-white ring-1 ring-black/5 z-50 overflow-hidden border border-gray-100 animate-fadeIn max-h-72 overflow-y-auto" role="menu">
+                <div class="py-1">
+                  <button type="button" onclick={() => aplicarFiltro(null)} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-lumiCyan/10 hover:text-lumiDark font-bold gap-2 transition-colors text-left border-b border-gray-100">
+                      <span>🌍</span> Mostrar Todos
+                  </button>
+                  {#each origenesDisponibles as origen}
+                      <button type="button" onclick={() => aplicarFiltro(origen.codigo)} class="w-full flex items-center px-4 py-3 text-sm {origenFiltroActual === origen.codigo ? 'bg-lumiCyan/20 text-lumiDark font-black' : 'text-gray-600 hover:bg-gray-50 font-semibold'} gap-2 transition-colors text-left border-b border-gray-50 last:border-0">
+                          <span class="text-xs font-black bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{origen.codigo}</span> {origen.nombre}
+                      </button>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+          </div>
+
+          <div class="w-full sm:w-auto relative group">
+            <div class="bg-white/90 backdrop-blur-xl p-1.5 rounded-full shadow-[0_4px_15px_rgba(0,0,0,0.04)] border border-gray-200/60 flex items-center gap-2 transform transition-all duration-500 group-hover:shadow-[0_8px_30px_rgba(0,210,255,0.15)]">
+              <form class="w-full flex gap-1" onsubmit={handleSubmitNewsletter}>
+                <input type="email" placeholder="Recibir alertas de este país..." required class="w-full min-w-[200px] bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" bind:value={nlEmail} />
+                <button type="submit" class="bg-lumiDark hover:bg-black text-white px-6 py-2.5 rounded-full font-black transition-all active:scale-95 text-xs whitespace-nowrap shadow-md" disabled={nlEnviando}>{nlEnviando ? '...' : 'Suscribirme'}</button>
+              </form>
+            </div>
+            {#if nlEstado !== ''}
+              <p class="absolute -bottom-6 left-0 right-0 text-center text-xs font-bold {nlEstado === 'ok' ? 'text-emerald-500' : nlEstado === 'ya' ? 'text-lumiCyan' : 'text-red-500'}">{nlMensaje}</p>
+            {/if}
+          </div>
+          
       </div>
     </div>
 
     <div id="hook-deals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20 relative z-10">
       {#if !data.deals || data.deals.length === 0}
-        <div class="col-span-full text-center text-gray-400 py-20 font-medium">Aún no hay ofertas activas en la bóveda de {paisActual}.</div>
+        <div class="col-span-full text-center text-gray-400 py-20 font-medium">Aún no hay ofertas activas en la bóveda de {paisActual} con este filtro.</div>
       {:else}
         {#each data.deals as deal (deal.id)}
           {@const estaMuerta = checarSiEstaMuerta(deal, vuelosReportados)}
