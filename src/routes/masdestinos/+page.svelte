@@ -51,7 +51,6 @@
   const isAdminModo = $derived($page.url.searchParams.get('admin') === 'true');
   let cargandoAdmin = $state(false);
 
-  // Filtro de Origen
   const origenFiltroActual = $derived(data.origenFiltroActual);
   const origenesDisponibles = $derived(data.origenesDisponibles || []);
 
@@ -96,7 +95,6 @@
       });
       
       if (res.ok) {
-        alert("💀 Oferta aniquilada. Recarga la página.");
         window.location.reload(); 
       } else {
         alert("Contraseña incorrecta o error en el servidor.");
@@ -182,7 +180,7 @@
     const { error } = await supabase.from('suscriptores_radar').insert([{ email: nlEmail.toLowerCase(), pais: paisActual, nombre: 'Viajero' }]);
     nlEnviando = false;
     if (!error) { nlMensaje = '¡Listo! Te avisaremos de las mejores gangas.'; nlEstado = 'ok'; nlEmail = ''; } 
-    else if ((error as any).code === '23505') { nlMensaje = '¡Ya estás en la lista!'; nlEstado = 'ya'; } 
+    else if ((error as any).code === '23505') { nlMensaje = '¡Ya estás en nuestra lista!'; nlEstado = 'ya'; } 
     else { nlMensaje = 'Error de conexión. Intenta de nuevo.'; nlEstado = 'error'; }
   }
 
@@ -245,7 +243,7 @@
 <div class="bg-gradient-to-b from-[#eaf6f9] via-gray-50 to-gray-50 text-lumiDark min-h-screen flex flex-col relative overflow-x-hidden">
   
   <header class="bg-white/80 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-4">
         <a data-sveltekit-reload href={`/paises/${paisActual.toLowerCase()}`} class="text-gray-400 hover:text-lumiCyan transition-colors cursor-pointer" title="Volver a los destinos de {paisActual}">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -298,21 +296,34 @@
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full relative z-10">
-    <div class="mb-8 text-center md:text-left relative z-10">
-      <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-2">Catálogo de Oportunidades</h1>
+  <main class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full relative z-10">
+    
+    <div class="mb-12 text-center relative z-10">
+      <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-6">Catálogo de Oportunidades</h1>
+      <div class="max-w-xl mx-auto mb-6 relative z-20 group">
+        <div class="bg-white/80 backdrop-blur-xl p-2 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-gray-200/60 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(0,210,255,0.12)]">
+          <div class="pl-4 text-gray-400 hidden sm:block"><svg class="w-5 h-5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div>
+          <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
+            <input type="email" placeholder="Ingresa tu correo para recibir nuestra selección..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" bind:value={nlEmail} />
+            <button type="submit" class="bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark px-8 py-3 rounded-full font-black transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-[0_4px_15px_rgba(0,210,255,0.25)]" disabled={nlEnviando}>{nlEnviando ? 'Guardando...' : 'Suscribirme Gratis'}</button>
+          </form>
+        </div>
+        {#if nlEstado !== ''}
+          <p class="text-center text-sm font-bold mt-4 {nlEstado === 'ok' ? 'text-emerald-500' : nlEstado === 'ya' ? 'text-lumiCyan' : 'text-red-500'}">{nlMensaje}</p>
+        {/if}
+      </div>
     </div>
 
-    <div class="flex flex-col lg:flex-row gap-8 items-start">
+    <div class="flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
       
       <aside class="w-full lg:w-[260px] shrink-0 flex flex-col gap-6 lg:sticky lg:top-24 z-20">
         
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
           <h3 class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4">Filtrar por Salida</h3>
           
-          <div class="flex flex-col gap-1 max-h-[35vh] overflow-y-auto no-scrollbar pr-1">
+          <div class="flex flex-col gap-1 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
             <button type="button" onclick={() => aplicarFiltro(null)} class="text-left px-3 py-2.5 rounded-xl text-[13px] transition-colors flex items-center gap-2 {origenFiltroActual === null ? 'bg-lumiCyan/20 text-lumiDark font-black' : 'text-gray-600 hover:bg-gray-50 font-semibold'}">
-              <span>🌍</span> Mostrar Todos
+              Mostrar Todos
             </button>
             
             {#each origenesDisponibles as origen}
@@ -323,28 +334,13 @@
             {/each}
           </div>
         </div>
-
-        <div class="bg-lumiDark p-6 rounded-2xl shadow-xl border border-gray-800 text-white relative overflow-hidden">
-          <div class="absolute -top-10 -right-10 w-32 h-32 bg-lumiCyan/10 rounded-full blur-2xl"></div>
-          <h3 class="text-sm font-black mb-2 flex items-center gap-2"><span>✈️</span> Alertas VIP</h3>
-          <p class="text-[11px] text-gray-400 mb-5 leading-relaxed">Recibe la selección de joyas ocultas directamente en tu correo.</p>
-          
-          <form class="flex flex-col gap-3 relative z-10" onsubmit={handleSubmitNewsletter}>
-            <input type="email" placeholder="Tu mejor correo..." required class="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan outline-none transition-all" bind:value={nlEmail} />
-            <button type="submit" class="w-full bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 shadow-[0_4px_15px_rgba(0,210,255,0.15)]" disabled={nlEnviando}>{nlEnviando ? 'Guardando...' : 'Suscribirme'}</button>
-          </form>
-          {#if nlEstado !== ''}
-            <p class="text-center text-[10px] font-bold mt-3 {nlEstado === 'ok' ? 'text-emerald-400' : nlEstado === 'ya' ? 'text-lumiCyan' : 'text-red-400'}">{nlMensaje}</p>
-          {/if}
-        </div>
       </aside>
 
-      <div class="flex-grow w-full relative z-10">
-        <div id="hook-deals" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-20 relative z-10">
+      <div class="flex-grow w-full min-w-0 relative z-10">
+        <div id="hook-deals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20 relative z-10">
           {#if !data.deals || data.deals.length === 0}
             <div class="col-span-full text-center text-gray-400 py-32 font-medium bg-white rounded-3xl border border-gray-100 shadow-sm">
-              <span class="text-4xl block mb-4">🏜️</span>
-              Aún no hay ofertas activas desde este origen. <br/>¡Elige otro en el menú de la izquierda!
+              No hay ofertas activas desde este origen. <br/>Selecciona otra opción en el menú.
             </div>
           {:else}
             {#each data.deals as deal (deal.id)}
@@ -361,11 +357,11 @@
                 role="button" 
                 tabindex="0" 
                 aria-label="Ver detalles de la oferta {deal.titulo_gancho}"
-                class="card-minimal flex flex-col group/card hover:shadow-xl transition-all duration-300 h-full bg-white rounded-2xl overflow-hidden border border-gray-100 cursor-pointer {estaMuerta ? 'opacity-50 grayscale hover:grayscale-0 focus:grayscale-0' : ''}" 
+                class="card-minimal flex flex-col group/card hover:shadow-2xl transition-all duration-300 h-full bg-white rounded-2xl overflow-hidden border border-gray-100 cursor-pointer {estaMuerta ? 'opacity-50 grayscale hover:grayscale-0 focus:grayscale-0' : ''}" 
                 onclick={() => abrirModal(deal)}
                 onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
               >
-                <div class="relative h-52 overflow-hidden bg-gray-100 shrink-0">
+                <div class="relative h-56 overflow-hidden bg-gray-100 shrink-0">
                   <img src={imgFinal} alt={deal.titulo_gancho || 'Oferta Especial'} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
                   <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
 
@@ -390,60 +386,60 @@
                   {/if}
 
                   {#if tiempoTranscurrido && !estaMuerta}
-                    <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-lumiDark text-[9px] font-bold px-2.5 py-1.5 rounded-md shadow-sm border border-white/50 uppercase flex items-center gap-1">
-                      ⏱️ {tiempoTranscurrido}
+                    <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-lumiDark text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm tracking-wide border border-white/50 uppercase flex items-center gap-1">
+                      {tiempoTranscurrido}
                     </div>
                   {/if}
 
                   {#if esVip}
-                    <div class="absolute top-4 right-4 bg-white/95 text-emerald-700 text-[9px] font-black px-2.5 py-1.5 rounded-md z-10 flex items-center gap-1 uppercase tracking-widest shadow-lg border border-emerald-200">
+                    <div class="absolute top-4 right-4 bg-white/95 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-emerald-200">
                       <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Directo
                     </div>
                   {:else if typeof deal?.escalas === 'number'}
-                    <div class="absolute top-4 right-4 bg-white/95 text-gray-700 text-[9px] font-bold px-2.5 py-1.5 rounded-md z-10 flex items-center gap-1 uppercase tracking-widest shadow-lg border border-gray-200">
+                    <div class="absolute top-4 right-4 bg-white/95 text-gray-700 text-[10px] font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-gray-200">
                       {deal.escalas} Escala{deal.escalas > 1 ? 's' : ''}
                     </div>
                   {/if}
 
                   {#if !estaMuerta}
-                    <button type="button" onclick={(e) => { e.stopPropagation(); reportarCambioPrecio(deal.id, e); }} title="¿El precio subió? Repórtalo" class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2 rounded-full shadow-sm border border-white/50 transition-colors z-10 cursor-pointer">
+                    <button type="button" onclick={(e) => { e.stopPropagation(); reportarCambioPrecio(deal.id, e); }} title="¿El precio subió? Repórtalo" class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 transition-colors z-10 cursor-pointer">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-1 6-1-1H11.5l-1-1H5v10m0 0h4"/></svg>
                     </button>
                   {/if}
                 </div>
 
-                <div class="p-5 flex flex-col flex-grow bg-white relative">
-                  <div class="flex items-start justify-between gap-2 mb-2">
-                    <div class="text-[10px] font-black text-lumiDark uppercase tracking-widest leading-snug break-words">
-                      {origenSeguro} <span class="text-gray-300 font-bold mx-1 text-[9px] align-middle">➔</span> {destinoSeguro}
+                <div class="p-6 flex flex-col flex-grow bg-white relative">
+                  <div class="flex items-start justify-between gap-3 mb-3">
+                    <div class="text-[11px] sm:text-[12px] font-black text-lumiDark uppercase tracking-widest leading-snug break-words">
+                      {origenSeguro} <span class="text-gray-300 font-bold mx-1.5 text-[10px] align-middle">➔</span> {destinoSeguro}
                     </div>
-                    <div class="shrink-0 text-[8.5px] font-extrabold text-gray-400 uppercase tracking-widest text-right mt-[2px]">
+                    <div class="shrink-0 text-[9.5px] font-extrabold text-gray-400 uppercase tracking-widest text-right mt-[2px]">
                       {fechasCortas}
                     </div>
                   </div>
 
-                  <h3 class="text-lg font-bold mb-4 text-gray-800 group-hover/card:text-lumiDark transition-colors leading-snug line-clamp-2">
+                  <h3 class="text-xl font-bold mb-4 text-gray-800 group-hover/card:text-lumiDark transition-colors leading-snug line-clamp-2">
                     {deal.titulo_gancho || 'Oferta Especial'}
                   </h3>
 
                   <AmenidadesLinea {deal} {paisActual} />
 
-                  <div class="mt-auto pt-4 border-t border-gray-100 flex items-end justify-between">
+                  <div class="mt-auto pt-5 border-t border-gray-100 flex items-end justify-between">
                     <div>
-                      <p class="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">{estaMuerta ? 'Precio Pasado' : 'Vuelo Id/Vt'}</p>
-                      <p class="text-2xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tighter">
-                        <span class="text-sm font-bold text-gray-400 align-top mr-0.5">$</span>{Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')} <span class="text-[11px] font-bold text-gray-400 align-baseline ml-1">{monedaDeal}</span>
+                      <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">{estaMuerta ? 'Precio Histórico' : 'Vuelo Id/Vt'}</p>
+                      <p class="text-3xl sm:text-4xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tighter">
+                        <span class="text-lg font-bold text-gray-400 align-top mr-0.5">$</span>{Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')} <span class="text-sm font-bold text-gray-400 align-baseline ml-1">{monedaDeal}</span>
                       </p>
                     </div>
 
-                    <div class="flex items-center gap-1.5">
-                      <button type="button" onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id, e); }} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan transition-colors p-1.5 rounded-full cursor-pointer">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                    <div class="flex items-center gap-2">
+                      <button type="button" onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id, e); }} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan transition-colors p-2 rounded-full cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                       </button>
                       
-                      <div class="{estaMuerta ? 'bg-gray-200 text-gray-500' : 'bg-lumiDark text-white group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark'} px-4 py-2.5 rounded-lg font-black text-[11px] transition-all duration-300 shadow-sm group-hover/card:shadow-md active:scale-95 cursor-pointer flex items-center gap-1.5 uppercase tracking-wider">
+                      <div class="{estaMuerta ? 'bg-gray-200 text-gray-500' : 'bg-lumiDark text-white group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark'} px-6 py-3 rounded-xl font-black text-[12px] sm:text-[13px] transition-all duration-300 shadow-md group-hover/card:shadow-lg active:scale-95 cursor-pointer flex items-center gap-2 uppercase tracking-wider">
                         {estaMuerta ? 'Ver Actuales' : 'Ver Vuelo'} 
-                        <svg class="w-3.5 h-3.5 transition-transform duration-300 group-hover/card:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        <svg class="w-4 h-4 transition-transform duration-300 group-hover/card:translate-x-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                       </div>
                     </div>
                   </div>
@@ -554,5 +550,21 @@
   }
   .animate-fadeIn {
     animation: fadeIn 0.25s ease-out;
+  }
+
+  /* CSS NUEVO: Barra de desplazamiento premium para el filtro */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
   }
 </style>
