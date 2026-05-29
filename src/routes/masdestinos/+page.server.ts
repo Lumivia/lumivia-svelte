@@ -9,9 +9,12 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
     const pageParam = Number(url.searchParams.get('page') ?? '1');
     const pageFromQuery = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
     
-    // 🔥 BLINDAJE 1: Prevención de strings vacíos que causaban el Error 500
     const rawPais = url.searchParams.get('pais');
     const paisQuery = (rawPais && rawPais.trim() !== '' ? rawPais : 'MX').toUpperCase();
+    
+    // 🔥 NUEVO: Capturar el origen de la URL (limpio y en mayúsculas)
+    const rawOrigen = url.searchParams.get('origen');
+    const origenFiltro = rawOrigen && rawOrigen.trim() !== '' ? rawOrigen.toUpperCase().trim() : null;
     
     const vueloParam = url.searchParams.get('vuelo');
     const vueloId = vueloParam ? Number(vueloParam) : null;
@@ -24,10 +27,13 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
     let canonicalURL = `${BASE_URL}?pais=${paisQuery}`;
     if (vueloId) canonicalURL = `${BASE_URL}?vuelo=${vueloId}`;
     if (!vueloId && pageFromQuery > 1) canonicalURL = `${BASE_URL}?pais=${paisQuery}&page=${pageFromQuery}`;
+    // Si hay filtro de origen, lo agregamos a la canonical
+    if (origenFiltro) canonicalURL += `&origen=${origenFiltro}`;
 
+    // 🔥 NUEVO: La clave de caché AHORA incluye el filtro de origen para no mezclar resultados
     const cacheKey = vueloId 
         ? `lumivia_vuelo_${vueloId}` 
-        : `lumivia_catalogo_${paisQuery}_p${pageFromQuery}`;
+        : `lumivia_catalogo_${paisQuery}_o${origenFiltro || 'ALL'}_p${pageFromQuery}`;
 
     // 1) LECTURA DE CACHÉ EDGE
     try {
@@ -52,12 +58,12 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
     let total = 0;
     let totalPages = 1;
     let paisMercadoResult = paisQuery;
+    let origenesDisponibles: string[] = []; // 🔥 NUEVO: Para alimentar el menú
 
-    // 🔥 BLINDAJE 2: Try-Catch global para evitar caída de SvelteKit si falla la DB
     try {
         let dealEncontrado = false;
 
-        // 3A) INTENTO 1: Buscar el Vuelo Único (Del Boletín)
+        // 3A) INTENTO 1: Buscar el Vuelo Único
         if (vueloId && !Number.isNaN(vueloId)) {
             const { data, error } = await supabase
                 .from('publicaciones_lumivia')
@@ -74,34 +80,55 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
             }
         } 
         
-        // 🔥 EL PARACAÍDAS (Graceful Degradation)
-        // 3B) INTENTO 2: Si no venía Vuelo ID, o si venía pero ya expiró/no existe -> Carga el catálogo
+        // 3B) INTENTO 2: Catálogo con o sin Filtro
         if (!dealEncontrado) {
             const page = pageFromQuery;
             const from = (page - 1) * PAGE_SIZE;
             const to = from + PAGE_SIZE - 1;
 
-            const { data: deals, count, error } = await supabase
+            // 🔥 NUEVO: Consulta base modificada para aceptar el filtro de origen
+            let query = supabase
                 .from('publicaciones_lumivia')
                 .select('*', { count: 'exact' })
                 .eq('activo', true)
-                .eq('pais_mercado', paisQuery)
-                .order('created_at', { ascending: false })
-                .range(from, to);
+                .eq('pais_mercado', paisQuery);
+
+            if (origenFiltro) {
+                query = query.eq('origen', origenFiltro);
+            }
+
+            query = query.order('created_at', { ascending: false }).range(from, to);
+
+            const { data: deals, count, error } = await query;
 
             if (!error && deals) {
                 ofertasCrudas = deals;
                 total = count ?? 0;
                 totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
             }
+            
+            // 🔥 NUEVO: Obtener la lista de orígenes únicos ACTIVOS para ese país para llenar el dropdown
+            // Hacemos una consulta rápida solo seleccionando el origen
+            const { data: origenesData } = await supabase
+                .from('publicaciones_lumivia')
+                .select('origen')
+                .eq('activo', true)
+                .eq('pais_mercado', paisQuery);
+                
+            if (origenesData) {
+               // Extraer únicos y limpiar nulos
+               origenesDisponibles = [...new Set(origenesData.map(d => d.origen).filter(Boolean))].sort();
+            }
         }
 
         // 3.5) ENRIQUECIMIENTO DE DATOS
-        if (ofertasCrudas.length > 0) {
-            // 🔥 BLINDAJE 3: .filter(Boolean) asegura que no pasen nulls a PostgREST
+        if (ofertasCrudas.length > 0 || origenesDisponibles.length > 0) {
+            
+            // Queremos enriquecer tanto los vuelos actuales como los orígenes del dropdown
             const codigosIata = [...new Set([
                 ...ofertasCrudas.map(o => o.origen),
-                ...ofertasCrudas.map(o => o.destino)
+                ...ofertasCrudas.map(o => o.destino),
+                ...origenesDisponibles
             ].filter(Boolean))];
 
             if (codigosIata.length > 0) {
@@ -121,6 +148,12 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
                     destino_nombre: mapaDestinos[oferta.destino]?.nombre_ciudad || oferta.destino,
                     imagen_fallback: mapaDestinos[oferta.destino]?.imagen_url_verificada || null
                 }));
+                
+                // Mapear los nombres bonitos para el Dropdown
+                origenesDisponibles = origenesDisponibles.map(codigo => ({
+                    codigo,
+                    nombre: mapaDestinos[codigo]?.nombre_ciudad || codigo
+                }));
             }
         }
     } catch (dbError) {
@@ -135,7 +168,10 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
         totalPages, 
         deals: ofertasCrudas, 
         schemaJSON, 
-        canonicalURL 
+        canonicalURL,
+        // 🔥 NUEVO: Pasamos los datos al Frontend
+        origenFiltroActual: origenFiltro,
+        origenesDisponibles 
     };
 
     // 4) GUARDADO EN CACHÉ EDGE
