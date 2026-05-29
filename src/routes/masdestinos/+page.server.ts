@@ -2,7 +2,8 @@ import type { PageServerLoad } from './$types';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/public';
 
-const PAGE_SIZE = 18;
+// 🔥 CAMBIO: Límite estricto de 12 tarjetas por página
+const PAGE_SIZE = 12;
 const BASE_URL = 'https://www.lumivia.app/masdestinos';
 
 export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
@@ -12,7 +13,6 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
     const rawPais = url.searchParams.get('pais');
     const paisQuery = (rawPais && rawPais.trim() !== '' ? rawPais : 'MX').toUpperCase();
     
-    // 🔥 NUEVO: Capturar el origen de la URL (limpio y en mayúsculas)
     const rawOrigen = url.searchParams.get('origen');
     const origenFiltro = rawOrigen && rawOrigen.trim() !== '' ? rawOrigen.toUpperCase().trim() : null;
     
@@ -27,15 +27,12 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
     let canonicalURL = `${BASE_URL}?pais=${paisQuery}`;
     if (vueloId) canonicalURL = `${BASE_URL}?vuelo=${vueloId}`;
     if (!vueloId && pageFromQuery > 1) canonicalURL = `${BASE_URL}?pais=${paisQuery}&page=${pageFromQuery}`;
-    // Si hay filtro de origen, lo agregamos a la canonical
     if (origenFiltro) canonicalURL += `&origen=${origenFiltro}`;
 
-    // 🔥 NUEVO: La clave de caché AHORA incluye el filtro de origen para no mezclar resultados
     const cacheKey = vueloId 
         ? `lumivia_vuelo_${vueloId}` 
         : `lumivia_catalogo_${paisQuery}_o${origenFiltro || 'ALL'}_p${pageFromQuery}`;
 
-    // 1) LECTURA DE CACHÉ EDGE
     try {
         if (platform?.env?.KV_CACHE) {
             const cached = await platform.env.KV_CACHE.get(cacheKey, 'json');
@@ -58,12 +55,11 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
     let total = 0;
     let totalPages = 1;
     let paisMercadoResult = paisQuery;
-    let origenesDisponibles: string[] = []; // 🔥 NUEVO: Para alimentar el menú
+    let origenesDisponibles: string[] = []; 
 
     try {
         let dealEncontrado = false;
 
-        // 3A) INTENTO 1: Buscar el Vuelo Único
         if (vueloId && !Number.isNaN(vueloId)) {
             const { data, error } = await supabase
                 .from('publicaciones_lumivia')
@@ -80,13 +76,11 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
             }
         } 
         
-        // 3B) INTENTO 2: Catálogo con o sin Filtro
         if (!dealEncontrado) {
             const page = pageFromQuery;
             const from = (page - 1) * PAGE_SIZE;
             const to = from + PAGE_SIZE - 1;
 
-            // 🔥 NUEVO: Consulta base modificada para aceptar el filtro de origen
             let query = supabase
                 .from('publicaciones_lumivia')
                 .select('*', { count: 'exact' })
@@ -107,8 +101,6 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
                 totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
             }
             
-            // 🔥 NUEVO: Obtener la lista de orígenes únicos ACTIVOS para ese país para llenar el dropdown
-            // Hacemos una consulta rápida solo seleccionando el origen
             const { data: origenesData } = await supabase
                 .from('publicaciones_lumivia')
                 .select('origen')
@@ -116,15 +108,12 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
                 .eq('pais_mercado', paisQuery);
                 
             if (origenesData) {
-               // Extraer únicos y limpiar nulos
                origenesDisponibles = [...new Set(origenesData.map(d => d.origen).filter(Boolean))].sort();
             }
         }
 
-        // 3.5) ENRIQUECIMIENTO DE DATOS
         if (ofertasCrudas.length > 0 || origenesDisponibles.length > 0) {
             
-            // Queremos enriquecer tanto los vuelos actuales como los orígenes del dropdown
             const codigosIata = [...new Set([
                 ...ofertasCrudas.map(o => o.origen),
                 ...ofertasCrudas.map(o => o.destino),
@@ -149,7 +138,6 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
                     imagen_fallback: mapaDestinos[oferta.destino]?.imagen_url_verificada || null
                 }));
                 
-                // Mapear los nombres bonitos para el Dropdown
                 origenesDisponibles = origenesDisponibles.map(codigo => ({
                     codigo,
                     nombre: mapaDestinos[codigo]?.nombre_ciudad || codigo
@@ -169,12 +157,10 @@ export const load: PageServerLoad = async ({ url, setHeaders, platform }) => {
         deals: ofertasCrudas, 
         schemaJSON, 
         canonicalURL,
-        // 🔥 NUEVO: Pasamos los datos al Frontend
         origenFiltroActual: origenFiltro,
         origenesDisponibles 
     };
 
-    // 4) GUARDADO EN CACHÉ EDGE
     try {
         if (platform?.env?.KV_CACHE && responseData.deals.length > 0) {
             await platform.env.KV_CACHE.put(cacheKey, JSON.stringify(responseData), { 
