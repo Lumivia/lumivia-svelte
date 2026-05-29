@@ -51,8 +51,7 @@
   const isAdminModo = $derived($page.url.searchParams.get('admin') === 'true');
   let cargandoAdmin = $state(false);
 
-  // 🔥 NUEVO: Variables y Estado del Filtro de Origen
-  let dropdownFiltroAbierto = $state(false);
+  // Filtro de Origen
   const origenFiltroActual = $derived(data.origenFiltroActual);
   const origenesDisponibles = $derived(data.origenesDisponibles || []);
 
@@ -115,15 +114,10 @@
   }
 
   function toggleDropdown() { dropdownAbierto = !dropdownAbierto; }
-  
-  // 🔥 NUEVO: Función para alternar el filtro
-  function toggleFiltro() { dropdownFiltroAbierto = !dropdownFiltroAbierto; }
 
   function handleClickOutside(event: MouseEvent) {
     const target = event.target as HTMLElement;
     if (!target.closest('#selector-pais-catalogo')) dropdownAbierto = false;
-    // 🔥 NUEVO: Cerrar el filtro de origen al hacer clic fuera
-    if (!target.closest('#filtro-origen-catalogo')) dropdownFiltroAbierto = false;
   }
 
   function seleccionarPais(codigoPais: string) {
@@ -132,9 +126,7 @@
     window.location.href = `/masdestinos?pais=${codigoPais.toUpperCase()}&page=1`;
   }
 
-  // 🔥 NUEVO: Aplicar el filtro inyectándolo en la URL y reseteando página
   function aplicarFiltro(origenIata: string | null) {
-      dropdownFiltroAbierto = false;
       const url = new URL(window.location.href);
       url.searchParams.set('page', '1'); 
       if (origenIata) {
@@ -145,14 +137,6 @@
       window.location.href = url.toString();
   }
 
-  // 🔥 NUEVO: Obtener el nombre bonito del origen actual para el botón
-  function getNombreOrigen(codigo: string) {
-      if (!codigo) return 'Todos los Orígenes';
-      const origenObj = origenesDisponibles.find((o: any) => o.codigo === codigo);
-      return origenObj ? origenObj.nombre : codigo;
-  }
-
-  // 🔥 MODIFICADO: Mantiene los parámetros actuales (origen) al cambiar de página
   function irAPagina(n: number) {
     if (n < 1 || n > data.totalPages) return;
     const url = new URL(window.location.href);
@@ -198,7 +182,7 @@
     const { error } = await supabase.from('suscriptores_radar').insert([{ email: nlEmail.toLowerCase(), pais: paisActual, nombre: 'Viajero' }]);
     nlEnviando = false;
     if (!error) { nlMensaje = '¡Listo! Te avisaremos de las mejores gangas.'; nlEstado = 'ok'; nlEmail = ''; } 
-    else if ((error as any).code === '23505') { nlMensaje = '¡Ya estás en nuestra lista!'; nlEstado = 'ya'; } 
+    else if ((error as any).code === '23505') { nlMensaje = '¡Ya estás en la lista!'; nlEstado = 'ya'; } 
     else { nlMensaje = 'Error de conexión. Intenta de nuevo.'; nlEstado = 'error'; }
   }
 
@@ -263,11 +247,9 @@
   <header class="bg-white/80 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-4">
-        
         <a data-sveltekit-reload href={`/paises/${paisActual.toLowerCase()}`} class="text-gray-400 hover:text-lumiCyan transition-colors cursor-pointer" title="Volver a los destinos de {paisActual}">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
         </a>
-        
         <span class="text-3xl font-black tracking-tighter text-lumiDark">Lumivia <span class="text-lumiCyan font-light">| Catálogo</span></span>
       </div>
 
@@ -317,182 +299,180 @@
   </header>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full relative z-10">
-    <div class="mb-12 text-center relative z-10">
-      <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-6">Catálogo de Oportunidades</h1>
+    <div class="mb-8 text-center md:text-left relative z-10">
+      <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-2">Catálogo de Oportunidades</h1>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-8 items-start">
       
-      <div class="max-w-3xl mx-auto flex flex-col md:flex-row gap-4 justify-center items-center mb-6 relative z-30">
+      <aside class="w-full lg:w-[260px] shrink-0 flex flex-col gap-6 lg:sticky lg:top-24 z-20">
+        
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+          <h3 class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4">Filtrar por Salida</h3>
           
-          <div id="filtro-origen-catalogo" class="relative inline-block text-left w-full sm:w-auto min-w-[200px]">
-            <button type="button" onclick={toggleFiltro} aria-expanded={dropdownFiltroAbierto} class="inline-flex items-center justify-between w-full rounded-full border border-gray-200 shadow-[0_4px_15px_rgba(0,0,0,0.04)] px-5 py-3.5 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-lumiCyan/50 transition-all gap-3 cursor-pointer">
-              <div class="flex flex-col items-start leading-none">
-                  <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Filtrar por Salida</span>
-                  <span class="text-sm font-black text-lumiDark flex items-center gap-1.5">
-                    <svg class="w-4 h-4 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    {getNombreOrigen(origenFiltroActual)}
-                  </span>
-              </div>
-              <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 ml-2" style={`transform: rotate(${dropdownFiltroAbierto ? '180deg' : '0deg'})`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
+          <div class="flex flex-col gap-1 max-h-[35vh] overflow-y-auto no-scrollbar pr-1">
+            <button type="button" onclick={() => aplicarFiltro(null)} class="text-left px-3 py-2.5 rounded-xl text-[13px] transition-colors flex items-center gap-2 {origenFiltroActual === null ? 'bg-lumiCyan/20 text-lumiDark font-black' : 'text-gray-600 hover:bg-gray-50 font-semibold'}">
+              <span>🌍</span> Mostrar Todos
             </button>
-
-            {#if dropdownFiltroAbierto}
-              <div class="origin-top absolute left-0 mt-2 w-full sm:w-64 rounded-2xl shadow-xl bg-white ring-1 ring-black/5 z-50 overflow-hidden border border-gray-100 animate-fadeIn max-h-72 overflow-y-auto" role="menu">
-                <div class="py-1">
-                  <button type="button" onclick={() => aplicarFiltro(null)} class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-lumiCyan/10 hover:text-lumiDark font-bold gap-2 transition-colors text-left border-b border-gray-100">
-                      <span>🌍</span> Mostrar Todos
-                  </button>
-                  {#each origenesDisponibles as origen}
-                      <button type="button" onclick={() => aplicarFiltro(origen.codigo)} class="w-full flex items-center px-4 py-3 text-sm {origenFiltroActual === origen.codigo ? 'bg-lumiCyan/20 text-lumiDark font-black' : 'text-gray-600 hover:bg-gray-50 font-semibold'} gap-2 transition-colors text-left border-b border-gray-50 last:border-0">
-                          <span class="text-xs font-black bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{origen.codigo}</span> {origen.nombre}
-                      </button>
-                  {/each}
-                </div>
-              </div>
-            {/if}
+            
+            {#each origenesDisponibles as origen}
+              <button type="button" onclick={() => aplicarFiltro(origen.codigo)} class="text-left px-3 py-2.5 rounded-xl text-[13px] transition-colors flex items-center justify-between {origenFiltroActual === origen.codigo ? 'bg-lumiCyan/20 text-lumiDark font-black' : 'text-gray-600 hover:bg-gray-50 font-semibold'}">
+                <span class="truncate pr-2">{origen.nombre}</span>
+                <span class="text-[9px] bg-gray-100 text-gray-500 font-bold px-1.5 py-0.5 rounded shadow-sm border border-gray-200 shrink-0">{origen.codigo}</span>
+              </button>
+            {/each}
           </div>
-
-          <div class="w-full sm:w-auto relative group">
-            <div class="bg-white/90 backdrop-blur-xl p-1.5 rounded-full shadow-[0_4px_15px_rgba(0,0,0,0.04)] border border-gray-200/60 flex items-center gap-2 transform transition-all duration-500 group-hover:shadow-[0_8px_30px_rgba(0,210,255,0.15)]">
-              <form class="w-full flex gap-1" onsubmit={handleSubmitNewsletter}>
-                <input type="email" placeholder="Recibir alertas de este país..." required class="w-full min-w-[200px] bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-4 py-2 text-sm outline-none" bind:value={nlEmail} />
-                <button type="submit" class="bg-lumiDark hover:bg-black text-white px-6 py-2.5 rounded-full font-black transition-all active:scale-95 text-xs whitespace-nowrap shadow-md" disabled={nlEnviando}>{nlEnviando ? '...' : 'Suscribirme'}</button>
-              </form>
-            </div>
-            {#if nlEstado !== ''}
-              <p class="absolute -bottom-6 left-0 right-0 text-center text-xs font-bold {nlEstado === 'ok' ? 'text-emerald-500' : nlEstado === 'ya' ? 'text-lumiCyan' : 'text-red-500'}">{nlMensaje}</p>
-            {/if}
-          </div>
-          
-      </div>
-    </div>
-
-    <div id="hook-deals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20 relative z-10">
-      {#if !data.deals || data.deals.length === 0}
-        <div class="col-span-full text-center text-gray-400 py-20 font-medium">Aún no hay ofertas activas en la bóveda de {paisActual} con este filtro.</div>
-      {:else}
-        {#each data.deals as deal (deal.id)}
-          {@const estaMuerta = checarSiEstaMuerta(deal, vuelosReportados)}
-          {@const imgFinal = obtenerImagen(deal)}
-          {@const tiempoTranscurrido = calcularTiempoTranscurrido(deal.created_at)}
-          {@const fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`}
-          {@const esVip = deal.tipo_vuelo === 'directo' || deal.escalas === 0}
-          {@const monedaDeal = (deal.moneda || deal.currency || monedaActual).toUpperCase()}
-          {@const origenSeguro = String(deal.origen_nombre || deal.origen || '').toUpperCase()}
-          {@const destinoSeguro = String(deal.destino_nombre || deal.destino || '').toUpperCase()}
-
-          <div 
-            role="button" 
-            tabindex="0" 
-            aria-label="Ver detalles de la oferta {deal.titulo_gancho}"
-            class="card-minimal flex flex-col group/card hover:shadow-2xl transition-all duration-300 h-full bg-white rounded-2xl overflow-hidden border border-gray-100 cursor-pointer {estaMuerta ? 'opacity-50 grayscale hover:grayscale-0 focus:grayscale-0' : ''}" 
-            onclick={() => abrirModal(deal)}
-            onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
-          >
-            <div class="relative h-56 overflow-hidden bg-gray-100 shrink-0">
-              <img src={imgFinal} alt={deal.titulo_gancho || 'Oferta Especial'} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
-              <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
-
-              {#if isAdminModo && !estaMuerta}
-                <button 
-                  type="button" 
-                  onclick={(e) => handleMatarOferta(deal.id, e)} 
-                  disabled={cargandoAdmin}
-                  class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600/90 hover:bg-red-700 text-white backdrop-blur-md px-4 py-1.5 rounded-full font-black text-[10px] shadow-lg border border-red-400 z-30 uppercase tracking-widest flex items-center gap-1 transition-all"
-                >
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                  {cargandoAdmin ? '...' : 'MATAR OFERTA'}
-                </button>
-              {/if}
-
-              {#if estaMuerta}
-                <div class="absolute inset-0 flex items-center justify-center bg-black/40 z-20">
-                  <div class="bg-black/80 text-white font-black px-6 py-2 rounded-full uppercase tracking-widest text-[11px] shadow-2xl border border-white/20">
-                    Fechas Pasadas / Expirada
-                  </div>
-                </div>
-              {/if}
-
-              {#if tiempoTranscurrido && !estaMuerta}
-                <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-lumiDark text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm tracking-wide border border-white/50 uppercase flex items-center gap-1">
-                  ⏱️ {tiempoTranscurrido}
-                </div>
-              {/if}
-
-              {#if esVip}
-                <div class="absolute top-4 right-4 bg-white/95 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-emerald-200">
-                  <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Directo
-                </div>
-              {:else if typeof deal?.escalas === 'number'}
-                <div class="absolute top-4 right-4 bg-white/95 text-gray-700 text-[10px] font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-gray-200">
-                  {deal.escalas} Escala{deal.escalas > 1 ? 's' : ''}
-                </div>
-              {/if}
-
-              {#if !estaMuerta}
-                <button type="button" onclick={(e) => { e.stopPropagation(); reportarCambioPrecio(deal.id, e); }} title="¿El precio subió? Repórtalo" class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 transition-colors z-10 cursor-pointer">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-1 6-1-1H11.5l-1-1H5v10m0 0h4"/></svg>
-                </button>
-              {/if}
-            </div>
-
-            <div class="p-6 flex flex-col flex-grow bg-white relative">
-              <div class="flex items-start justify-between gap-3 mb-3">
-                <div class="text-[11px] sm:text-[12px] font-black text-lumiDark uppercase tracking-widest leading-snug break-words">
-                  {origenSeguro} <span class="text-gray-300 font-bold mx-1.5 text-[10px] align-middle">➔</span> {destinoSeguro}
-                </div>
-                <div class="shrink-0 text-[9.5px] font-extrabold text-gray-400 uppercase tracking-widest text-right mt-[2px]">
-                  {fechasCortas}
-                </div>
-              </div>
-
-              <h3 class="text-xl font-bold mb-4 text-gray-800 group-hover/card:text-lumiDark transition-colors leading-snug line-clamp-2">
-                {deal.titulo_gancho || 'Oferta Especial'}
-              </h3>
-
-              <AmenidadesLinea {deal} {paisActual} />
-
-              <div class="mt-auto pt-5 border-t border-gray-100 flex items-end justify-between">
-                <div>
-                  <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">{estaMuerta ? 'Precio Histórico' : 'Vuelo Id/Vt'}</p>
-                  <p class="text-3xl sm:text-4xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tighter">
-                    <span class="text-lg font-bold text-gray-400 align-top mr-0.5">$</span>{Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')} <span class="text-sm font-bold text-gray-400 align-baseline ml-1">{monedaDeal}</span>
-                  </p>
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <button type="button" onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id, e); }} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan transition-colors p-2 rounded-full cursor-pointer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                  </button>
-                  
-                  <div class="{estaMuerta ? 'bg-gray-200 text-gray-500' : 'bg-lumiDark text-white group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark'} px-6 py-3 rounded-xl font-black text-[12px] sm:text-[13px] transition-all duration-300 shadow-md group-hover/card:shadow-lg active:scale-95 cursor-pointer flex items-center gap-2 uppercase tracking-wider">
-                    {estaMuerta ? 'Ver Actuales' : 'Ver Vuelo'} 
-                    <svg class="w-4 h-4 transition-transform duration-300 group-hover/card:translate-x-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        {/each}
-      {/if}
-    </div>
-
-    {#if data.totalPages > 1}
-      <div class="flex justify-center items-center gap-3 mt-10 mb-20 relative z-10">
-        <button type="button" onclick={() => irAPagina(data.page - 1)} disabled={data.page <= 1} class="px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-sm">← Anterior</button>
-        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
-          {#each Array(data.totalPages) as _, i}
-            {@const n = i + 1}
-            {#if Math.abs(data.page - n) <= 2 || n === 1 || n === data.totalPages}
-              <button type="button" onclick={() => irAPagina(n)} class="w-9 h-9 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-lumiCyan text-lumiDark shadow-md' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">{n}</button>
-            {:else if Math.abs(data.page - n) === 3}
-              <span class="text-gray-400 font-bold px-1">...</span>
-            {/if}
-          {/each}
         </div>
-        <button type="button" onclick={() => irAPagina(data.page + 1)} disabled={data.page >= data.totalPages} class="px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-sm">Siguiente →</button>
-      </div>
-    {/if}
 
-    <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10 w-full mb-20 mx-auto">
+        <div class="bg-lumiDark p-6 rounded-2xl shadow-xl border border-gray-800 text-white relative overflow-hidden">
+          <div class="absolute -top-10 -right-10 w-32 h-32 bg-lumiCyan/10 rounded-full blur-2xl"></div>
+          <h3 class="text-sm font-black mb-2 flex items-center gap-2"><span>✈️</span> Alertas VIP</h3>
+          <p class="text-[11px] text-gray-400 mb-5 leading-relaxed">Recibe la selección de joyas ocultas directamente en tu correo.</p>
+          
+          <form class="flex flex-col gap-3 relative z-10" onsubmit={handleSubmitNewsletter}>
+            <input type="email" placeholder="Tu mejor correo..." required class="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan outline-none transition-all" bind:value={nlEmail} />
+            <button type="submit" class="w-full bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 shadow-[0_4px_15px_rgba(0,210,255,0.15)]" disabled={nlEnviando}>{nlEnviando ? 'Guardando...' : 'Suscribirme'}</button>
+          </form>
+          {#if nlEstado !== ''}
+            <p class="text-center text-[10px] font-bold mt-3 {nlEstado === 'ok' ? 'text-emerald-400' : nlEstado === 'ya' ? 'text-lumiCyan' : 'text-red-400'}">{nlMensaje}</p>
+          {/if}
+        </div>
+      </aside>
+
+      <div class="flex-grow w-full relative z-10">
+        <div id="hook-deals" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-20 relative z-10">
+          {#if !data.deals || data.deals.length === 0}
+            <div class="col-span-full text-center text-gray-400 py-32 font-medium bg-white rounded-3xl border border-gray-100 shadow-sm">
+              <span class="text-4xl block mb-4">🏜️</span>
+              Aún no hay ofertas activas desde este origen. <br/>¡Elige otro en el menú de la izquierda!
+            </div>
+          {:else}
+            {#each data.deals as deal (deal.id)}
+              {@const estaMuerta = checarSiEstaMuerta(deal, vuelosReportados)}
+              {@const imgFinal = obtenerImagen(deal)}
+              {@const tiempoTranscurrido = calcularTiempoTranscurrido(deal.created_at)}
+              {@const fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`}
+              {@const esVip = deal.tipo_vuelo === 'directo' || deal.escalas === 0}
+              {@const monedaDeal = (deal.moneda || deal.currency || monedaActual).toUpperCase()}
+              {@const origenSeguro = String(deal.origen_nombre || deal.origen || '').toUpperCase()}
+              {@const destinoSeguro = String(deal.destino_nombre || deal.destino || '').toUpperCase()}
+
+              <div 
+                role="button" 
+                tabindex="0" 
+                aria-label="Ver detalles de la oferta {deal.titulo_gancho}"
+                class="card-minimal flex flex-col group/card hover:shadow-xl transition-all duration-300 h-full bg-white rounded-2xl overflow-hidden border border-gray-100 cursor-pointer {estaMuerta ? 'opacity-50 grayscale hover:grayscale-0 focus:grayscale-0' : ''}" 
+                onclick={() => abrirModal(deal)}
+                onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
+              >
+                <div class="relative h-52 overflow-hidden bg-gray-100 shrink-0">
+                  <img src={imgFinal} alt={deal.titulo_gancho || 'Oferta Especial'} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
+                  <div class="absolute inset-0 bg-gradient-to-t from-lumiDark/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+
+                  {#if isAdminModo && !estaMuerta}
+                    <button 
+                      type="button" 
+                      onclick={(e) => handleMatarOferta(deal.id, e)} 
+                      disabled={cargandoAdmin}
+                      class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600/90 hover:bg-red-700 text-white backdrop-blur-md px-4 py-1.5 rounded-full font-black text-[10px] shadow-lg border border-red-400 z-30 uppercase tracking-widest flex items-center gap-1 transition-all"
+                    >
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                      {cargandoAdmin ? '...' : 'MATAR OFERTA'}
+                    </button>
+                  {/if}
+
+                  {#if estaMuerta}
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/40 z-20">
+                      <div class="bg-black/80 text-white font-black px-6 py-2 rounded-full uppercase tracking-widest text-[11px] shadow-2xl border border-white/20">
+                        Fechas Pasadas / Expirada
+                      </div>
+                    </div>
+                  {/if}
+
+                  {#if tiempoTranscurrido && !estaMuerta}
+                    <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-lumiDark text-[9px] font-bold px-2.5 py-1.5 rounded-md shadow-sm border border-white/50 uppercase flex items-center gap-1">
+                      ⏱️ {tiempoTranscurrido}
+                    </div>
+                  {/if}
+
+                  {#if esVip}
+                    <div class="absolute top-4 right-4 bg-white/95 text-emerald-700 text-[9px] font-black px-2.5 py-1.5 rounded-md z-10 flex items-center gap-1 uppercase tracking-widest shadow-lg border border-emerald-200">
+                      <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Directo
+                    </div>
+                  {:else if typeof deal?.escalas === 'number'}
+                    <div class="absolute top-4 right-4 bg-white/95 text-gray-700 text-[9px] font-bold px-2.5 py-1.5 rounded-md z-10 flex items-center gap-1 uppercase tracking-widest shadow-lg border border-gray-200">
+                      {deal.escalas} Escala{deal.escalas > 1 ? 's' : ''}
+                    </div>
+                  {/if}
+
+                  {#if !estaMuerta}
+                    <button type="button" onclick={(e) => { e.stopPropagation(); reportarCambioPrecio(deal.id, e); }} title="¿El precio subió? Repórtalo" class="absolute bottom-3 right-3 bg-white/80 hover:bg-red-50 text-gray-500 hover:text-red-500 backdrop-blur-sm p-2 rounded-full shadow-sm border border-white/50 transition-colors z-10 cursor-pointer">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-1 6-1-1H11.5l-1-1H5v10m0 0h4"/></svg>
+                    </button>
+                  {/if}
+                </div>
+
+                <div class="p-5 flex flex-col flex-grow bg-white relative">
+                  <div class="flex items-start justify-between gap-2 mb-2">
+                    <div class="text-[10px] font-black text-lumiDark uppercase tracking-widest leading-snug break-words">
+                      {origenSeguro} <span class="text-gray-300 font-bold mx-1 text-[9px] align-middle">➔</span> {destinoSeguro}
+                    </div>
+                    <div class="shrink-0 text-[8.5px] font-extrabold text-gray-400 uppercase tracking-widest text-right mt-[2px]">
+                      {fechasCortas}
+                    </div>
+                  </div>
+
+                  <h3 class="text-lg font-bold mb-4 text-gray-800 group-hover/card:text-lumiDark transition-colors leading-snug line-clamp-2">
+                    {deal.titulo_gancho || 'Oferta Especial'}
+                  </h3>
+
+                  <AmenidadesLinea {deal} {paisActual} />
+
+                  <div class="mt-auto pt-4 border-t border-gray-100 flex items-end justify-between">
+                    <div>
+                      <p class="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">{estaMuerta ? 'Precio Pasado' : 'Vuelo Id/Vt'}</p>
+                      <p class="text-2xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tighter">
+                        <span class="text-sm font-bold text-gray-400 align-top mr-0.5">$</span>{Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')} <span class="text-[11px] font-bold text-gray-400 align-baseline ml-1">{monedaDeal}</span>
+                      </p>
+                    </div>
+
+                    <div class="flex items-center gap-1.5">
+                      <button type="button" onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id, e); }} title="Compartir enlace" class="text-gray-400 hover:text-lumiCyan transition-colors p-1.5 rounded-full cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                      </button>
+                      
+                      <div class="{estaMuerta ? 'bg-gray-200 text-gray-500' : 'bg-lumiDark text-white group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark'} px-4 py-2.5 rounded-lg font-black text-[11px] transition-all duration-300 shadow-sm group-hover/card:shadow-md active:scale-95 cursor-pointer flex items-center gap-1.5 uppercase tracking-wider">
+                        {estaMuerta ? 'Ver Actuales' : 'Ver Vuelo'} 
+                        <svg class="w-3.5 h-3.5 transition-transform duration-300 group-hover/card:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {/each}
+          {/if}
+        </div>
+
+        {#if data.totalPages > 1}
+          <div class="flex justify-center items-center gap-3 mb-20 relative z-10">
+            <button type="button" onclick={() => irAPagina(data.page - 1)} disabled={data.page <= 1} class="px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-sm">← Anterior</button>
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
+              {#each Array(data.totalPages) as _, i}
+                {@const n = i + 1}
+                {#if Math.abs(data.page - n) <= 2 || n === 1 || n === data.totalPages}
+                  <button type="button" onclick={() => irAPagina(n)} class="w-9 h-9 flex items-center justify-center shrink-0 rounded-full text-sm font-bold transition-all {data.page === n ? 'bg-lumiCyan text-lumiDark shadow-md' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">{n}</button>
+                {:else if Math.abs(data.page - n) === 3}
+                  <span class="text-gray-400 font-bold px-1">...</span>
+                {/if}
+              {/each}
+            </div>
+            <button type="button" onclick={() => irAPagina(data.page + 1)} disabled={data.page >= data.totalPages} class="px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold text-sm">Siguiente →</button>
+          </div>
+        {/if}
+      </div>
+    </div>
+
+    <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10 w-full mb-10 mx-auto mt-10">
       <div class="relative z-10 md:w-5/12 text-center md:text-left">
         <h3 class="text-3xl font-black text-white mb-4 tracking-tight">¿No ves tu destino soñado?</h3>
         <p class="text-gray-400 font-medium leading-relaxed text-sm">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos el momento perfecto.</p>
