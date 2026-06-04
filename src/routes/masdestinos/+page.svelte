@@ -416,6 +416,10 @@
                     </div>
 
                     <div class="flex items-center gap-2.5">
+                      <button type="button" onclick={(e) => { e.stopPropagation(); copiarUrlUnica(deal.id, e); }} title="Compartir enlace" class="text-gray-400 hover:text-[#0096ff] transition-colors p-2.5 rounded-xl border border-gray-200 hover:border-[#0096ff]/30 hover:bg-[#0096ff]/5 cursor-pointer active:scale-95 shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                      </button>
+
                       <div class="{estaMuerta ? 'bg-gray-200 text-gray-500' : 'bg-gradient-to-r from-[#00d2ff] to-[#0096ff] text-white hover:brightness-110 shadow-md'} px-8 py-3.5 rounded-2xl font-black text-xs sm:text-sm transition-all duration-300 active:scale-95 flex items-center gap-2.5 uppercase tracking-widest">
                         {estaMuerta ? 'Ver Actuales' : 'Ver Vuelo'} 
                         <svg class="w-4 h-4 transition-transform duration-300 group-hover/card:translate-x-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
