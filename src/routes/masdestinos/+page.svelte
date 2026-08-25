@@ -337,7 +337,7 @@
               {@const tiempoTranscurrido = calcularTiempoTranscurrido(deal.created_at)}
               {@const fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`}
               
-              <!-- 🔥 FIX DE ESCALAS: Volvemos a confiar en Supabase ciegamente -->
+              <!-- 🔥 FIX DE ESCALAS -->
               {@const numeroEscalas = parseInt(deal?.escalas)}
               {@const esDirecto = !isNaN(numeroEscalas) && numeroEscalas === 0}
 
@@ -382,7 +382,7 @@
                     </div>
                   {:else if !isNaN(numeroEscalas)}
                     <div class="absolute top-4 right-4 bg-white/95 text-gray-800 text-[10px] font-bold px-3 py-2 rounded-xl z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-md border border-gray-100">
-                      {numeroEscalas} Escala{numeroEscalas !== 1 ? 's' : ''}
+                      Con Escalas
                     </div>
                   {/if}
                 </div>
