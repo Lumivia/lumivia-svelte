@@ -85,8 +85,11 @@
   const origenSeguro = $derived(String(deal?.origen_nombre || deal?.origen || '').toUpperCase());
   const destinoSeguro = $derived(String(deal?.destino_nombre || deal?.destino || '').toUpperCase());
 
-  // El sistema anterior de VIP se queda, pero agregamos la validación de la base de datos
-  const esVip = $derived(deal?.tipo_vuelo === 'directo' || deal?.escalas === 0);
+  // 🔥 NUEVA LÓGICA DE ESCALAS: Confianza estricta en el texto de tipo_vuelo
+  const tipoVueloLimpio = $derived(String(deal?.tipo_vuelo || '').toLowerCase().trim());
+  const esDirecto = $derived(tipoVueloLimpio === 'directo');
+  const esAhorro = $derived(tipoVueloLimpio === 'ahorro');
+  const numeroEscalas = $derived(parseInt(deal?.escalas));
 
   async function handleReportar(e: Event) {
     e.stopPropagation(); 
@@ -175,13 +178,18 @@
       </div>
     {/if}
 
-    {#if esVip}
+    <!-- 🔥 RENDERIZADO DE ETIQUETAS BLINDADO -->
+    {#if esDirecto}
       <div class="absolute top-4 right-4 bg-white/95 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-emerald-200">
         <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Directo
       </div>
-    {:else if typeof deal?.escalas === 'number'}
+    {:else if esAhorro}
       <div class="absolute top-4 right-4 bg-white/95 text-gray-700 text-[10px] font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-gray-200">
-        {deal.escalas} Escala{deal.escalas > 1 ? 's' : ''}
+        Con Escalas
+      </div>
+    {:else if !isNaN(numeroEscalas)}
+      <div class="absolute top-4 right-4 bg-white/95 text-gray-700 text-[10px] font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-gray-200">
+        {numeroEscalas} Escala{numeroEscalas !== 1 ? 's' : ''}
       </div>
     {/if}
 
