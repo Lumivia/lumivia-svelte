@@ -82,7 +82,6 @@
   const origenSeguro = $derived(String(deal?.origen_nombre || deal?.origen || '').toUpperCase());
   const destinoSeguro = $derived(String(deal?.destino_nombre || deal?.destino || '').toUpperCase());
 
-  // 🔥 REGRESAMOS A LA FUENTE DE LA VERDAD: La columna "escalas" de Supabase
   const numeroEscalas = $derived(parseInt(deal?.escalas));
   const esDirecto = $derived(!isNaN(numeroEscalas) && numeroEscalas === 0);
 
@@ -179,7 +178,7 @@
       </div>
     {:else if !isNaN(numeroEscalas)}
       <div class="absolute top-4 right-4 bg-white/95 text-gray-700 text-[10px] font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-gray-200">
-        {numeroEscalas} Escala{numeroEscalas !== 1 ? 's' : ''}
+        Con Escalas
       </div>
     {/if}
 
