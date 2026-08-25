@@ -151,7 +151,7 @@
     const diferenciaMinutos = Math.floor(diferenciaSegundos / 60);
     if (diferenciaMinutos < 60) return `Hace ${diferenciaMinutos} min`;
     const diferenciaHoras = Math.floor(diferenciaMinutos / 60);
-    if (diferenciaHoras < 24) return `Hace ${diferenciaHoras} horas`;
+    if (diferenciaHoras < 24) return `Hace ${diferenciaHoras} hours`;
     const diferenciaDias = Math.floor(diferenciaHoras / 24);
     return `Hace ${diferenciaDias} días`;
   }
@@ -336,7 +336,13 @@
               {@const imgFinal = obtenerImagen(deal)}
               {@const tiempoTranscurrido = calcularTiempoTranscurrido(deal.created_at)}
               {@const fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`}
-              {@const esVip = deal.tipo_vuelo === 'directo' || deal.escalas === 0}
+              
+              <!-- 🔥 NUEVA LÓGICA DE ESCALAS BLINDADA -->
+              {@const tipoVueloLimpio = String(deal?.tipo_vuelo || '').toLowerCase().trim()}
+              {@const esDirecto = tipoVueloLimpio === 'directo'}
+              {@const esAhorro = tipoVueloLimpio === 'ahorro'}
+              {@const numeroEscalas = parseInt(deal?.escalas)}
+
               {@const monedaDeal = (deal.moneda || deal.currency || monedaActual).toUpperCase()}
               {@const origenSeguro = String(deal.origen_nombre || deal.origen || '').toUpperCase()}
               {@const destinoSeguro = String(deal.destino_nombre || deal.destino || '').toUpperCase()}
@@ -371,13 +377,18 @@
                     </div>
                   {/if}
 
-                  {#if esVip}
-                    <div class="absolute top-4 right-4 bg-white/95 text-emerald-800 text-[10px] font-black px-3 py-2 rounded-xl z-10 uppercase tracking-widest shadow-md border border-emerald-100">
-                      Directo
+                  <!-- 🔥 ETIQUETAS BASADAS ESTRICTAMENTE EN LA NUEVA LÓGICA -->
+                  {#if esDirecto}
+                    <div class="absolute top-4 right-4 bg-white/95 text-emerald-800 text-[10px] font-black px-3 py-2 rounded-xl z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-md border border-emerald-100">
+                      <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Directo
                     </div>
-                  {:else if typeof deal?.escalas === 'number'}
-                    <div class="absolute top-4 right-4 bg-white/95 text-gray-800 text-[10px] font-bold px-3 py-2 rounded-xl z-10 uppercase tracking-widest shadow-md border border-gray-100">
-                      {deal.escalas} Escala{deal.escalas > 1 ? 's' : ''}
+                  {:else if esAhorro}
+                    <div class="absolute top-4 right-4 bg-white/95 text-gray-800 text-[10px] font-bold px-3 py-2 rounded-xl z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-md border border-gray-100">
+                      Con Escalas
+                    </div>
+                  {:else if !isNaN(numeroEscalas)}
+                    <div class="absolute top-4 right-4 bg-white/95 text-gray-800 text-[10px] font-bold px-3 py-2 rounded-xl z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-md border border-gray-100">
+                      {numeroEscalas} Escala{numeroEscalas !== 1 ? 's' : ''}
                     </div>
                   {/if}
                 </div>
