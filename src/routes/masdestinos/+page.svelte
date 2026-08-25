@@ -151,7 +151,7 @@
     const diferenciaMinutos = Math.floor(diferenciaSegundos / 60);
     if (diferenciaMinutos < 60) return `Hace ${diferenciaMinutos} min`;
     const diferenciaHoras = Math.floor(diferenciaMinutos / 60);
-    if (diferenciaHoras < 24) return `Hace ${diferenciaHoras} hours`;
+    if (diferenciaHoras < 24) return `Hace ${diferenciaHoras} horas`;
     const diferenciaDias = Math.floor(diferenciaHoras / 24);
     return `Hace ${diferenciaDias} días`;
   }
@@ -337,11 +337,9 @@
               {@const tiempoTranscurrido = calcularTiempoTranscurrido(deal.created_at)}
               {@const fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`}
               
-              <!-- 🔥 NUEVA LÓGICA DE ESCALAS BLINDADA -->
-              {@const tipoVueloLimpio = String(deal?.tipo_vuelo || '').toLowerCase().trim()}
-              {@const esDirecto = tipoVueloLimpio === 'directo'}
-              {@const esAhorro = tipoVueloLimpio === 'ahorro'}
+              <!-- 🔥 FIX DE ESCALAS: Volvemos a confiar en Supabase ciegamente -->
               {@const numeroEscalas = parseInt(deal?.escalas)}
+              {@const esDirecto = !isNaN(numeroEscalas) && numeroEscalas === 0}
 
               {@const monedaDeal = (deal.moneda || deal.currency || monedaActual).toUpperCase()}
               {@const origenSeguro = String(deal.origen_nombre || deal.origen || '').toUpperCase()}
@@ -377,14 +375,10 @@
                     </div>
                   {/if}
 
-                  <!-- 🔥 ETIQUETAS BASADAS ESTRICTAMENTE EN LA NUEVA LÓGICA -->
+                  <!-- 🔥 ETIQUETAS BASADAS ESTRICTAMENTE EN NÚMEROS -->
                   {#if esDirecto}
                     <div class="absolute top-4 right-4 bg-white/95 text-emerald-800 text-[10px] font-black px-3 py-2 rounded-xl z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-md border border-emerald-100">
                       <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Directo
-                    </div>
-                  {:else if esAhorro}
-                    <div class="absolute top-4 right-4 bg-white/95 text-gray-800 text-[10px] font-bold px-3 py-2 rounded-xl z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-md border border-gray-100">
-                      Con Escalas
                     </div>
                   {:else if !isNaN(numeroEscalas)}
                     <div class="absolute top-4 right-4 bg-white/95 text-gray-800 text-[10px] font-bold px-3 py-2 rounded-xl z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-md border border-gray-100">
