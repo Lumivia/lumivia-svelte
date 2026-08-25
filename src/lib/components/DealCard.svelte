@@ -10,10 +10,8 @@
   let reportado = $state(false);
   let cargandoAdmin = $state(false);
 
-  // 🕵️ MODO DIOS: Lee si la URL tiene ?admin=true
   const isAdminModo = $derived($page.url.searchParams.get('admin') === 'true');
 
-  // Evalúa si la oferta está muerta (por ti o por la fecha)
   const estaMuerta = $derived.by(() => {
     if (deal?.expirada_manualmente) return true;
     if (reportado) return true;
@@ -45,7 +43,6 @@
     img.src = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
   }
 
-  // 🔥 FIX DEFINITIVO: Algoritmo de Fechas Premium (A prueba de timestamps basuras)
   function formatearFechasPremium(salida: string | null, regreso: string | null) {
     const format = (iso: string | null) => {
       if (!iso) return '';
@@ -85,11 +82,9 @@
   const origenSeguro = $derived(String(deal?.origen_nombre || deal?.origen || '').toUpperCase());
   const destinoSeguro = $derived(String(deal?.destino_nombre || deal?.destino || '').toUpperCase());
 
-  // 🔥 NUEVA LÓGICA DE ESCALAS: Confianza estricta en el texto de tipo_vuelo
-  const tipoVueloLimpio = $derived(String(deal?.tipo_vuelo || '').toLowerCase().trim());
-  const esDirecto = $derived(tipoVueloLimpio === 'directo');
-  const esAhorro = $derived(tipoVueloLimpio === 'ahorro');
+  // 🔥 REGRESAMOS A LA FUENTE DE LA VERDAD: La columna "escalas" de Supabase
   const numeroEscalas = $derived(parseInt(deal?.escalas));
+  const esDirecto = $derived(!isNaN(numeroEscalas) && numeroEscalas === 0);
 
   async function handleReportar(e: Event) {
     e.stopPropagation(); 
@@ -107,7 +102,6 @@
     if (deal?.id) await copiarUrlUnica(deal.id);
   }
 
-  // 💣 FUNCIÓN GOD MODE (Dispara al backend)
   async function handleMatarOferta(e: Event) {
     e.stopPropagation();
     const password = prompt("Ingresa la contraseña de administrador para matar esta oferta:");
@@ -178,14 +172,10 @@
       </div>
     {/if}
 
-    <!-- 🔥 RENDERIZADO DE ETIQUETAS BLINDADO -->
+    <!-- 🔥 RENDERIZADO BASADO EN NÚMEROS REALES -->
     {#if esDirecto}
       <div class="absolute top-4 right-4 bg-white/95 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-emerald-200">
         <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Directo
-      </div>
-    {:else if esAhorro}
-      <div class="absolute top-4 right-4 bg-white/95 text-gray-700 text-[10px] font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-gray-200">
-        Con Escalas
       </div>
     {:else if !isNaN(numeroEscalas)}
       <div class="absolute top-4 right-4 bg-white/95 text-gray-700 text-[10px] font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1.5 uppercase tracking-widest shadow-lg border border-gray-200">
