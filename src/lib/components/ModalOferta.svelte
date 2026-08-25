@@ -41,6 +41,10 @@
   const origenNombre = $derived(String(deal?.origen_nombre || deal?.origen || '').toUpperCase());
   const destinoNombre = $derived(String(deal?.destino_nombre || deal?.destino || '').toUpperCase());
 
+  // 🔥 LÓGICA MAESTRA DE ESCALAS
+  const numeroEscalas = $derived(parseInt(deal?.escalas));
+  const esDirecto = $derived(!isNaN(numeroEscalas) && numeroEscalas === 0);
+
   // 🔥 BLINDAJE 2: Ejecución directa de la nueva utilidad de formato.
   const fechasCortas = $derived(deal ? formatDatesLumivia(deal.fecha_salida, deal.fecha_regreso) : '');
   
@@ -75,8 +79,6 @@
     return listaLocal.some(keyword => destinoNorm.includes(keyword) || tituloNorm.includes(keyword));
   });
 
-  // 🔥 TIER 1: Estructura de datos para la IA (Schema.org / JSON-LD)
-  // Esto es lo que leerá Bing/Google para mostrar precios y estrellas en los resultados
   const jsonLd = $derived.by(() => {
     if (!deal) return null;
     return {
@@ -146,10 +148,24 @@
       <div class="px-6 pb-6 -mt-4 relative z-10 flex-grow flex flex-col">
         <div class="mb-4">
           
-          <div class="inline-flex items-center gap-2 mb-3 px-3 py-1.5 bg-lumiDark text-white rounded-xl shadow-md border border-gray-800">
-            <span class="text-[11px] sm:text-[12px] font-black uppercase tracking-widest">{origenNombre}</span>
-            <svg class="w-3.5 h-3.5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-            <span class="text-[11px] sm:text-[12px] font-black uppercase tracking-widest">{destinoNombre}</span>
+          <div class="flex items-center gap-2 mb-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-lumiDark text-white rounded-xl shadow-md border border-gray-800">
+              <span class="text-[11px] sm:text-[12px] font-black uppercase tracking-widest">{origenNombre}</span>
+              <svg class="w-3.5 h-3.5 text-lumiCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+              <span class="text-[11px] sm:text-[12px] font-black uppercase tracking-widest">{destinoNombre}</span>
+            </div>
+
+            <!-- 🔥 MODIFICACIÓN SOLICITADA: Sólo texto "Con Escalas" -->
+            {#if esDirecto}
+              <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl shadow-sm border border-emerald-100">
+                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                <span class="text-[10px] sm:text-[11px] font-black uppercase tracking-widest">Directo</span>
+              </div>
+            {:else if !isNaN(numeroEscalas)}
+              <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-700 rounded-xl shadow-sm border border-gray-200">
+                <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">Con Escalas</span>
+              </div>
+            {/if}
           </div>
 
           <h2 class="text-2xl font-black text-lumiDark leading-tight mb-3">{deal?.titulo_gancho || ''}</h2>
