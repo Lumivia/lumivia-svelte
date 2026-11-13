@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/public';
 import { curarOfertas } from '$lib/utils/curacion';
 import { fechaDeHoy } from '$lib/utils/ofertas';
+import { registrarError } from '$lib/server/observabilidad';
 
 const mercadosPermitidos = {
   mx: { nombre: 'México', moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' },
@@ -37,6 +38,7 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, depends 
   });
 
   let ofertasEnriquecidas: any[] = [];
+  let cargaOfertasError = false;
 
   // 🔥 BLINDAJE 1: Try/Catch global para que el servidor nunca arroje un 500 fatal a SvelteKit
   try {
@@ -85,8 +87,9 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, depends 
       }
     }
   } catch (dbError) {
-    console.error("Error crítico procesando DB en página de países:", dbError);
-    throw httpError(503, 'No pudimos cargar las ofertas en este momento');
+    cargaOfertasError = true;
+    ofertasEnriquecidas = [];
+    registrarError('country_offers.load_error', dbError, { market: paisUpper });
   }
 
   // Obtenemos solo las variables que necesita la página principal
@@ -106,6 +109,7 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, depends 
     mercado,
     destacadas: hookDeals,
     masDestinos: radarDeals.slice(0, 10),
+    cargaOfertasError,
     schemaAEO
   };
 

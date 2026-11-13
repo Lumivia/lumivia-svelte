@@ -27,6 +27,10 @@
       {page.error?.message || 'Nuestros ingenieros ya están revisando los motores. Por favor, intenta de nuevo en unos minutos.'}
     {/if}
   </p>
+
+  {#if page.error?.requestId}
+    <p class="mt-3 text-xs text-gray-400">Referencia: <code>{page.error.requestId}</code></p>
+  {/if}
   
   <a 
     href="/" 

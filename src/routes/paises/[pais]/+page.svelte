@@ -5,8 +5,8 @@
   import DealCard from '$lib/components/DealCard.svelte';
   import RadarItem from '$lib/components/RadarItem.svelte';
   import Footer from '$lib/components/Footer.svelte';
-  import { supabase } from '$lib/supabaseClient';
   import { AVISO_OFERTA } from '$lib/utils/avisos';
+  import { crearRadar } from '$lib/utils/radar';
 
   let { data }: { data: any } = $props();
 
@@ -28,6 +28,7 @@
   let radarDestino = $state('');
   let radarMes = $state('');
   let radarContacto = $state('');
+  let radarWebsite = $state('');
   let radarExito = $state(false);
   let radarError = $state(false);
   let radarCargando = $state(false);
@@ -59,13 +60,15 @@
 
   async function enviarRadar() {
     radarCargando = true; radarExito = false; radarError = false;
-    const { error } = await supabase.from('radares_personales').insert([{ nombre: radarNombre, origen: radarOrigen, destino: radarDestino, mes_esperado: radarMes, contacto: radarContacto, status: 'pendiente_verificacion' }]);
-    radarCargando = false;
-    if (!error) { 
+    try {
+      await crearRadar({ nombre: radarNombre, origen: radarOrigen, destino: radarDestino, mes: radarMes, contacto: radarContacto, website: radarWebsite });
       radarExito = true; 
-      radarNombre = radarOrigen = radarDestino = radarMes = radarContacto = ''; 
-    } else { 
-      radarError = true; console.error(error); 
+      radarNombre = radarOrigen = radarDestino = radarMes = radarContacto = radarWebsite = '';
+    } catch (error) {
+      radarError = true;
+      console.error(error);
+    } finally {
+      radarCargando = false;
     }
   }
 
@@ -136,7 +139,7 @@
     <p class="-mt-4 mb-6 text-xs leading-relaxed text-gray-500">{AVISO_OFERTA}</p>
 
     <div class="relative w-full mb-16 group z-10">
-      <div role="region" aria-label="Ofertas destacadas" use:carruselLogica onmouseenter={() => pausarCarrusel = true} onmouseleave={() => pausarCarrusel = false} ontouchstart={() => pausarCarrusel = true} ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)} class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth w-full">
+      <div role="region" aria-label="Ofertas destacadas" use:carruselLogica onmouseenter={() => pausarCarrusel = true} onmouseleave={() => pausarCarrusel = false} ontouchstart={() => pausarCarrusel = true} ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)} class="flex min-h-[360px] overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth w-full">
         
         {#if !data || data.destacadas === undefined}
           {@render dealCardSkeleton()}
@@ -145,16 +148,19 @@
           {@render dealCardSkeleton()}
         
         {:else if ofertasHook.length > 0}
-          {#each ofertasHook as deal (deal.id)}
-            <DealCard {deal} monedaActual={data.mercado?.moneda} paisActual={data.paisUpper} onclick={() => abrirModal(deal)} />
+          {#each ofertasHook as deal, index (deal.id)}
+            <DealCard {deal} monedaActual={data.mercado?.moneda} paisActual={data.paisUpper} prioridad={index === 0} onclick={() => abrirModal(deal)} />
           {/each}
         
         {:else}
-          <div class="w-full flex justify-center items-center py-6 px-4">
+          <div class="w-full flex justify-center items-center py-12 px-4">
             <div class="bg-white/60 backdrop-blur-md border border-gray-200 rounded-3xl p-8 text-center max-w-md shadow-sm w-full">
-              <div class="text-4xl mb-3">📡</div>
-              <h3 class="text-xl font-bold text-lumiDark mb-2">Afinando el radar global</h3>
-              <p class="text-gray-500 text-sm">Nuestro algoritmo de IA está escaneando tarifas ocultas en este momento. Revisa la sección de "Más Destinos" aquí abajo.</p>
+              <div class="text-4xl mb-3">{data.cargaOfertasError ? '🔄' : '📡'}</div>
+              <h3 class="text-xl font-bold text-lumiDark mb-2">{data.cargaOfertasError ? 'No pudimos actualizar las ofertas' : 'Afinando el radar global'}</h3>
+              <p class="text-gray-500 text-sm">{data.cargaOfertasError ? 'La sección sigue disponible, pero el proveedor de datos no respondió. Intenta cargarla nuevamente.' : 'Estamos buscando nuevas tarifas vigentes. Revisa la sección de “Más Destinos” aquí abajo.'}</p>
+              {#if data.cargaOfertasError}
+                <a href={`/paises/${data.pais}`} class="mt-5 inline-flex rounded-xl bg-lumiDark px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white hover:bg-lumiCyan hover:text-lumiDark">Reintentar</a>
+              {/if}
             </div>
           </div>
         {/if}
@@ -216,6 +222,8 @@
       </div>
       <div class="relative z-10 md:w-7/12 w-full bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10">
         <form class="space-y-5 w-full" onsubmit={handleSubmitRadar}>
+          <label class="absolute -left-[9999px]" aria-hidden="true" for="pais-website">No completar este campo</label>
+          <input id="pais-website" class="absolute -left-[9999px]" type="text" tabindex="-1" autocomplete="off" bind:value={radarWebsite} aria-hidden="true" />
           <div>
             <label for="pais-nombre" class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Tu Nombre</label>
             <input id="pais-nombre" type="text" bind:value={radarNombre} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />

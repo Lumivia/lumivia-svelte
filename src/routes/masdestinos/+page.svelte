@@ -8,9 +8,10 @@
   import ModalOferta from '$lib/components/ModalOferta.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
-  import { obtenerImagen } from '$lib/utils/imagenes'; 
+  import { crearSrcsetImagen, obtenerImagen } from '$lib/utils/imagenes';
   import { esOfertaVigente, tituloOferta } from '$lib/utils/ofertas';
   import { AVISO_OFERTA } from '$lib/utils/avisos';
+  import { crearRadar } from '$lib/utils/radar';
 
   let { data }: { data: PageData } = $props();
 
@@ -36,6 +37,7 @@
   let leadDestino = $state('');
   let leadMes = $state('');
   let leadContacto = $state('');
+  let radarWebsite = $state('');
   let radarEnviando = $state(false);
   let radarExito = $state(false);
   let radarError = $state(false);
@@ -82,6 +84,7 @@
   function handleImageError(e: Event) {
     const img = e.target as HTMLImageElement;
     img.onerror = null;
+    img.removeAttribute('srcset');
     img.src = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
   }
 
@@ -145,10 +148,16 @@
 
   async function enviarRadar() {
     radarEnviando = true; radarExito = false; radarError = false;
-    const { error } = await supabase.from('radares_personales').insert([{ nombre: leadNombre, origen: leadOrigen, destino: leadDestino, mes_esperado: leadMes, contacto: leadContacto, status: 'pendiente_verificacion' }]);
-    radarEnviando = false;
-    if (!error) { radarExito = true; leadNombre = leadOrigen = leadDestino = leadMes = leadContacto = ''; } 
-    else { radarError = true; console.error(error); }
+    try {
+      await crearRadar({ nombre: leadNombre, origen: leadOrigen, destino: leadDestino, mes: leadMes, contacto: leadContacto, website: radarWebsite });
+      radarExito = true;
+      leadNombre = leadOrigen = leadDestino = leadMes = leadContacto = radarWebsite = '';
+    } catch (error) {
+      radarError = true;
+      console.error(error);
+    } finally {
+      radarEnviando = false;
+    }
   }
 
   async function reportarCambioPrecio(id: number | string, e?: Event) {
@@ -292,9 +301,10 @@
               <span>No hay ofertas activas desde este origen actualmente.<br/>Prueba seleccionando otro en el menú izquierdo.</span>
             </div>
           {:else}
-            {#each data.deals as deal (deal.id)}
+            {#each data.deals as deal, index (deal.id)}
               {@const estaMuerta = checarSiEstaMuerta(deal, vuelosReportados)}
               {@const imgFinal = obtenerImagen(deal)}
+              {@const imgSrcset = crearSrcsetImagen(imgFinal, [480, 800, 1200])}
               {@const fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`}
               {@const tituloSeguro = tituloOferta(deal)}
               
@@ -314,7 +324,7 @@
                 onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
               >
                 <div class="relative h-60 overflow-hidden bg-gray-100 shrink-0">
-                  <img src={imgFinal} alt={tituloSeguro} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
+                  <img src={imgFinal} srcset={imgSrcset} sizes="(min-width: 1280px) 28vw, (min-width: 768px) 46vw, 92vw" alt={tituloSeguro} loading={index === 0 ? 'eager' : 'lazy'} fetchpriority={index === 0 ? 'high' : 'auto'} decoding="async" width="800" height="480" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
                   
                   {#if isAdminModo && !estaMuerta}
                     <button type="button" onclick={(e) => handleMatarOferta(deal.id, e)} disabled={cargandoAdmin} class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-full font-black text-[10px] shadow-lg z-30 uppercase">
@@ -423,6 +433,8 @@
           </div>
           <div class="relative z-10 md:w-7/12 w-full bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10">
             <form class="space-y-5 w-full" onsubmit={handleSubmitRadar}>
+              <label class="absolute -left-[9999px]" aria-hidden="true" for="catalogo-website">No completar este campo</label>
+              <input id="catalogo-website" class="absolute -left-[9999px]" type="text" tabindex="-1" autocomplete="off" bind:value={radarWebsite} aria-hidden="true" />
               <div>
                 <label for="catalogo-nombre" class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Tu Nombre Completo</label>
                 <input id="catalogo-nombre" type="text" bind:value={leadNombre} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />

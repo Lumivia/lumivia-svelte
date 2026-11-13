@@ -70,6 +70,7 @@
         <div class="relative inline-block mb-3">
             {#if creator.avatar_url && !creator.avatar_url.includes('ui-avatars')}
                 <img src={creator.avatar_url} alt={creator.name} 
+                     width="80" height="80" decoding="async"
                      class="w-20 h-20 mx-auto rounded-full object-cover shadow-sm p-1 bg-white border"
                      style="border-color: {creator.theme_color};" />
             {:else}

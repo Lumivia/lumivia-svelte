@@ -4,12 +4,12 @@
   import { guardarPais } from '$lib/utils/preferencias';
   import type { PageData } from './$types';
   
-  import { supabase } from '$lib/supabaseClient';
   import ModalOferta from '$lib/components/ModalOferta.svelte';
   import Footer from '$lib/components/Footer.svelte';
-  import { obtenerImagen } from '$lib/utils/imagenes'; // 🔥 Sabueso de imágenes invocado
+  import { crearSrcsetImagen, obtenerImagen } from '$lib/utils/imagenes'; // 🔥 Sabueso de imágenes invocado
   import { esOfertaVigente, tituloOferta } from '$lib/utils/ofertas';
   import { AVISO_OFERTA } from '$lib/utils/avisos';
+  import { crearRadar } from '$lib/utils/radar';
 
   let { data }: { data: PageData } = $props();
 
@@ -35,6 +35,7 @@
   let leadDestino = $state('');
   let leadMes = $state('');
   let leadContacto = $state('');
+  let radarWebsite = $state('');
   let radarEnviando = $state(false);
   let radarExito = $state(false);
   let radarError = $state(false);
@@ -85,6 +86,7 @@
   function handleImageError(e: Event) {
     const img = e.target as HTMLImageElement;
     img.onerror = null;
+    img.removeAttribute('srcset');
     img.src = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
   }
 
@@ -135,10 +137,16 @@
 
   async function enviarRadar() {
     radarEnviando = true; radarExito = false; radarError = false;
-    const { error } = await supabase.from('radares_personales').insert([{ nombre: leadNombre, origen: leadOrigen, destino: leadDestino, mes_esperado: leadMes, contacto: leadContacto, status: 'pendiente_verificacion' }]);
-    radarEnviando = false;
-    if (!error) { radarExito = true; leadNombre = leadOrigen = leadDestino = leadMes = leadContacto = ''; } 
-    else { radarError = true; console.error(error); }
+    try {
+      await crearRadar({ nombre: leadNombre, origen: leadOrigen, destino: leadDestino, mes: leadMes, contacto: leadContacto, website: radarWebsite });
+      radarExito = true;
+      leadNombre = leadOrigen = leadDestino = leadMes = leadContacto = radarWebsite = '';
+    } catch (error) {
+      radarError = true;
+      console.error(error);
+    } finally {
+      radarEnviando = false;
+    }
   }
 
   $effect(() => { if (paisActual) guardarPais(paisActual); });
@@ -229,9 +237,10 @@
       {#if !dealsFiltrados || dealsFiltrados.length === 0}
         <div class="col-span-full text-center text-gray-400 py-20 font-medium w-full">Aún no hay escapadas activas en la bóveda de {paisActual}.</div>
       {:else}
-        {#each dealsFiltrados as deal (deal.id)}
+        {#each dealsFiltrados as deal, index (deal.id)}
           {@const estaMuerta = checarSiEstaMuerta(deal, vuelosReportados)}
           {@const imgFinal = obtenerImagen(deal)}
+          {@const imgSrcset = crearSrcsetImagen(imgFinal, [480, 800, 1200])}
           {@const esVip = deal.tipo_vuelo === 'directo' || deal.escalas === 0}
           {@const origenSeguro = String(deal.origen_nombre || deal.origen || '').toUpperCase()}
           {@const destinoSeguro = String(deal.destino_nombre || deal.destino || '').toUpperCase()}
@@ -245,7 +254,7 @@
             onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
           >
             <div class="relative h-[220px] overflow-hidden bg-gray-200 shrink-0 w-full">
-              <img src={imgFinal} alt={tituloSeguro} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
+              <img src={imgFinal} srcset={imgSrcset} sizes="(min-width: 1024px) 31vw, (min-width: 768px) 46vw, 92vw" alt={tituloSeguro} loading={index === 0 ? 'eager' : 'lazy'} fetchpriority={index === 0 ? 'high' : 'auto'} decoding="async" width="800" height="440" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
               
               {#if isAdminModo && !estaMuerta}
                 <button type="button" onclick={(e) => handleMatarOferta(deal.id, e)} class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600/90 text-white px-4 py-1.5 rounded-full font-black text-[10px] z-30 uppercase">MATAR</button>
@@ -329,6 +338,8 @@
       </div>
       <div class="relative z-10 md:w-7/12 w-full bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10">
         <form class="space-y-5 w-full" onsubmit={handleSubmitRadar}>
+          <label class="absolute -left-[9999px]" aria-hidden="true" for="escapadas-website">No completar este campo</label>
+          <input id="escapadas-website" class="absolute -left-[9999px]" type="text" tabindex="-1" autocomplete="off" bind:value={radarWebsite} aria-hidden="true" />
           <div>
             <label for="escapadas-nombre" class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Tu Nombre</label>
             <input id="escapadas-nombre" type="text" bind:value={leadNombre} required class="w-full bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />

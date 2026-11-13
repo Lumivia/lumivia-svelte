@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { obtenerImagen } from '$lib/utils/imagenes';
+  import { crearSrcsetImagen, obtenerImagen } from '$lib/utils/imagenes';
   import { copiarUrlUnica } from '$lib/utils/clipboard';
   import { esOfertaVigente, tituloOferta } from '$lib/utils/ofertas';
 
@@ -15,10 +15,12 @@
 
   const esVip = $derived(deal?.tipo_vuelo === 'directo' || deal?.escalas === 0);
   const imgFinal = $derived(obtenerImagen(deal, 150));
+  const imgSrcset = $derived(crearSrcsetImagen(imgFinal, [96, 150, 224]));
 
   function handleImageError(e: Event) {
     const img = e.target as HTMLImageElement;
     img.onerror = null;
+    img.removeAttribute('srcset');
     img.src = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=150&q=80';
   }
 
@@ -109,7 +111,12 @@
       <div class="relative hidden sm:block shrink-0">
         <img
           src={imgFinal}
+          srcset={imgSrcset}
+          sizes="56px"
           loading="lazy"
+          decoding="async"
+          width="56"
+          height="56"
           class="h-14 w-14 rounded-xl object-cover shadow-sm border border-gray-200 transform group-hover/item:scale-105 transition-transform duration-500 ease-out"
           alt={tituloSeguro}
           onerror={handleImageError}

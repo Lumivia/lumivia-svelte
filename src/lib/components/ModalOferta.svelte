@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { obtenerImagen } from '$lib/utils/imagenes';
+  import { crearSrcsetImagen, obtenerImagen } from '$lib/utils/imagenes';
   // 🔥 BLINDAJE 1: Importamos el motor maestro de fechas
   import { formatDatesLumivia } from '$lib/utils/formatters';
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
@@ -32,10 +32,12 @@
   const normalizar = (texto: any) => String(texto || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
 
   const imgFinal = $derived(obtenerImagen(deal));
+  const imgSrcset = $derived(crearSrcsetImagen(imgFinal, [480, 800, 1200]));
   
   function handleImageError(e: Event) {
     const img = e.target as HTMLImageElement;
     img.onerror = null;
+    img.removeAttribute('srcset');
     img.src = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
   }
 
@@ -142,7 +144,7 @@
       </button>
 
       <div class="h-48 sm:h-56 w-full overflow-hidden relative flex-shrink-0">
-        <img src={imgFinal} alt={deal?.titulo_gancho || 'Destino'} class="w-full h-full object-cover" onerror={handleImageError} />
+        <img src={imgFinal} srcset={imgSrcset} sizes="(min-width: 640px) 576px, 92vw" alt={deal?.titulo_gancho || 'Destino'} decoding="async" width="800" height="448" class="w-full h-full object-cover" onerror={handleImageError} />
         <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
       </div>
 
@@ -197,25 +199,25 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {#if links.esim && !esNacional}
               <a href={links.esim} target="_blank" rel="noopener noreferrer sponsored" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-emerald-400 hover:shadow-md transition-all group">
-                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1488509082528-cefbba5ad692?q=80&w=2070&auto=format&fit=crop" alt="eSIM Airalo" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1488509082528-cefbba5ad692?auto=format&fit=crop&w=96&q=76" alt="eSIM Airalo" loading="lazy" decoding="async" width="40" height="40" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
                 <div class="flex-1 min-w-0"><p class="text-[11px] font-black text-lumiDark truncate">Internet eSIM</p><p class="text-[10px] text-gray-500 truncate">Sin Roaming</p></div>
               </a>
             {/if}
             {#if links.tours}
               <a href={links.tours} target="_blank" rel="noopener noreferrer sponsored" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-blue-500 hover:shadow-md transition-all group">
-                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=150&q=80" alt="Tours Civitatis" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=96&q=76" alt="Tours Civitatis" loading="lazy" decoding="async" width="40" height="40" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
                 <div class="flex-1 min-w-0"><p class="text-[11px] font-black text-lumiDark truncate">Tours & Guías</p><p class="text-[10px] text-gray-500 truncate">En español</p></div>
               </a>
             {/if}
             {#if links.hotel}
               <a href={links.hotel} target="_blank" rel="noopener noreferrer sponsored" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-amber-500 hover:shadow-md transition-all group">
-                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=150&q=80" alt="Hoteles" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=96&q=76" alt="Hoteles" loading="lazy" decoding="async" width="40" height="40" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
                 <div class="flex-1 min-w-0"><p class="text-[11px] font-black text-lumiDark truncate">Hospedaje</p><p class="text-[10px] text-gray-500 truncate">Mapa Interactivo</p></div>
               </a>
             {/if}
             {#if links.seguro && !esNacional}
               <a href={links.seguro} target="_blank" rel="noopener noreferrer sponsored" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-rose-500 hover:shadow-md transition-all group">
-                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=150&q=80" alt="Seguro Viaje" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
+                <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=96&q=76" alt="Seguro Viaje" loading="lazy" decoding="async" width="40" height="40" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
                 <div class="flex-1 min-w-0"><p class="text-[11px] font-black text-lumiDark truncate">Asistencia</p><p class="text-[10px] text-gray-500 truncate">Seguro Global</p></div>
               </a>
             {/if}

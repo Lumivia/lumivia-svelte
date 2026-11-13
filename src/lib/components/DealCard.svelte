@@ -1,12 +1,12 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { obtenerImagen } from '$lib/utils/imagenes';
+  import { crearSrcsetImagen, obtenerImagen } from '$lib/utils/imagenes';
   import { copiarUrlUnica } from '$lib/utils/clipboard';
   import { reportarCambioPrecio } from '$lib/utils/reportes';
   import { esOfertaVigente, tituloOferta } from '$lib/utils/ofertas';
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
 
-  const { deal, monedaActual, paisActual, onclick } = $props();
+  const { deal, monedaActual, paisActual, onclick, prioridad = false } = $props();
 
   let reportado = $state(false);
   let cargandoAdmin = $state(false);
@@ -19,10 +19,12 @@
   });
 
   const imgFinal = $derived(obtenerImagen(deal));
+  const imgSrcset = $derived(crearSrcsetImagen(imgFinal, [480, 800, 1200]));
   
   function handleImageError(e: Event) {
     const img = e.target as HTMLImageElement;
     img.onerror = null;
+    img.removeAttribute('srcset');
     img.src = 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
   }
 
@@ -122,8 +124,14 @@
   <div class="relative h-56 overflow-hidden bg-gray-100 shrink-0">
     <img
       src={imgFinal}
+      srcset={imgSrcset}
+      sizes="(min-width: 1024px) 31vw, (min-width: 768px) 46vw, 85vw"
       alt={tituloSeguro}
-      loading="lazy"
+      loading={prioridad ? 'eager' : 'lazy'}
+      fetchpriority={prioridad ? 'high' : 'auto'}
+      decoding="async"
+      width="800"
+      height="448"
       class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out"
       onerror={handleImageError}
     />
