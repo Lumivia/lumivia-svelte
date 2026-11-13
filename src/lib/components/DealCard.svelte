@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { obtenerImagen } from '$lib/utils/imagenes';
   import { copiarUrlUnica } from '$lib/utils/clipboard';
   import { reportarCambioPrecio } from '$lib/utils/reportes';
@@ -10,7 +10,7 @@
   let reportado = $state(false);
   let cargandoAdmin = $state(false);
 
-  const isAdminModo = $derived($page.url.searchParams.get('admin') === 'true');
+  const isAdminModo = $derived(page.url.searchParams.get('admin') === 'true');
 
   const estaMuerta = $derived.by(() => {
     if (deal?.expirada_manualmente) return true;

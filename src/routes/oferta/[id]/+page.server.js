@@ -45,6 +45,7 @@ export const load = async ({ params, fetch }) => {
 
         if (diccionario && diccionario.length > 0) {
             // Creamos un mapa rápido como en n8n
+            /** @type {Record<string, string>} */
             const traductor = {};
             diccionario.forEach(d => {
                 traductor[d.iata_code.toUpperCase()] = d.nombre_ciudad;

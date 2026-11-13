@@ -45,6 +45,8 @@ export async function load({ params }) {
 
     } catch (err) {
         console.error("Error fatal en servidor:", err);
-        throw error(err.status || 500, err.body?.message || err.message || 'Error interno');
+        const status = err && typeof err === 'object' && 'status' in err ? Number(err.status) : 500;
+        const message = err instanceof Error ? err.message : 'Error interno';
+        throw error(status, message);
     }
 }

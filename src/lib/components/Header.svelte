@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   
   // 🔥 MODO DEIDAD: Props blindados. Si la data tarda, nunca crashea el DOM.
   let { 
@@ -10,7 +10,7 @@
 
   let dropdownAbierto = $state(false);
 
-  const esCatalogo = $derived($page.url.pathname.includes('masdestinos'));
+  const esCatalogo = $derived(page.url.pathname.includes('masdestinos'));
 
   const paises = [
     { codigo: 'mx', nombre: 'México', moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' },
@@ -53,11 +53,6 @@
       <a href="/escapadas?pais={paisUpper}" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
         <span class="hidden sm:inline">Escapadas</span>
-      </a>
-
-      <a href="/wanderlust?pais={paisUpper}" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
-        <span class="hidden sm:inline">Wanderlust</span>
       </a>
 
       <div class="h-5 w-px bg-gray-200 hidden sm:block"></div>

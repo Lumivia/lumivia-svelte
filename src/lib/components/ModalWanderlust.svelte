@@ -85,7 +85,7 @@
   <div class="fixed inset-0 z-[1000] flex items-center justify-center p-4 pointer-events-none">
     <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative animate-fadeIn pointer-events-auto flex flex-col border border-gray-100">
       
-      <button class="absolute top-4 right-4 bg-white/60 backdrop-blur-md hover:bg-white text-gray-900 p-2.5 rounded-full shadow-md z-20 transition-all" onclick={cerrar}>
+      <button aria-label="Cerrar oferta" class="absolute top-4 right-4 bg-white/60 backdrop-blur-md hover:bg-white text-gray-900 p-2.5 rounded-full shadow-md z-20 transition-all" onclick={cerrar}>
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
 

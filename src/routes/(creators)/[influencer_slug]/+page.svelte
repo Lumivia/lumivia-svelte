@@ -4,15 +4,16 @@
      * Versión: 4.0 (Merge exacto con UI Lumivia Glassmorphism)
      */
     let { data } = $props();
-    const { creator, flights } = data;
+    const creator = $derived(data.creator);
+    const flights = $derived(data.flights);
 
     // 1. Formateador de moneda (MXN)
-    const formatPrice = (price) => {
+    const formatPrice = (price: number) => {
         return new Intl.NumberFormat('es-MX').format(price);
     };
 
     // 2. Inyector de Afiliado para las OFERTAS
-    const buildAffiliateLink = (originalUrl) => {
+    const buildAffiliateLink = (originalUrl: string | null | undefined) => {
         if (!originalUrl) return '#';
         try {
             const url = new URL(originalUrl);
@@ -25,8 +26,8 @@
     };
 
     // 3. ENLACES UNIVERSALES (Inyectados para el menú superior)
-    const linkBuscadorVuelos = `https://vuelos.lumivia.app/?marker=${creator.affiliate_tag}`;
-    const linkBuscadorHoteles = `https://www.stay22.com/allez/roam?aid=lumivia&subid=${creator.affiliate_tag}`;
+    const linkBuscadorVuelos = $derived(`https://vuelos.lumivia.app/?marker=${creator.affiliate_tag}`);
+    const linkBuscadorHoteles = $derived(`https://www.stay22.com/allez/roam?aid=lumivia&subid=${creator.affiliate_tag}`);
 </script>
 
 <svelte:head>

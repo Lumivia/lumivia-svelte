@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
+import { error as httpError, redirect } from '@sveltejs/kit';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/public';
 
@@ -22,8 +22,8 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
   const mercadoInfo = mercadosPermitidos[paisQuery as CodigoPais];
   
   // Paginación
-  const pageParam = url.searchParams.get('page');
-  const page = pageParam ? parseInt(pageParam) : 1;
+  const pageParam = Number(url.searchParams.get('page') ?? '1');
+  const page = Number.isInteger(pageParam) && pageParam >= 1 ? Math.min(pageParam, 1000) : 1;
   const itemsPerPage = 21; // Múltiplo de 3 para el grid
   const start = (page - 1) * itemsPerPage;
 
@@ -31,7 +31,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
   const supabaseKey = env.PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    return { pais: paisQuery, deals: [], page: 1, totalPages: 1 };
+    throw httpError(503, 'Las escapadas no están configuradas temporalmente');
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey, {
@@ -53,7 +53,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
       .order('created_at', { ascending: false });
 
     if (err) {
-      console.error('Error fetching escapadas:', err);
+      throw err;
     } else {
       const crudas = ofertasCrudas || [];
 
@@ -110,9 +110,10 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
     }
   } catch (dbError) {
     console.error('Error crítico procesando DB en página de escapadas:', dbError);
+    throw httpError(503, 'No pudimos cargar las escapadas en este momento');
   }
 
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
 
   // Metadatos SEO Únicos y Paginación Perfecta
   const metaTitle = `Escapadas de Fin de Semana desde ${mercadoInfo.nombre} | Lumivia`;
@@ -132,7 +133,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
   });
 
   setHeaders({
-    'Cache-Control': 'public, max-age=60, s-maxage=60'
+    'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60'
   });
 
   return {

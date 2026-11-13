@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { obtenerImagen } from '$lib/utils/imagenes';
   import { copiarUrlUnica } from '$lib/utils/clipboard';
 
@@ -8,7 +8,7 @@
   let cargandoAdmin = $state(false);
 
   // 🕵️ MODO DIOS: Lee si la URL tiene ?admin=true
-  const isAdminModo = $derived($page.url.searchParams.get('admin') === 'true');
+  const isAdminModo = $derived(page.url.searchParams.get('admin') === 'true');
 
   // 💀 Evalúa si la oferta está muerta (Manual o por fecha)
   const estaMuerta = $derived.by(() => {

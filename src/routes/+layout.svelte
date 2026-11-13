@@ -1,14 +1,25 @@
 <script lang="ts">
-  import "../app.css"; 
+  import "../app.css";
+  import type { Snippet } from 'svelte';
+
+  type LayoutMetadata = {
+    canonicalURL?: string;
+    description?: string;
+    ogImage?: string;
+    robots?: string;
+    schemaAEO?: string | null;
+    schemaJSON?: string | null;
+    title?: string;
+  };
   
   // 🔥 SVELTE 5: Extracción limpia
-  let { data, children } = $props();
+  let { data, children }: { data: LayoutMetadata; children: Snippet } = $props();
 
   // 🔥 Sanitización de JSON-LD (Evita XSS y caídas de página)
   // Reemplazamos '<' con su código unicode para que el navegador no se confunda
   // si un texto de la base de datos contiene HTML o scripts rotos.
-  const schemaDinamico = data?.schemaAEO || data?.schemaJSON;
-  const safeSchema = schemaDinamico ? schemaDinamico.replace(/</g, '\\u003C') : null;
+  const schemaDinamico = $derived(data?.schemaAEO || data?.schemaJSON);
+  const safeSchema = $derived(schemaDinamico ? schemaDinamico.replace(/</g, '\\u003C') : null);
 </script>
 
 <svelte:head>

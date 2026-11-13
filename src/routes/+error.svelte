@@ -1,19 +1,19 @@
 <script lang="ts">
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
 </script>
 
 <svelte:head>
-  <title>Error {$page.status} | Lumivia</title>
+  <title>Error {page.status} | Lumivia</title>
   <meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
 <div class="min-h-[75vh] flex flex-col items-center justify-center px-6 text-center bg-gray-50">
   <h1 class="text-[150px] leading-none font-black text-gray-200 tracking-tighter select-none">
-    {$page.status}
+    {page.status}
   </h1>
   
   <h2 class="text-3xl font-extrabold text-lumiDark mt-4 tracking-tight">
-    {#if $page.status === 404}
+    {#if page.status === 404}
       Este vuelo ya despegó 🛫
     {:else}
       Turbulencia técnica detectada 🌩️
@@ -21,10 +21,10 @@
   </h2>
   
   <p class="text-gray-500 mt-4 max-w-md mx-auto text-lg leading-relaxed">
-    {#if $page.status === 404}
+    {#if page.status === 404}
       La oferta que buscas expiró o la URL es incorrecta. Pero no te preocupes, nuestro radar detecta nuevos vuelos cada hora.
     {:else}
-      {$page.error?.message || 'Nuestros ingenieros ya están revisando los motores. Por favor, intenta de nuevo en unos minutos.'}
+      {page.error?.message || 'Nuestros ingenieros ya están revisando los motores. Por favor, intenta de nuevo en unos minutos.'}
     {/if}
   </p>
   

@@ -1,11 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { guardarPais, leerPaisGuardado } from '$lib/utils/preferencias';
 
   onMount(() => {
-    const paisGuardado = localStorage.getItem('lumivia_pais');
+    const paisGuardado = leerPaisGuardado(null);
 
     if (paisGuardado) {
-      window.location.replace(`/paises/${paisGuardado.toLowerCase()}/`);
+      window.location.replace(`/paises/${paisGuardado.toLowerCase()}`);
       return;
     }
 
@@ -40,11 +41,11 @@
         pais = 'mx';
       }
 
-      localStorage.setItem('lumivia_pais', pais.toUpperCase());
-      window.location.replace(`/paises/${pais}/`);
-    } catch (e) {
-      localStorage.setItem('lumivia_pais', 'MX');
-      window.location.replace('/paises/mx/');
+      guardarPais(pais);
+      window.location.replace(`/paises/${pais}`);
+    } catch {
+      guardarPais('MX');
+      window.location.replace('/paises/mx');
     }
   });
 </script>

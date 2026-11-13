@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import Header from '$lib/components/Header.svelte';
   import Footer from '$lib/components/Footer.svelte';
+  import { leerPaisGuardado } from '$lib/utils/preferencias';
 
   // 🔥 Diccionario de Mercados para el Header Global
   const configMercado: Record<string, { nombre: string; moneda: string; bandera: string }> = {
@@ -18,16 +19,14 @@
 
   // ✅ Fix 404: Ruta corregida a /paises/xx
   function volverAlPais() {
-    const paisGuardado = typeof window !== 'undefined' ? localStorage.getItem('lumivia_pais') : 'MX';
-    const iso = paisGuardado ? paisGuardado.toUpperCase() : 'MX';
-    goto(`/paises/${iso.toLowerCase()}`);
+    goto(`/paises/${leerPaisGuardado().toLowerCase()}`);
   }
 
   onMount(() => {
     // Recuperamos la preferencia del usuario para el Header
-    const paisGuardado = localStorage.getItem('lumivia_pais');
-    if (paisGuardado && configMercado[paisGuardado.toUpperCase()]) {
-      paisUpper = paisGuardado.toUpperCase();
+    const paisGuardado = leerPaisGuardado();
+    if (configMercado[paisGuardado]) {
+      paisUpper = paisGuardado;
       mercado = configMercado[paisUpper];
     }
   });

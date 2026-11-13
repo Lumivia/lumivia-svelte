@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
+import { error as httpError, redirect } from '@sveltejs/kit';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/public';
 import { curarOfertas } from '$lib/utils/curacion';
@@ -13,7 +13,7 @@ const mercadosPermitidos = {
 
 type CodigoPais = keyof typeof mercadosPermitidos;
 
-export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform, depends }) => {
+export const load: PageServerLoad = async ({ params, setHeaders, fetch, depends }) => {
   const paisParam = params.pais ?? '';
   const codigoPais = paisParam.toLowerCase();
 
@@ -23,24 +23,11 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
   if (!mercado) throw redirect(302, '/');
 
   const paisUpper = codigoPais.toUpperCase();
-  const cacheKey = `lumivia_cache_${codigoPais}`;
-
-  try {
-    if (platform?.env?.KV_CACHE) {
-      const cached = await platform.env.KV_CACHE.get(cacheKey, 'json');
-      if (cached) {
-        return { ...cached, fromCache: true };
-      }
-    }
-  } catch (e) {
-    console.error("Error leyendo KV Cache:", e);
-  }
-
   const supabaseUrl = env.PUBLIC_SUPABASE_URL;
   const supabaseKey = env.PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    return { pais: codigoPais, paisUpper, mercado, destacadas: [], masDestinos: [], schemaAEO: null };
+    throw httpError(503, 'El radar no está configurado temporalmente');
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey, {
@@ -61,7 +48,7 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
       .limit(50);
 
     if (err) {
-      console.error('Error al extraer ofertas:', err);
+      throw err;
     } else {
       ofertasEnriquecidas = ofertasCrudas || [];
     }
@@ -96,7 +83,7 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     }
   } catch (dbError) {
     console.error("Error crítico procesando DB en página de países:", dbError);
-    // Si la DB explota, ofertasEnriquecidas se queda como [] y la página carga viva y sin crash.
+    throw httpError(503, 'No pudimos cargar las ofertas en este momento');
   }
 
   // Obtenemos solo las variables que necesita la página principal
@@ -119,19 +106,9 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, platform
     schemaAEO
   };
 
-  try {
-    if (platform?.env?.KV_CACHE && hookDeals.length > 0) {
-      await platform.env.KV_CACHE.put(cacheKey, JSON.stringify(responseData), { 
-        expirationTtl: 300 
-      });
-    }
-  } catch (e) {
-    console.error("Error guardando en KV Cache:", e);
-  }
-
   setHeaders({
     'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60'
   });
 
-  return { ...responseData, fromCache: false };
+  return responseData;
 };

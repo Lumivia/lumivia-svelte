@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { page } from '$app/stores'; 
-  import { afterNavigate } from '$app/navigation'; 
+  import { page } from '$app/state';
+  import { guardarPais } from '$lib/utils/preferencias';
   import type { PageData } from './$types';
   
   import { supabase } from '$lib/supabaseClient';
@@ -12,7 +12,7 @@
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
   import { obtenerImagen } from '$lib/utils/imagenes'; 
 
-  let { data } = $props<PageData>();
+  let { data }: { data: PageData } = $props();
 
   const configMercado: Record<string, { moneda: string; bandera: string }> = {
     MX: { moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' },
@@ -25,7 +25,7 @@
   const monedaActual = $derived(configMercado[paisActual]?.moneda ?? 'MXN');
   const banderaActual = $derived(configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png');
   
-  const urlCanonica = $derived(`https://www.lumivia.app${$page.url.pathname}`);
+  const urlCanonica = $derived(`https://www.lumivia.app${page.url.pathname}`);
   
   let dropdownAbierto = $state(false);
   let modalAbierto = $state(false);
@@ -48,17 +48,11 @@
   let mesesDisponibles = $state<string[]>([]);
   let vuelosReportados = $state(new Set<number | string>());
 
-  const isAdminModo = $derived($page.url.searchParams.get('admin') === 'true');
+  const isAdminModo = $derived(page.url.searchParams.get('admin') === 'true');
   let cargandoAdmin = $state(false);
 
   const origenFiltroActual = $derived(data.origenFiltroActual);
   const origenesDisponibles = $derived(data.origenesDisponibles || []);
-
-  afterNavigate(({ type }) => {
-    if (type === 'popstate') {
-      window.location.reload();
-    }
-  });
 
   function checarSiEstaMuerta(deal: any, reportados: Set<number | string>) {
     if (deal?.expirada_manualmente) return true;
@@ -120,7 +114,7 @@
 
   function seleccionarPais(codigoPais: string) {
     dropdownAbierto = false;
-    localStorage.setItem('lumivia_pais', codigoPais);
+    guardarPais(codigoPais);
     window.location.href = `/masdestinos?pais=${codigoPais.toUpperCase()}&page=1`;
   }
 
@@ -211,7 +205,7 @@
 
   $effect(() => {
     if (paisActual) {
-      localStorage.setItem('lumivia_pais', paisActual);
+      guardarPais(paisActual);
     }
   });
 
@@ -353,7 +347,7 @@
                 onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
               >
                 <div class="relative h-60 overflow-hidden bg-gray-100 shrink-0">
-                  <img src={imgFinal} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
+                  <img src={imgFinal} alt={deal.titulo_gancho || deal.destino_nombre || deal.destino || 'Oferta de viaje'} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
                   
                   {#if isAdminModo && !estaMuerta}
                     <button type="button" onclick={(e) => handleMatarOferta(deal.id, e)} disabled={cargandoAdmin} class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-full font-black text-[10px] shadow-lg z-30 uppercase">
@@ -467,23 +461,23 @@
           <div class="relative z-10 md:w-7/12 w-full bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10">
             <form class="space-y-5 w-full" onsubmit={handleSubmitRadar}>
               <div>
-                <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Tu Nombre Completo</label>
-                <input type="text" bind:value={leadNombre} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+                <label for="catalogo-nombre" class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Tu Nombre Completo</label>
+                <input id="catalogo-nombre" type="text" bind:value={leadNombre} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Ciudad de Origen</label>
-                  <input type="text" bind:value={leadOrigen} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+                  <label for="catalogo-origen" class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Ciudad de Origen</label>
+                  <input id="catalogo-origen" type="text" bind:value={leadOrigen} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
                 </div>
                 <div>
-                  <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Ciudad de Destino</label>
-                  <input type="text" bind:value={leadDestino} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+                  <label for="catalogo-destino" class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Ciudad de Destino</label>
+                  <input id="catalogo-destino" type="text" bind:value={leadDestino} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
                 </div>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Mes Aproximado</label>
-                  <select bind:value={leadMes} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm appearance-none cursor-pointer">
+                  <label for="catalogo-mes" class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Mes Aproximado</label>
+                  <select id="catalogo-mes" bind:value={leadMes} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm appearance-none cursor-pointer">
                     <option value="" disabled>Selecciona un mes...</option>
                     {#each mesesDisponibles as m}
                       <option value={m} class="bg-lumiDark text-white">{m}</option>
@@ -491,8 +485,8 @@
                   </select>
                 </div>
                 <div>
-                  <label class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Correo Electrónico</label>
-                  <input type="email" bind:value={leadContacto} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
+                  <label for="catalogo-contacto" class="block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Correo Electrónico</label>
+                  <input id="catalogo-contacto" type="email" bind:value={leadContacto} required class="w-full bg-[#1f2937]/70 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-lumiCyan focus:ring-1 focus:ring-lumiCyan transition-all text-sm" />
                 </div>
               </div>
               

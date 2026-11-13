@@ -7,7 +7,7 @@
   import { formatearFechaCorta } from '$lib/utils/fechas';
 
   let { data } = $props();
-  const deal = data.deal;
+  const deal = $derived(data.deal);
 
   let links = $state({ tours: '', hotel: '', esim: '', seguro: '' });
 
