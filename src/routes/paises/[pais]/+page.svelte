@@ -5,7 +5,6 @@
   import DealCard from '$lib/components/DealCard.svelte';
   import RadarItem from '$lib/components/RadarItem.svelte';
   import Footer from '$lib/components/Footer.svelte';
-  import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
   import { supabase } from '$lib/supabaseClient';
   import { AVISO_OFERTA } from '$lib/utils/avisos';
 
@@ -22,12 +21,6 @@
   let ofertaSeleccionada: any = $state(null);
   let modalAbierto = $state(false);
   let pausarCarrusel = $state(false);
-
-  let buscadorOrigen = $state('');
-  let buscadorDestino = $state('');
-  let buscadorSalida = $state('');
-  let buscadorRegreso = $state('');
-  const fechaMinima = new Date().toISOString().slice(0, 10);
 
   // 🔥 Variables sincronizadas correctamente para el build
   let radarNombre = $state('');
@@ -52,23 +45,6 @@
       }
     }, 5000);
     return { destroy() { clearInterval(intervalo); } };
-  }
-
-  function formatoBuscador(fecha: string) {
-    const partes = fecha.split('-');
-    return partes.length === 3 ? `${partes[2]}${partes[1]}` : '';
-  }
-
-  function abrirBuscador(e: Event) {
-    e.preventDefault();
-    const origen = buscadorOrigen.trim().toUpperCase();
-    const destino = buscadorDestino.trim().toUpperCase();
-    const salida = formatoBuscador(buscadorSalida);
-    const regreso = formatoBuscador(buscadorRegreso);
-    const url = salida && regreso
-      ? `https://vuelos.lumivia.app/?flightSearch=${encodeURIComponent(`${origen}${salida}${destino}${regreso}1`)}`
-      : `https://vuelos.lumivia.app/?origin_iata=${encodeURIComponent(origen)}&destination_iata=${encodeURIComponent(destino)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
   }
 
   function poblarMeses() {
@@ -152,22 +128,6 @@
         Buscador gratuito de vuelos. Lumivia no vende boletos: comparamos opciones y te llevamos a la aerolínea o agencia donde completas la reserva.
       </p>
 
-      <form class="mt-8 grid grid-cols-1 gap-3 rounded-3xl border border-white/80 bg-white/90 p-4 text-left shadow-xl backdrop-blur md:grid-cols-5" onsubmit={abrirBuscador}>
-        <label class="text-[11px] font-black uppercase tracking-widest text-gray-500">Origen (IATA)
-          <input bind:value={buscadorOrigen} required maxlength="3" pattern="[A-Za-z][A-Za-z][A-Za-z]" placeholder="MEX" class="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-3 text-sm font-bold uppercase text-lumiDark outline-none focus:border-lumiCyan" />
-        </label>
-        <label class="text-[11px] font-black uppercase tracking-widest text-gray-500">Destino (IATA)
-          <input bind:value={buscadorDestino} required maxlength="3" pattern="[A-Za-z][A-Za-z][A-Za-z]" placeholder="CUN" class="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-3 text-sm font-bold uppercase text-lumiDark outline-none focus:border-lumiCyan" />
-        </label>
-        <label class="text-[11px] font-black uppercase tracking-widest text-gray-500">Salida
-          <input type="date" bind:value={buscadorSalida} min={fechaMinima} required class="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-3 text-sm font-semibold text-lumiDark outline-none focus:border-lumiCyan" />
-        </label>
-        <label class="text-[11px] font-black uppercase tracking-widest text-gray-500">Regreso
-          <input type="date" bind:value={buscadorRegreso} min={buscadorSalida || fechaMinima} required class="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-3 text-sm font-semibold text-lumiDark outline-none focus:border-lumiCyan" />
-        </label>
-        <button type="submit" class="mt-auto rounded-xl bg-lumiDark px-5 py-3 text-center text-sm font-black text-white transition-colors hover:bg-lumiCyan hover:text-lumiDark">Buscar vuelos ↗</button>
-      </form>
-      <p class="mt-2 text-xs text-gray-500">El buscador se abre en una nueva pestaña. La disponibilidad y el precio final los confirma el proveedor externo.</p>
     </div>
 
     <div class="mb-6 flex items-center justify-between relative z-10 w-full">
@@ -303,7 +263,6 @@
 
   </main>
 
-  <WhatsAppButton pais={data.paisUpper || data.pais} />
   <Footer />
 
   {#if modalAbierto}

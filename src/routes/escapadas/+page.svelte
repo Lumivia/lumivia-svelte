@@ -7,7 +7,6 @@
   import { supabase } from '$lib/supabaseClient';
   import ModalOferta from '$lib/components/ModalOferta.svelte';
   import Footer from '$lib/components/Footer.svelte';
-  import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
   import { obtenerImagen } from '$lib/utils/imagenes'; // 🔥 Sabueso de imágenes invocado
   import { esOfertaVigente, tituloOferta } from '$lib/utils/ofertas';
   import { AVISO_OFERTA } from '$lib/utils/avisos';
@@ -377,7 +376,6 @@
 
   </main>
 
-  <WhatsAppButton pais={paisActual} />
   <Footer />
 
   {#if modalAbierto && dealSeleccionado}
