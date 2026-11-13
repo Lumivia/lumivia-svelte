@@ -3,6 +3,7 @@ import { error as httpError, redirect } from '@sveltejs/kit';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/public';
 import { fechaDeHoy, filtrarOfertasPublicables } from '$lib/utils/ofertas';
+import { registrarError } from '$lib/server/observabilidad';
 
 const mercadosPermitidos = {
   mx: { nombre: 'México', moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' },
@@ -42,6 +43,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
 
   let ofertasEnriquecidas: any[] = [];
   let totalItems = 0;
+  let cargaError = false;
 
   // 🔥 Try/Catch global para evitar Error 500 si la DB falla
   try {
@@ -112,8 +114,10 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
       }
     }
   } catch (dbError) {
-    console.error('Error crítico procesando DB en página de escapadas:', dbError);
-    throw httpError(503, 'No pudimos cargar las escapadas en este momento');
+    cargaError = true;
+    ofertasEnriquecidas = [];
+    totalItems = 0;
+    registrarError('getaways.load_error', dbError, { market: paisUpper });
   }
 
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
@@ -144,6 +148,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
     deals: ofertasEnriquecidas,
     page,
     totalPages,
+    cargaError,
     schemaJSON: schemaAEO,
     title: page > 1 ? `${metaTitle} - Página ${page}` : metaTitle,
     description: metaDescription,

@@ -299,7 +299,14 @@
         <div id="hook-deals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20 relative z-10">
           {#if !data.deals || data.deals.length === 0}
             <div class="col-span-full text-center text-gray-400 py-32 font-medium bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col items-center gap-4">
-              <span>No hay ofertas activas desde este origen actualmente.<br/>Prueba seleccionando otro en el menú izquierdo.</span>
+              {#if data.cargaError}
+                <span class="text-4xl">🔄</span>
+                <h2 class="text-xl font-black text-lumiDark">No pudimos actualizar el catálogo</h2>
+                <span>La sección sigue disponible, pero el proveedor de datos no respondió.</span>
+                <a href={`/masdestinos?pais=${paisActual}`} class="inline-flex rounded-xl bg-lumiDark px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white hover:bg-lumiCyan hover:text-lumiDark">Reintentar</a>
+              {:else}
+                <span>No hay ofertas activas desde este origen actualmente.<br/>Prueba seleccionando otro en el menú izquierdo.</span>
+              {/if}
             </div>
           {:else}
             {#each data.deals as deal, index (deal.id)}

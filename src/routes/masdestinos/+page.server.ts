@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/public';
 import { error as httpError } from '@sveltejs/kit';
 import { fechaDeHoy, filtrarOfertasPublicables } from '$lib/utils/ofertas';
+import { registrarError } from '$lib/server/observabilidad';
 
 // 🔥 CAMBIO: Límite estricto de 12 tarjetas por página
 const PAGE_SIZE = 12;
@@ -60,6 +61,7 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
     let paisMercadoResult = paisQuery;
     let origenesCodigos: string[] = [];
     let origenesDisponibles: OrigenDisponible[] = [];
+    let cargaError = false;
 
     try {
         let dealEncontrado = false;
@@ -160,8 +162,12 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
             }
         }
     } catch (dbError) {
-        console.error("Error crítico procesando ofertas en DB:", dbError);
-        throw httpError(503, 'No pudimos cargar las ofertas en este momento');
+        cargaError = true;
+        ofertasCrudas = [];
+        total = 0;
+        totalPages = 1;
+        origenesDisponibles = [];
+        registrarError('catalog.load_error', dbError, { market: paisQuery });
     }
 
     const responseData = { 
@@ -175,7 +181,8 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
         canonicalURL,
         ordenActual,
         origenFiltroActual: origenFiltro,
-        origenesDisponibles 
+        origenesDisponibles,
+        cargaError
     };
 
     return responseData;

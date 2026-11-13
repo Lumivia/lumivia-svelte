@@ -235,7 +235,16 @@
 
     <div id="escapadas-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20 relative z-10 w-full">
       {#if !dealsFiltrados || dealsFiltrados.length === 0}
-        <div class="col-span-full text-center text-gray-400 py-20 font-medium w-full">Aún no hay escapadas activas en la bóveda de {paisActual}.</div>
+        <div class="col-span-full text-center py-20 font-medium w-full bg-white/70 rounded-3xl border border-gray-100 shadow-sm px-6">
+          {#if data.cargaError}
+            <div class="text-4xl mb-3">🔄</div>
+            <h2 class="text-xl font-black text-lumiDark mb-2">No pudimos actualizar las escapadas</h2>
+            <p class="text-sm text-gray-500 mb-5">La sección sigue disponible, pero el proveedor de datos no respondió.</p>
+            <a href={`/escapadas?pais=${paisActual}`} class="inline-flex rounded-xl bg-lumiDark px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white hover:bg-lumiCyan hover:text-lumiDark">Reintentar</a>
+          {:else}
+            <span class="text-gray-400">Aún no hay escapadas activas en la bóveda de {paisActual}.</span>
+          {/if}
+        </div>
       {:else}
         {#each dealsFiltrados as deal, index (deal.id)}
           {@const estaMuerta = checarSiEstaMuerta(deal, vuelosReportados)}

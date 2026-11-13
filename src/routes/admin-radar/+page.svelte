@@ -1,25 +1,9 @@
-<script>
-    let password = $state('');
-    let isAuthenticated = $state(false);
-    let error = $state(false);
-
-    // 🔐 LLAVE DE ACCESO
-    const CLAVE_MAESTRA = 'EAV_2026'; 
-
-    function handleLogin() {
-        if (password === CLAVE_MAESTRA) {
-            isAuthenticated = true;
-            error = false;
-        } else {
-            error = true;
-            password = '';
-        }
-    }
+<script lang="ts">
+    let { data, form } = $props();
 
     // 🔥 LA MAGIA DE SVELTE: Acción directa al DOM
     // Esto obliga a Svelte a inyectar el script exactamente cuando el contenedor está listo
-    /** @param {HTMLElement} node */
-    function cargarRadar(node) {
+    function cargarRadar(node: HTMLElement) {
         const script = document.createElement('script');
         script.src = "https://tpwidg.com/content?currency=mxn&trs=504500&shmarker=708095&lat=19.4270499&lng=-99.1275711&powered_by=true&search_host=vuelos.lumivia.app%2Fflights&locale=es&origin=GDL&value_min=0&value_max=1000000&round_trip=true&only_direct=false&radius=1&draggable=true&disable_zoom=false&show_logo=false&scrollwheel=false&primary=%23111827&secondary=%2300d2ff&light=%23ffffff&width=1200&height=600&zoom=2&promo_id=4054&campaign_id=100";
         script.async = true;
@@ -38,33 +22,40 @@
 
 <svelte:head>
     <title>Radar Secreto | Lumivia</title>
+    <meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
 <div class="admin-wrapper">
-    {#if !isAuthenticated}
+    {#if !data.authenticated}
         <section class="login-box">
             <div class="logo">🛰️ <span>RADAR</span> LUMIVIA</div>
             <p>Acceso restringido al centro de mando.</p>
             
-            <div class="input-group">
+            <form method="POST" action="?/login" class="input-group">
                 <input 
                     type="password" 
-                    bind:value={password} 
+                    name="password"
                     placeholder="Contraseña"
-                    onkeydown={(e) => e.key === 'Enter' && handleLogin()}
+                    autocomplete="current-password"
+                    required
+                    disabled={!data.configured}
                 />
-                <button onclick={handleLogin}>ACCEDER</button>
-            </div>
+                <button type="submit" disabled={!data.configured}>ACCEDER</button>
+            </form>
             
-            {#if error}
-                <div class="error-msg">Clave incorrecta. Intento registrado.</div>
+            {#if form?.message}
+                <div class="error-msg">{form.message}</div>
+            {:else if !data.configured}
+                <div class="error-msg">El acceso administrativo no está configurado.</div>
             {/if}
         </section>
     {:else}
         <section class="radar-dashboard">
             <header class="radar-header">
                 <div class="status"><span class="dot"></span> RADAR ACTIVO (Conexión Directa)</div>
-                <button class="logout" onclick={() => location.reload()}>CERRAR SESIÓN</button>
+                <form method="POST" action="?/logout">
+                    <button type="submit" class="logout">CERRAR SESIÓN</button>
+                </form>
             </header>
             
             <div class="map-frame" use:cargarRadar></div>
