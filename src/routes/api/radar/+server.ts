@@ -5,6 +5,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { headersLimite, limitarSolicitud, obtenerClaveCliente } from '$lib/server/rate-limit';
 import { registrarAdvertencia, registrarError, registrarEvento } from '$lib/server/observabilidad';
+import { ErrorSolicitud, leerObjetoJson } from '$lib/server/request';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,7 +28,7 @@ export const POST: RequestHandler = async ({ request, fetch, getClientAddress, l
   }
 
   try {
-    const body = await request.json();
+    const body = await leerObjetoJson(request);
     const nombre = limpiar(body.nombre, 80);
     const origen = limpiar(body.origen, 80);
     const destino = limpiar(body.destino, 80);
@@ -75,6 +76,9 @@ export const POST: RequestHandler = async ({ request, fetch, getClientAddress, l
     registrarEvento('radar.created', { requestId: locals.requestId });
     return json({ success: true }, { headers: rateHeaders });
   } catch (error) {
+    if (error instanceof ErrorSolicitud) {
+      return json({ success: false, message: error.message }, { status: error.status, headers: rateHeaders });
+    }
     registrarError('radar.unexpected_error', error, { requestId: locals.requestId });
     return json({ success: false, message: 'No pudimos procesar la solicitud.' }, { status: 500, headers: rateHeaders });
   }

@@ -108,7 +108,7 @@
         </div>
 
         <div class="text-[15px] text-gray-600 leading-relaxed font-medium whitespace-pre-line mb-8 text-justify">
-          {@html cuerpoPostLimpiado}
+          {cuerpoPostLimpiado}
         </div>
 
         {#if !esNacional}

@@ -27,6 +27,7 @@
   const banderaActual = $derived(configMercado[paisActual]?.bandera ?? 'https://flagcdn.com/w20/mx.png');
   
   const urlCanonica = $derived(`https://www.lumivia.app${page.url.pathname}`);
+  const schemaJSONSeguro = $derived(data.schemaJSON ? String(data.schemaJSON).replace(/</g, '\\u003c') : '');
   
   let dropdownAbierto = $state(false);
   let modalAbierto = $state(false);
@@ -202,7 +203,7 @@
   <meta name="description" content="Compara vuelos vigentes por origen, fechas, aerolínea y precio. Reserva directamente con el proveedor." />
   <link rel="canonical" href={urlCanonica} />
   {#if data.schemaJSON}
-    {@html `<script type="application/ld+json">${data.schemaJSON}</script>`}
+    {@html `<script type="application/ld+json">${schemaJSONSeguro}</script>`}
   {/if}
 </svelte:head>
 

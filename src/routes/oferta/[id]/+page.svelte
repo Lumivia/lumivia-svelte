@@ -134,6 +134,35 @@
     const splitText = original.split(/👉|👇|✨|Comenta la palabra/i);
     return splitText[0].trim().replace(/[\(\[\{\-\:\s]+$/, '');
   });
+
+  const productoJsonLdSeguro = $derived.by(() => JSON.stringify({
+    '@context': 'https://schema.org/',
+    '@type': 'Product',
+    name: `Vuelo: ${deal?.titulo_gancho || ''}`,
+    image: imgFinal,
+    description: `Vuelo redondo desde ${origenNombre} a ${destinoNombre}`,
+    brand: { '@type': 'Brand', name: 'Lumivia' },
+    offers: {
+      '@type': 'Offer',
+      url: `https://lumivia.app/oferta/${deal?.id || ''}`,
+      priceCurrency: monedaDeal,
+      price: deal?.precio || 0,
+      availability: 'https://schema.org/InStock'
+    }
+  }).replace(/</g, '\\u003c'));
+
+  const geoJsonLdSeguro = $derived.by(() => {
+    if (!deal?.geo_schema) return null;
+
+    try {
+      const valor = typeof deal.geo_schema === 'string'
+        ? JSON.parse(deal.geo_schema.trim().replace(/^<script[^>]*>/i, '').replace(/<\/script>$/i, ''))
+        : deal.geo_schema;
+      return JSON.stringify(valor).replace(/</g, '\\u003c');
+    } catch {
+      return null;
+    }
+  });
 </script>
 
 <svelte:head>
@@ -153,26 +182,10 @@
   <meta name="twitter:description" content="Vuelo desde {origenNombre} a {destinoNombre}. Tasas e impuestos incluidos." />
   <meta name="twitter:image" content={imgFinal} />
 
-  {@html `<script type="application/ld+json">
-    {
-      "@context": "https://schema.org/",
-      "@type": "Product",
-      "name": "Vuelo: ${deal?.titulo_gancho}",
-      "image": "${imgFinal}",
-      "description": "Vuelo redondo desde ${origenNombre} a ${destinoNombre}",
-      "brand": { "@type": "Brand", "name": "Lumivia" },
-      "offers": {
-        "@type": "Offer",
-        "url": "https://lumivia.app/oferta/${deal?.id}",
-        "priceCurrency": "${monedaDeal}",
-        "price": "${deal?.precio}",
-        "availability": "https://schema.org/InStock"
-      }
-    }
-  </script>`}
+  {@html `<script type="application/ld+json">${productoJsonLdSeguro}</script>`}
 
-  {#if deal?.geo_schema}
-    {@html deal.geo_schema}
+  {#if geoJsonLdSeguro}
+    {@html `<script type="application/ld+json">${geoJsonLdSeguro}</script>`}
   {/if}
 </svelte:head>
 
@@ -235,7 +248,7 @@
               <span>Las fechas específicas de este vuelo ya pasaron, pero puedes consultar los precios actuales haciendo clic abajo.</span>
             </div>
           {/if}
-          {@html cuerpoPostLimpiado}
+          {cuerpoPostLimpiado}
         </div>
 
         <div class="mt-auto bg-gray-50/80 -mx-6 sm:-mx-10 px-6 sm:px-10 pt-8 pb-6 border-t border-gray-100">

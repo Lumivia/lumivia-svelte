@@ -100,6 +100,7 @@
       }
     };
   });
+  const jsonLdSeguro = $derived(jsonLd ? JSON.stringify(jsonLd).replace(/</g, '\\u003c') : '');
 
   $effect(() => {
     if (abierto && deal) {
@@ -128,9 +129,7 @@
 
 <svelte:head>
   {#if jsonLd}
-    <script type="application/ld+json">
-      {@html JSON.stringify(jsonLd)}
-    </script>
+    {@html `<script type="application/ld+json">${jsonLdSeguro}</script>`}
   {/if}
 </svelte:head>
 
@@ -181,7 +180,7 @@
           </div>
         </div>
 
-        <div class="text-[13px] text-gray-600 leading-relaxed font-medium whitespace-pre-line text-justify mb-6">{@html cuerpoPostLimpiado}</div>
+        <div class="text-[13px] text-gray-600 leading-relaxed font-medium whitespace-pre-line text-justify mb-6">{cuerpoPostLimpiado}</div>
 
         <div class="mt-auto">
           <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Complementos de Viaje</h4>

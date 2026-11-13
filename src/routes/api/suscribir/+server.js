@@ -4,6 +4,7 @@ import { env as privateEnv } from '$env/dynamic/private';
 import { json } from '@sveltejs/kit';
 import { headersLimite, limitarSolicitud, obtenerClaveCliente } from '$lib/server/rate-limit';
 import { registrarAdvertencia, registrarError, registrarEvento } from '$lib/server/observabilidad';
+import { ErrorSolicitud, leerObjetoJson } from '$lib/server/request';
 
 export async function POST({ request, fetch, getClientAddress, locals }) {
     const cliente = obtenerClaveCliente(request, getClientAddress);
@@ -20,13 +21,13 @@ export async function POST({ request, fetch, getClientAddress, locals }) {
     }
 
     try {
-        const body = await request.json();
+        const body = await leerObjetoJson(request);
         
         // 1. Sanitización de datos
-        const rawEmail = body.email || '';
-        const email = rawEmail.trim().toLowerCase();
-        const pais = body.pais || 'MX';
-        const nombre = (body.nombre || 'Viajero').trim();
+        const email = String(body.email ?? '').trim().toLowerCase().slice(0, 254);
+        const paisSolicitado = String(body.pais ?? 'MX').trim().toUpperCase();
+        const pais = ['MX', 'CO', 'CL', 'CR'].includes(paisSolicitado) ? paisSolicitado : 'MX';
+        const nombre = String(body.nombre ?? 'Viajero').trim().slice(0, 80) || 'Viajero';
 
         // 2. Escudo de Validación (Regex para email)
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -71,6 +72,9 @@ export async function POST({ request, fetch, getClientAddress, locals }) {
         return json({ success: true }, { headers: rateHeaders });
 
     } catch (err) {
+        if (err instanceof ErrorSolicitud) {
+            return json({ success: false, message: err.message }, { status: err.status, headers: rateHeaders });
+        }
         registrarError('subscription.unexpected_error', err, { requestId: locals.requestId });
         return json({ success: false, message: 'Error inesperado del servidor.' }, { status: 500, headers: rateHeaders });
     }
