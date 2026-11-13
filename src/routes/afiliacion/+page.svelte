@@ -81,8 +81,16 @@
           </h3>
           <p>
             Cuando haces clic en uno de nuestros enlaces sugeridos y reservas un vuelo, un hotel, un tour o compras una eSIM o seguro médico, Lumivia puede recibir una pequeña comisión por parte del proveedor tecnológico.
-            <strong class="text-lumiCyan font-semibold">Esto NO aumenta en absoluto el precio final que tú pagas.</strong>
-            Al contrario, en muchos casos estas alianzas nos permiten ofrecerte acceso a inventario especial o descuentos que no encontrarías de otra forma.
+            <strong class="text-lumiCyan font-semibold">Esto no representa un costo adicional para ti.</strong>
+          </p>
+        </section>
+
+        <section>
+          <h3 class="text-lumiDark font-bold uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
+            <span class="w-6 h-[1px] bg-lumiCyan inline-block"></span> Tarifas y disponibilidad
+          </h3>
+          <p>
+            Las tarifas mostradas corresponden a ofertas temporales y pueden cambiar o agotarse en cualquier momento. La reserva y el cobro se realizan directamente con la aerolínea, agencia o proveedor externo. Antes de pagar, confirma siempre el precio total, la disponibilidad y las condiciones finales en su plataforma.
           </p>
         </section>
 

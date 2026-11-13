@@ -1,3 +1,7 @@
+<script lang="ts">
+  import { AVISO_OFERTA } from '$lib/utils/avisos';
+</script>
+
 <footer class="bg-white border-t border-gray-200 py-10">
   <div class="max-w-7xl mx-auto px-4 text-center">
 
@@ -37,8 +41,7 @@
     </div>
 
     <p class="text-xs text-gray-500 max-w-2xl mx-auto leading-relaxed">
-      © {new Date().getFullYear()} Lumivia. Lumivia es un buscador independiente y no vende boletos.
-      Las reservas se completan en plataformas de terceros bajo sus propios términos. Algunos enlaces son de afiliado y pueden generar una comisión sin cambiar el precio para ti.
+      © {new Date().getFullYear()} Lumivia. Lumivia es un buscador independiente y no vende boletos. {AVISO_OFERTA}
     </p>
 
   </div>

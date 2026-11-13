@@ -201,8 +201,5 @@
         </div>
       </div>
     </div>
-    {#if !estaMuerta}
-      <p class="mt-3 text-[10px] leading-relaxed text-gray-400">Enlace afiliado · la reserva se completa con la aerolínea o agencia.</p>
-    {/if}
   </div>
 </div>

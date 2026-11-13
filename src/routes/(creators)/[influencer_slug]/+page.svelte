@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { AVISO_OFERTA } from '$lib/utils/avisos';
+
     /**
      * Svelte 5 - Lumivia Influencer Storefront
      * Versión: 4.0 (Merge exacto con UI Lumivia Glassmorphism)
@@ -44,7 +46,7 @@
         </div>
 
         <div class="flex items-center gap-4 sm:gap-6">
-          <a href={linkBuscadorVuelos} target="_blank" rel="noopener noreferrer"
+          <a href={linkBuscadorVuelos} target="_blank" rel="noopener noreferrer sponsored"
              class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -52,12 +54,12 @@
             <span class="hidden sm:inline">Vuelos</span>
           </a>
 
-          <a href={linkBuscadorHoteles} target="_blank" rel="noopener noreferrer"
+          <a href={linkBuscadorHoteles} target="_blank" rel="noopener noreferrer sponsored"
              class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
             </svg>
-            <span class="hidden sm:inline">Hoteles</span>
+            <span class="hidden sm:inline">Hoteles ↗</span>
           </a>
         </div>
 
@@ -99,6 +101,8 @@
             <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Actualizado Ahora</span>
         </div>
 
+        <p class="px-2 text-[11px] leading-relaxed text-gray-500">{AVISO_OFERTA}</p>
+
         {#each flights as flight}
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
                 <div class="p-6">
@@ -129,7 +133,7 @@
                     <a 
                         href={buildAffiliateLink(flight.url)} 
                         target="_blank" 
-                        rel="noopener noreferrer" 
+                        rel="noopener noreferrer sponsored"
                         class="block w-full text-center py-4 rounded-xl text-white font-black text-sm uppercase tracking-widest transition-opacity hover:opacity-90"
                         style="background-color: {creator.theme_color};"
                     >

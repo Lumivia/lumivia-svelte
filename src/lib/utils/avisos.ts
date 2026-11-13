@@ -1,0 +1,1 @@
+export const AVISO_OFERTA = 'Las tarifas mostradas corresponden a ofertas temporales y pueden cambiar o agotarse en cualquier momento. La reserva y el cobro se realizan directamente con la aerolínea o agencia externa; confirma el total final antes de pagar. Algunos enlaces son de afiliado: si reservas desde ellos, Lumivia puede recibir una comisión sin costo adicional para ti.';

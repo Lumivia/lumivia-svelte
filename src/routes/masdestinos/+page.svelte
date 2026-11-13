@@ -11,6 +11,7 @@
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
   import { obtenerImagen } from '$lib/utils/imagenes'; 
   import { esOfertaVigente, tituloOferta } from '$lib/utils/ofertas';
+  import { AVISO_OFERTA } from '$lib/utils/avisos';
 
   let { data }: { data: PageData } = $props();
 
@@ -214,7 +215,7 @@
           <span class="hidden sm:inline">Vuelos</span>
         </a>
 
-        <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden sm:flex">
+        <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" rel="noopener noreferrer sponsored" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden sm:flex">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
           <span class="hidden sm:inline">Hoteles ↗</span>
         </a>
@@ -248,7 +249,7 @@
     <div class="mb-12 text-center relative z-10">
       <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-3 leading-tight">Catálogo de vuelos vigentes</h1>
       <p class="mx-auto max-w-2xl text-sm text-gray-500">Filtra por origen y compara fechas, aerolínea y precio. Lumivia no vende boletos; la reserva se completa con el proveedor.</p>
-      <p class="mt-2 text-xs text-gray-400">Algunos enlaces son de afiliado y pueden generar una comisión sin cambiar tu precio.</p>
+      <p class="mx-auto mt-2 max-w-3xl text-xs leading-relaxed text-gray-500">{AVISO_OFERTA}</p>
     </div>
 
     <div class="flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
@@ -388,7 +389,6 @@
                       </div>
                     </div>
                   </div>
-                  {#if !estaMuerta}<p class="mt-3 text-[10px] leading-relaxed text-gray-400">Enlace afiliado · reserva con la aerolínea o agencia.</p>{/if}
                 </div>
               </div>
             {/each}

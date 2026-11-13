@@ -7,6 +7,7 @@
   import Footer from '$lib/components/Footer.svelte';
   import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
   import { supabase } from '$lib/supabaseClient';
+  import { AVISO_OFERTA } from '$lib/utils/avisos';
 
   let { data }: { data: any } = $props();
 
@@ -166,13 +167,13 @@
         </label>
         <button type="submit" class="mt-auto rounded-xl bg-lumiDark px-5 py-3 text-center text-sm font-black text-white transition-colors hover:bg-lumiCyan hover:text-lumiDark">Buscar vuelos ↗</button>
       </form>
-      <p class="mt-2 text-xs text-gray-500">El buscador se abre en una nueva pestaña. La disponibilidad y el precio final los confirma el proveedor.</p>
+      <p class="mt-2 text-xs text-gray-500">El buscador se abre en una nueva pestaña. La disponibilidad y el precio final los confirma el proveedor externo.</p>
     </div>
 
     <div class="mb-6 flex items-center justify-between relative z-10 w-full">
       <h2 class="text-2xl font-bold tracking-tight">Oportunidades Destacadas</h2>
     </div>
-    <p class="-mt-4 mb-6 text-xs text-gray-500">Mostramos solo salidas vigentes. Algunos enlaces son de afiliado; esto no cambia el precio para ti.</p>
+    <p class="-mt-4 mb-6 text-xs leading-relaxed text-gray-500">{AVISO_OFERTA}</p>
 
     <div class="relative w-full mb-16 group z-10">
       <div role="region" aria-label="Ofertas destacadas" use:carruselLogica onmouseenter={() => pausarCarrusel = true} onmouseleave={() => pausarCarrusel = false} ontouchstart={() => pausarCarrusel = true} ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)} class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth w-full">

@@ -10,6 +10,7 @@
   import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
   import { obtenerImagen } from '$lib/utils/imagenes'; // 🔥 Sabueso de imágenes invocado
   import { esOfertaVigente, tituloOferta } from '$lib/utils/ofertas';
+  import { AVISO_OFERTA } from '$lib/utils/avisos';
 
   let { data }: { data: PageData } = $props();
 
@@ -183,7 +184,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg> 
           <span class="hidden sm:inline">Vuelos</span>
         </a>
-        <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden sm:flex">
+        <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" rel="noopener noreferrer sponsored" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden sm:flex">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg> 
           <span class="hidden sm:inline">Hoteles ↗</span>
         </a>
@@ -222,7 +223,7 @@
       <p class="text-base md:text-lg text-gray-500 font-light max-w-2xl mx-auto">
         Viajes de 1 a 4 días con fechas futuras. Lumivia no vende boletos; la reserva se completa con la aerolínea o agencia.
       </p>
-      <p class="mt-2 text-xs text-gray-400">Algunos enlaces son de afiliado y pueden generar una comisión sin cambiar tu precio.</p>
+      <p class="mx-auto mt-2 max-w-3xl text-xs leading-relaxed text-gray-500">{AVISO_OFERTA}</p>
     </div>
 
     <div id="escapadas-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20 relative z-10 w-full">
@@ -299,7 +300,6 @@
                   <svg class="w-3.5 h-3.5 transition-transform group-hover/card:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </button>
               </div>
-              <p class="mt-3 text-[10px] leading-relaxed text-gray-400">Enlace afiliado · reserva con la aerolínea o agencia.</p>
             </div>
           </div>
         {/each}

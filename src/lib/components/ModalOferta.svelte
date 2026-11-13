@@ -4,6 +4,7 @@
   // 🔥 BLINDAJE 1: Importamos el motor maestro de fechas
   import { formatDatesLumivia } from '$lib/utils/formatters';
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
+  import { AVISO_OFERTA } from '$lib/utils/avisos';
 
   const { deal, abierto, cerrar } = $props();
   let links = $state({ tours: '', hotel: '', esim: '', seguro: '' });
@@ -195,25 +196,25 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {#if links.esim && !esNacional}
-              <a href={links.esim} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-emerald-400 hover:shadow-md transition-all group">
+              <a href={links.esim} target="_blank" rel="noopener noreferrer sponsored" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-emerald-400 hover:shadow-md transition-all group">
                 <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1488509082528-cefbba5ad692?q=80&w=2070&auto=format&fit=crop" alt="eSIM Airalo" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
                 <div class="flex-1 min-w-0"><p class="text-[11px] font-black text-lumiDark truncate">Internet eSIM</p><p class="text-[10px] text-gray-500 truncate">Sin Roaming</p></div>
               </a>
             {/if}
             {#if links.tours}
-              <a href={links.tours} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-blue-500 hover:shadow-md transition-all group">
+              <a href={links.tours} target="_blank" rel="noopener noreferrer sponsored" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-blue-500 hover:shadow-md transition-all group">
                 <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=150&q=80" alt="Tours Civitatis" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
                 <div class="flex-1 min-w-0"><p class="text-[11px] font-black text-lumiDark truncate">Tours & Guías</p><p class="text-[10px] text-gray-500 truncate">En español</p></div>
               </a>
             {/if}
             {#if links.hotel}
-              <a href={links.hotel} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-amber-500 hover:shadow-md transition-all group">
+              <a href={links.hotel} target="_blank" rel="noopener noreferrer sponsored" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-amber-500 hover:shadow-md transition-all group">
                 <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=150&q=80" alt="Hoteles" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
                 <div class="flex-1 min-w-0"><p class="text-[11px] font-black text-lumiDark truncate">Hospedaje</p><p class="text-[10px] text-gray-500 truncate">Mapa Interactivo</p></div>
               </a>
             {/if}
             {#if links.seguro && !esNacional}
-              <a href={links.seguro} target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-rose-500 hover:shadow-md transition-all group">
+              <a href={links.seguro} target="_blank" rel="noopener noreferrer sponsored" class="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-rose-500 hover:shadow-md transition-all group">
                 <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm flex-shrink-0"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=150&q=80" alt="Seguro Viaje" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" /></div>
                 <div class="flex-1 min-w-0"><p class="text-[11px] font-black text-lumiDark truncate">Asistencia</p><p class="text-[10px] text-gray-500 truncate">Seguro Global</p></div>
               </a>
@@ -221,15 +222,17 @@
           </div>
         </div>
 
-        <div class="flex items-center justify-between border-t border-gray-100 pt-5 mt-5">
+        <p class="mt-5 border-t border-gray-100 pt-4 text-[10px] leading-relaxed text-gray-500">{AVISO_OFERTA}</p>
+
+        <div class="flex items-center justify-between pt-4">
           <div>
-            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Vuelo Id / Vt</p>
+            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Precio total mostrado</p>
             <div class="text-3xl font-black text-lumiDark leading-none">
               ${Number(deal?.precio ?? 0).toLocaleString('en-US')}
               <span class="text-[11px] font-bold text-gray-400 uppercase ml-0.5">{monedaDeal}</span>
             </div>
           </div>
-          <a href={linkVuelo} target="_blank" rel="noopener noreferrer" class="bg-lumiDark hover:bg-black text-white font-bold px-8 py-3.5 rounded-full transition-all shadow-lg active:scale-95 text-[13px] uppercase tracking-wider flex items-center gap-2">
+          <a href={linkVuelo} target="_blank" rel="noopener noreferrer sponsored" class="bg-lumiDark hover:bg-black text-white font-bold px-8 py-3.5 rounded-full transition-all shadow-lg active:scale-95 text-[13px] uppercase tracking-wider flex items-center gap-2">
             Ver Vuelo <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
           </a>
         </div>
