@@ -30,14 +30,15 @@
     </div>
 
     <div class="flex flex-wrap justify-center gap-4 sm:gap-8 text-[10px] font-extrabold uppercase tracking-widest text-gray-400 mb-6">
-      <a href="/terminos/" class="hover:text-lumiCyan transition-colors">Términos de Uso</a>
-      <a href="/privacidad/" class="hover:text-lumiCyan transition-colors">Privacidad</a>
-      <a href="/afiliacion/" class="hover:text-lumiCyan transition-colors">Afiliados</a>
+      <a href="/terminos" class="hover:text-lumiCyan transition-colors">Términos de Uso</a>
+      <a href="/privacidad" class="hover:text-lumiCyan transition-colors">Privacidad</a>
+      <a href="/afiliacion" class="hover:text-lumiCyan transition-colors">Afiliados</a>
+      <a href="mailto:legal@lumivia.app" class="hover:text-lumiCyan transition-colors">Contacto</a>
     </div>
 
-    <p class="text-[9px] text-gray-500 max-w-xl mx-auto leading-relaxed">
-      © {new Date().getFullYear()} Lumivia. Todos los derechos reservados. Lumivia es un motor de búsqueda independiente.
-      Al usar este sitio, usted acepta que las transacciones ocurren en plataformas de terceros bajo sus propios términos legales.
+    <p class="text-xs text-gray-500 max-w-2xl mx-auto leading-relaxed">
+      © {new Date().getFullYear()} Lumivia. Lumivia es un buscador independiente y no vende boletos.
+      Las reservas se completan en plataformas de terceros bajo sus propios términos. Algunos enlaces son de afiliado y pueden generar una comisión sin cambiar el precio para ti.
     </p>
 
   </div>

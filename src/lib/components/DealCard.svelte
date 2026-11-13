@@ -3,6 +3,7 @@
   import { obtenerImagen } from '$lib/utils/imagenes';
   import { copiarUrlUnica } from '$lib/utils/clipboard';
   import { reportarCambioPrecio } from '$lib/utils/reportes';
+  import { esOfertaVigente, tituloOferta } from '$lib/utils/ofertas';
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
 
   const { deal, monedaActual, paisActual, onclick } = $props();
@@ -13,26 +14,8 @@
   const isAdminModo = $derived(page.url.searchParams.get('admin') === 'true');
 
   const estaMuerta = $derived.by(() => {
-    if (deal?.expirada_manualmente) return true;
     if (reportado) return true;
-    
-    if (!deal?.fecha_salida) return false;
-    try {
-      const fechaStr = String(deal.fecha_salida).split('T')[0];
-      const partes = fechaStr.split(/[-/]/);
-      if (partes.length === 3) {
-        let y, m, d;
-        if (partes[0].length === 4) { y = partes[0]; m = partes[1]; d = partes[2]; }
-        else if (partes[2].length === 4) { y = partes[2]; m = partes[1]; d = partes[0]; }
-        else return false;
-        
-        const fechaSalida = new Date(Number(y), Number(m)-1, Number(d));
-        const hoy = new Date();
-        hoy.setHours(0,0,0,0);
-        return fechaSalida < hoy;
-      }
-    } catch(e) {}
-    return false;
+    return !esOfertaVigente(deal);
   });
 
   const imgFinal = $derived(obtenerImagen(deal));
@@ -81,6 +64,7 @@
 
   const origenSeguro = $derived(String(deal?.origen_nombre || deal?.origen || '').toUpperCase());
   const destinoSeguro = $derived(String(deal?.destino_nombre || deal?.destino || '').toUpperCase());
+  const tituloSeguro = $derived(tituloOferta(deal));
 
   const numeroEscalas = $derived(parseInt(deal?.escalas));
   const esDirecto = $derived(!isNaN(numeroEscalas) && numeroEscalas === 0);
@@ -138,7 +122,7 @@
   <div class="relative h-56 overflow-hidden bg-gray-100 shrink-0">
     <img
       src={imgFinal}
-      alt={deal?.titulo_gancho || 'Oferta'}
+      alt={tituloSeguro}
       loading="lazy"
       class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out"
       onerror={handleImageError}
@@ -162,12 +146,6 @@
         <div class="bg-black/80 text-white font-black px-6 py-2 rounded-full uppercase tracking-widest text-[11px] shadow-2xl border border-white/20">
           Fechas Pasadas / Expirada
         </div>
-      </div>
-    {/if}
-
-    {#if deal?.tiempoTranscurrido && !estaMuerta}
-      <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-lumiDark text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm tracking-wide border border-white/50 uppercase flex items-center gap-1">
-        ⏱️ {deal.tiempoTranscurrido}
       </div>
     {/if}
 
@@ -200,14 +178,14 @@
     </div>
 
     <h3 class="text-xl font-bold mb-4 text-gray-800 group-hover/card:text-lumiDark transition-colors leading-snug line-clamp-2">
-      {deal?.titulo_gancho || 'Vuelo Especial'}
+      {tituloSeguro}
     </h3>
 
     <AmenidadesLinea {deal} {paisActual} />
 
     <div class="mt-auto pt-5 border-t border-gray-100 flex items-end justify-between">
       <div>
-        <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">{estaMuerta ? 'Precio Histórico' : 'Vuelo Id/Vt'}</p>
+        <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">{estaMuerta ? 'Precio histórico' : 'Precio total mostrado'}</p>
         <p class="text-3xl sm:text-4xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tighter">
           <span class="text-lg font-bold text-gray-400 align-top mr-0.5">$</span>{precio} <span class="text-sm font-bold text-gray-400 align-baseline ml-1">{monedaDeal}</span>
         </p>
@@ -223,5 +201,8 @@
         </div>
       </div>
     </div>
+    {#if !estaMuerta}
+      <p class="mt-3 text-[10px] leading-relaxed text-gray-400">Enlace afiliado · la reserva se completa con la aerolínea o agencia.</p>
+    {/if}
   </div>
 </div>

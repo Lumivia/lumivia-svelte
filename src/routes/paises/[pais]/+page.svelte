@@ -6,28 +6,27 @@
   import RadarItem from '$lib/components/RadarItem.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
-  import { calcularTiempoTranscurrido } from '$lib/utils/fechas';
   import { supabase } from '$lib/supabaseClient';
 
   let { data }: { data: any } = $props();
 
   const title = $derived(`Vuelos baratos desde ${data.mercado?.nombre || 'tu país'} - Lumivia`);
-  const description = $derived(`Ofertas destacadas y destinos populares desde ${data.mercado?.nombre || 'tu país'}. Planifica tu próxima gran historia con nuestra bóveda secreta.`);
+  const description = $derived(`Compara vuelos vigentes desde ${data.mercado?.nombre || 'tu país'} y completa la reserva con la aerolínea o agencia.`);
 
-  const ofertasHook = $derived((data.destacadas || []).map((d: any) => ({ ...d, tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at) })));
-  const ofertasRadar = $derived((data.masDestinos || []).map((d: any) => ({ ...d, tiempoTranscurrido: calcularTiempoTranscurrido(d.created_at) })));
+  const ofertasHook = $derived(data.destacadas || []);
+  const ofertasRadar = $derived(data.masDestinos || []);
 
-  function handleSubmitNewsletter(e: Event) { e.preventDefault(); enviarNewsletter(); }
   function handleSubmitRadar(e: Event) { e.preventDefault(); enviarRadar(); }
 
   let ofertaSeleccionada: any = $state(null);
   let modalAbierto = $state(false);
   let pausarCarrusel = $state(false);
 
-  let emailNewsletter = $state('');
-  let newsletterMensaje = $state('');
-  let newsletterClase = $state('');
-  let newsletterCargando = $state(false);
+  let buscadorOrigen = $state('');
+  let buscadorDestino = $state('');
+  let buscadorSalida = $state('');
+  let buscadorRegreso = $state('');
+  const fechaMinima = new Date().toISOString().slice(0, 10);
 
   // 🔥 Variables sincronizadas correctamente para el build
   let radarNombre = $state('');
@@ -54,18 +53,21 @@
     return { destroy() { clearInterval(intervalo); } };
   }
 
-  async function enviarNewsletter() {
-    newsletterCargando = true; newsletterMensaje = ''; newsletterClase = '';
-    try {
-      const response = await fetch('/api/suscribir', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailNewsletter.toLowerCase(), pais: data.paisUpper, nombre: 'Viajero' })
-      });
-      const result = await response.json();
-      if (result.success) { newsletterMensaje = '¡Listo! Te avisaremos de las mejores gangas.'; newsletterClase = 'text-emerald-500'; emailNewsletter = ''; } 
-      else { newsletterMensaje = 'Error al procesar tu suscripción.'; newsletterClase = 'text-red-500'; }
-    } catch (err) { newsletterMensaje = 'Error de conexión. Intenta de nuevo.'; newsletterClase = 'text-red-500'; } 
-    finally { newsletterCargando = false; }
+  function formatoBuscador(fecha: string) {
+    const partes = fecha.split('-');
+    return partes.length === 3 ? `${partes[2]}${partes[1]}` : '';
+  }
+
+  function abrirBuscador(e: Event) {
+    e.preventDefault();
+    const origen = buscadorOrigen.trim().toUpperCase();
+    const destino = buscadorDestino.trim().toUpperCase();
+    const salida = formatoBuscador(buscadorSalida);
+    const regreso = formatoBuscador(buscadorRegreso);
+    const url = salida && regreso
+      ? `https://vuelos.lumivia.app/?flightSearch=${encodeURIComponent(`${origen}${salida}${destino}${regreso}1`)}`
+      : `https://vuelos.lumivia.app/?origin_iata=${encodeURIComponent(origen)}&destination_iata=${encodeURIComponent(destino)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 
   function poblarMeses() {
@@ -138,24 +140,39 @@
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full relative">
 
-    <div class="text-center max-w-3xl mx-auto mb-16 relative z-10 w-full">
+    <div class="text-center max-w-4xl mx-auto mb-12 relative z-10 w-full">
       <h1 class="text-4xl md:text-5xl font-black tracking-tighter mb-4 text-lumiDark leading-tight drop-shadow-sm mt-4">
         Viajes para tus recuerdos.<br>
         <span class="bg-clip-text text-transparent bg-gradient-to-r from-lumiCyan to-blue-500">
           Historias para toda la vida.
         </span>
       </h1>
-      <p class="text-base text-gray-600 mb-0 font-light leading-relaxed">
-        Auditamos miles de vuelos a diario.
-        <strong class="text-lumiDark font-semibold">
-          Dedícate a planear tu próxima gran historia; nosotros nos aseguramos de que el precio sea el mejor posible.
-        </strong>
+      <p class="mx-auto max-w-2xl text-base text-gray-600 font-light leading-relaxed">
+        Buscador gratuito de vuelos. Lumivia no vende boletos: comparamos opciones y te llevamos a la aerolínea o agencia donde completas la reserva.
       </p>
+
+      <form class="mt-8 grid grid-cols-1 gap-3 rounded-3xl border border-white/80 bg-white/90 p-4 text-left shadow-xl backdrop-blur md:grid-cols-5" onsubmit={abrirBuscador}>
+        <label class="text-[11px] font-black uppercase tracking-widest text-gray-500">Origen (IATA)
+          <input bind:value={buscadorOrigen} required maxlength="3" pattern="[A-Za-z][A-Za-z][A-Za-z]" placeholder="MEX" class="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-3 text-sm font-bold uppercase text-lumiDark outline-none focus:border-lumiCyan" />
+        </label>
+        <label class="text-[11px] font-black uppercase tracking-widest text-gray-500">Destino (IATA)
+          <input bind:value={buscadorDestino} required maxlength="3" pattern="[A-Za-z][A-Za-z][A-Za-z]" placeholder="CUN" class="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-3 text-sm font-bold uppercase text-lumiDark outline-none focus:border-lumiCyan" />
+        </label>
+        <label class="text-[11px] font-black uppercase tracking-widest text-gray-500">Salida
+          <input type="date" bind:value={buscadorSalida} min={fechaMinima} required class="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-3 text-sm font-semibold text-lumiDark outline-none focus:border-lumiCyan" />
+        </label>
+        <label class="text-[11px] font-black uppercase tracking-widest text-gray-500">Regreso
+          <input type="date" bind:value={buscadorRegreso} min={buscadorSalida || fechaMinima} required class="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-3 text-sm font-semibold text-lumiDark outline-none focus:border-lumiCyan" />
+        </label>
+        <button type="submit" class="mt-auto rounded-xl bg-lumiDark px-5 py-3 text-center text-sm font-black text-white transition-colors hover:bg-lumiCyan hover:text-lumiDark">Buscar vuelos ↗</button>
+      </form>
+      <p class="mt-2 text-xs text-gray-500">El buscador se abre en una nueva pestaña. La disponibilidad y el precio final los confirma el proveedor.</p>
     </div>
 
     <div class="mb-6 flex items-center justify-between relative z-10 w-full">
       <h2 class="text-2xl font-bold tracking-tight">Oportunidades Destacadas</h2>
     </div>
+    <p class="-mt-4 mb-6 text-xs text-gray-500">Mostramos solo salidas vigentes. Algunos enlaces son de afiliado; esto no cambia el precio para ti.</p>
 
     <div class="relative w-full mb-16 group z-10">
       <div role="region" aria-label="Ofertas destacadas" use:carruselLogica onmouseenter={() => pausarCarrusel = true} onmouseleave={() => pausarCarrusel = false} ontouchstart={() => pausarCarrusel = true} ontouchend={() => setTimeout(() => pausarCarrusel = false, 2000)} class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 no-scrollbar scroll-smooth w-full">
@@ -182,26 +199,6 @@
         {/if}
 
       </div>
-    </div>
-
-    <div class="max-w-2xl mx-auto mb-16 relative z-20 group w-full">
-      <div class="text-center mb-4">
-        <h3 class="text-lg font-bold text-lumiDark">¿Aún no tienes fechas exactas?</h3>
-        <p class="text-sm text-gray-500">Deja que nuestro radar busque por ti y recibe nuestra selección del día.</p>
-      </div>
-      
-      <div class="bg-white/80 backdrop-blur-xl p-2 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-gray-200/60 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-500 group-hover:shadow-[0_8px_40px_rgba(0,210,255,0.12)]">
-        <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
-          <input type="email" bind:value={emailNewsletter} placeholder="Tu mejor correo electrónico..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-5 py-3 text-sm outline-none" />
-          
-          <button type="submit" class="bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark px-8 py-3 rounded-full font-black transition-all active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-[0_4px_15px_rgba(0,210,255,0.25)]" disabled={newsletterCargando}>
-            {newsletterCargando ? 'Guardando...' : 'Suscribirme Gratis'}
-          </button>
-        </form>
-      </div>
-      {#if newsletterMensaje}
-        <p class="text-center text-sm font-bold mt-4 {newsletterClase}">{newsletterMensaje}</p>
-      {/if}
     </div>
 
     <div class="mb-6 mt-4 relative z-10 w-full">
@@ -241,10 +238,10 @@
     <div class="bg-lumiDark text-white border border-gray-800 rounded-3xl px-8 py-10 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-8 mb-12 z-10 w-full">
       <div class="relative z-10 text-center md:text-left flex-grow">
         <h3 class="text-2xl font-black mb-2 tracking-tight">¿Tienes un viaje específico en mente?</h3>
-        <p class="text-gray-400 text-sm font-medium">Explora nuestro buscador global y compara todas las aerolíneas en milisegundos.</p>
+        <p class="text-gray-400 text-sm font-medium">Busca opciones de distintas aerolíneas y agencias en un solo lugar.</p>
       </div>
       <div class="relative z-10 whitespace-nowrap w-full md:w-auto">
-        <a href="https://vuelos.lumivia.app/" target="_blank" class="flex items-center justify-center gap-2 bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark px-8 py-3.5 rounded-2xl font-black transition-all shadow-[0_0_20px_rgba(0,210,255,0.3)] active:scale-95 text-sm uppercase tracking-widest w-full md:w-auto">
+        <a href="https://vuelos.lumivia.app/" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2 bg-lumiCyan hover:bg-[#00b8e6] text-lumiDark px-8 py-3.5 rounded-2xl font-black transition-all shadow-[0_0_20px_rgba(0,210,255,0.3)] active:scale-95 text-sm uppercase tracking-widest w-full md:w-auto">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
           Abrir Buscador
         </a>
@@ -254,7 +251,7 @@
     <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10 w-full mb-20 mx-auto">
       <div class="relative z-10 md:w-5/12 text-center md:text-left">
         <h3 class="text-3xl font-black text-white mb-4 tracking-tight">¿No ves tu destino soñado?</h3>
-        <p class="text-gray-400 font-medium leading-relaxed text-sm">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos el momento perfecto.</p>
+        <p class="text-gray-400 font-medium leading-relaxed text-sm">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Te avisaremos por correo cuando encontremos una opción que coincida con tu solicitud.</p>
       </div>
       <div class="relative z-10 md:w-7/12 w-full bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10">
         <form class="space-y-5 w-full" onsubmit={handleSubmitRadar}>

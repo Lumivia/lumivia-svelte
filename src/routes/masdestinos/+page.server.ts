@@ -2,6 +2,7 @@ import type { PageServerLoad } from './$types';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/public';
 import { error as httpError } from '@sveltejs/kit';
+import { fechaDeHoy, filtrarOfertasPublicables } from '$lib/utils/ofertas';
 
 // 🔥 CAMBIO: Límite estricto de 12 tarjetas por página
 const PAGE_SIZE = 12;
@@ -24,6 +25,9 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
     const rawOrigen = url.searchParams.get('origen');
     const origenSolicitado = rawOrigen?.toUpperCase().trim() ?? '';
     const origenFiltro = /^[A-Z0-9]{3,5}$/.test(origenSolicitado) ? origenSolicitado : null;
+
+    const ordenSolicitado = url.searchParams.get('orden');
+    const ordenActual = ordenSolicitado === 'precio' || ordenSolicitado === 'fecha' ? ordenSolicitado : 'recientes';
     
     const vueloParam = url.searchParams.get('vuelo');
     const vueloNumero = vueloParam ? Number(vueloParam) : null;
@@ -86,18 +90,28 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
                 .from('publicaciones_lumivia')
                 .select('*', { count: 'exact' })
                 .eq('activo', true)
-                .eq('pais_mercado', paisQuery);
+                .eq('pais_mercado', paisQuery)
+                .gte('fecha_salida', fechaDeHoy())
+                .or('expirada_manualmente.is.null,expirada_manualmente.eq.false');
 
             if (origenFiltro) {
                 query = query.eq('origen', origenFiltro);
             }
 
-            query = query.order('created_at', { ascending: false }).range(from, to);
+            if (ordenActual === 'precio') {
+                query = query.order('precio', { ascending: true }).order('created_at', { ascending: false });
+            } else if (ordenActual === 'fecha') {
+                query = query.order('fecha_salida', { ascending: true }).order('precio', { ascending: true });
+            } else {
+                query = query.order('created_at', { ascending: false });
+            }
+
+            query = query.range(from, to);
 
             const { data: deals, count, error } = await query;
 
             if (error) throw error;
-            ofertasCrudas = deals ?? [];
+            ofertasCrudas = filtrarOfertasPublicables(deals ?? []);
             total = count ?? 0;
             totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
             
@@ -105,7 +119,9 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
                 .from('publicaciones_lumivia')
                 .select('origen')
                 .eq('activo', true)
-                .eq('pais_mercado', paisQuery);
+                .eq('pais_mercado', paisQuery)
+                .gte('fecha_salida', fechaDeHoy())
+                .or('expirada_manualmente.is.null,expirada_manualmente.eq.false');
 
             if (origenesError) throw origenesError;
             origenesCodigos = [...new Set((origenesData ?? []).map(d => d.origen).filter(Boolean))].sort();
@@ -157,6 +173,7 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
         deals: ofertasCrudas, 
         schemaJSON, 
         canonicalURL,
+        ordenActual,
         origenFiltroActual: origenFiltro,
         origenesDisponibles 
     };

@@ -2,6 +2,7 @@ import type { PageServerLoad } from './$types';
 import { error as httpError, redirect } from '@sveltejs/kit';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/public';
+import { fechaDeHoy, filtrarOfertasPublicables } from '$lib/utils/ofertas';
 
 const mercadosPermitidos = {
   mx: { nombre: 'México', moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' },
@@ -49,13 +50,15 @@ export const load: PageServerLoad = async ({ url, setHeaders, fetch }) => {
       .select('*')
       .eq('activo', true)
       .eq('pais_mercado', paisUpper)
-      .eq('tipo_vuelo', 'escapada_finde') 
+      .eq('tipo_vuelo', 'escapada_finde')
+      .gte('fecha_salida', fechaDeHoy())
+      .or('expirada_manualmente.is.null,expirada_manualmente.eq.false')
       .order('created_at', { ascending: false });
 
     if (err) {
       throw err;
     } else {
-      const crudas = ofertasCrudas || [];
+      const crudas = filtrarOfertasPublicables(ofertasCrudas || []);
 
       // 🔥 ESCUDO MATEMÁTICO ULTRA ESTRICTO DE BACKEND 🔥
       // Filtra y destruye cualquier registro que dure más de 4 días o menos de 1 día

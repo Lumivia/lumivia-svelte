@@ -5,12 +5,12 @@
   import type { PageData } from './$types';
   
   import { supabase } from '$lib/supabaseClient';
-  import Header from '$lib/components/Header.svelte';
   import ModalOferta from '$lib/components/ModalOferta.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
   import { obtenerImagen } from '$lib/utils/imagenes'; 
+  import { esOfertaVigente, tituloOferta } from '$lib/utils/ofertas';
 
   let { data }: { data: PageData } = $props();
 
@@ -40,11 +40,6 @@
   let radarExito = $state(false);
   let radarError = $state(false);
 
-  let nlEmail = $state('');
-  let nlMensaje = $state('');
-  let nlEstado = $state<'ok' | 'ya' | 'error' | ''>('');
-  let nlEnviando = $state(false);
-
   let mesesDisponibles = $state<string[]>([]);
   let vuelosReportados = $state(new Set<number | string>());
 
@@ -53,26 +48,11 @@
 
   const origenFiltroActual = $derived(data.origenFiltroActual);
   const origenesDisponibles = $derived(data.origenesDisponibles || []);
+  const ordenActual = $derived(data.ordenActual || 'recientes');
 
   function checarSiEstaMuerta(deal: any, reportados: Set<number | string>) {
-    if (deal?.expirada_manualmente) return true;
     if (reportados.has(deal.id)) return true;
-    if (!deal?.fecha_salida) return false;
-    try {
-      const fechaStr = String(deal.fecha_salida).split('T')[0];
-      const partes = fechaStr.split(/[-/]/);
-      if (partes.length === 3) {
-        let y, m, d;
-        if (partes[0].length === 4) { y = partes[0]; m = partes[1]; d = partes[2]; }
-        else if (partes[2].length === 4) { y = partes[2]; m = partes[1]; d = partes[0]; }
-        else return false;
-        const fechaSalida = new Date(Number(y), Number(m)-1, Number(d));
-        const hoy = new Date();
-        hoy.setHours(0,0,0,0);
-        return fechaSalida < hoy;
-      }
-    } catch(e) {}
-    return false;
+    return !esOfertaVigente(deal);
   }
 
   async function handleMatarOferta(id: number | string, e: Event) {
@@ -129,25 +109,20 @@
       window.location.href = url.toString();
   }
 
+  function aplicarOrden(event: Event) {
+    const valor = (event.currentTarget as HTMLSelectElement).value;
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', '1');
+    if (valor === 'recientes') url.searchParams.delete('orden');
+    else url.searchParams.set('orden', valor);
+    window.location.href = url.toString();
+  }
+
   function irAPagina(n: number) {
     if (n < 1 || n > data.totalPages) return;
     const url = new URL(window.location.href);
     url.searchParams.set('page', n.toString());
     window.location.href = url.toString();
-  }
-
-  function calcularTiempoTranscurrido(fechaISO: string | null) {
-    if (!fechaISO) return 'Recientemente';
-    const fechaCreacion = new Date(fechaISO);
-    const ahora = new Date();
-    const diferenciaSegundos = Math.floor((+ahora - +fechaCreacion) / 1000);
-    if (diferenciaSegundos < 60) return `Hace ${diferenciaSegundos} seg`;
-    const diferenciaMinutos = Math.floor(diferenciaSegundos / 60);
-    if (diferenciaMinutos < 60) return `Hace ${diferenciaMinutos} min`;
-    const diferenciaHoras = Math.floor(diferenciaMinutos / 60);
-    if (diferenciaHoras < 24) return `Hace ${diferenciaHoras} horas`;
-    const diferenciaDias = Math.floor(diferenciaHoras / 24);
-    return `Hace ${diferenciaDias} días`;
   }
 
   function formatearFechaCorta(fechaCadena: string | null) {
@@ -166,17 +141,7 @@
     }
   }
 
-  function handleSubmitNewsletter(e: Event) { e.preventDefault(); enviarNewsletter(); }
   function handleSubmitRadar(e: Event) { e.preventDefault(); enviarRadar(); }
-
-  async function enviarNewsletter() {
-    nlEnviando = true; nlMensaje = ''; nlEstado = '';
-    const { error } = await supabase.from('suscriptores_radar').insert([{ email: nlEmail.toLowerCase(), pais: paisActual, nombre: 'Viajero' }]);
-    nlEnviando = false;
-    if (!error) { nlMensaje = '¡Listo! Te avisaremos de las mejores gangas.'; nlEstado = 'ok'; nlEmail = ''; } 
-    else if ((error as any).code === '23505') { nlMensaje = '¡Ya estás en nuestra lista!'; nlEstado = 'ya'; } 
-    else { nlMensaje = 'Error de conexión. Intenta de nuevo.'; nlEstado = 'error'; }
-  }
 
   async function enviarRadar() {
     radarEnviando = true; radarExito = false; radarError = false;
@@ -224,8 +189,8 @@
 </script>
 
 <svelte:head>
-  <title>Lumivia | Catálogo de Oportunidades Premium</title>
-  <meta name="description" content="Descubre oportunidades únicas de vuelos baratos. Catálogo completo de tarifas ocultas." />
+  <title>Lumivia | Catálogo de vuelos vigentes</title>
+  <meta name="description" content="Compara vuelos vigentes por origen, fechas, aerolínea y precio. Reserva directamente con el proveedor." />
   <link rel="canonical" href={urlCanonica} />
   {#if data.schemaJSON}
     {@html `<script type="application/ld+json">${data.schemaJSON}</script>`}
@@ -251,7 +216,7 @@
 
         <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden sm:flex">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-          <span class="hidden sm:inline">Hoteles</span>
+          <span class="hidden sm:inline">Hoteles ↗</span>
         </a>
 
         <div class="h-5 w-px bg-gray-200 hidden sm:block"></div>
@@ -281,18 +246,9 @@
   <main class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-grow w-full relative z-10">
     
     <div class="mb-12 text-center relative z-10">
-      <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-6 leading-tight">Catálogo de Oportunidades</h1>
-      <div class="max-w-xl mx-auto mb-6 relative z-20 group">
-        <div class="bg-white/80 backdrop-blur-xl p-2 rounded-full shadow-lg border border-gray-200 flex flex-col sm:flex-row items-center gap-2 transform transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5">
-          <form class="w-full flex flex-col sm:flex-row gap-2" onsubmit={handleSubmitNewsletter}>
-            <input type="email" placeholder="Ingresa tu correo para recibir nuestra selección VIP..." required class="w-full bg-transparent border-none focus:ring-0 text-lumiDark placeholder-gray-400 px-5 py-2 text-sm outline-none" bind:value={nlEmail} />
-            <button type="submit" class="bg-gradient-to-r from-[#00d2ff] to-[#0096ff] text-white px-8 py-3 rounded-full font-black transition-all hover:brightness-110 active:scale-95 text-sm whitespace-nowrap w-full sm:w-auto shadow-md" disabled={nlEnviando}>{nlEnviando ? 'Guardando...' : 'Suscribirme Gratis'}</button>
-          </form>
-        </div>
-        {#if nlEstado !== ''}
-          <p class="text-center text-sm font-bold mt-4 {nlEstado === 'ok' ? 'text-emerald-600' : nlEstado === 'ya' ? 'text-lumiCyan' : 'text-red-500'}">{nlMensaje}</p>
-        {/if}
-      </div>
+      <h1 class="text-3xl md:text-4xl font-black tracking-tight text-lumiDark mb-3 leading-tight">Catálogo de vuelos vigentes</h1>
+      <p class="mx-auto max-w-2xl text-sm text-gray-500">Filtra por origen y compara fechas, aerolínea y precio. Lumivia no vende boletos; la reserva se completa con el proveedor.</p>
+      <p class="mt-2 text-xs text-gray-400">Algunos enlaces son de afiliado y pueden generar una comisión sin cambiar tu precio.</p>
     </div>
 
     <div class="flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
@@ -319,6 +275,17 @@
       </aside>
 
       <div class="flex-grow w-full min-w-0 relative z-10">
+        <div class="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p class="text-sm text-gray-500">{data.total} vuelo{data.total === 1 ? '' : 's'} vigente{data.total === 1 ? '' : 's'}</p>
+          <label class="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500">
+            Ordenar
+            <select value={ordenActual} onchange={aplicarOrden} class="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-bold normal-case tracking-normal text-lumiDark outline-none focus:border-lumiCyan">
+              <option value="recientes">Más recientes</option>
+              <option value="precio">Menor precio</option>
+              <option value="fecha">Próxima salida</option>
+            </select>
+          </label>
+        </div>
         <div id="hook-deals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20 relative z-10">
           {#if !data.deals || data.deals.length === 0}
             <div class="col-span-full text-center text-gray-400 py-32 font-medium bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col items-center gap-4">
@@ -328,8 +295,8 @@
             {#each data.deals as deal (deal.id)}
               {@const estaMuerta = checarSiEstaMuerta(deal, vuelosReportados)}
               {@const imgFinal = obtenerImagen(deal)}
-              {@const tiempoTranscurrido = calcularTiempoTranscurrido(deal.created_at)}
               {@const fechasCortas = `${formatearFechaCorta(deal.fecha_salida)} - ${formatearFechaCorta(deal.fecha_regreso)}`}
+              {@const tituloSeguro = tituloOferta(deal)}
               
               <!-- 🔥 FIX DE ESCALAS -->
               {@const numeroEscalas = parseInt(deal?.escalas)}
@@ -347,7 +314,7 @@
                 onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
               >
                 <div class="relative h-60 overflow-hidden bg-gray-100 shrink-0">
-                  <img src={imgFinal} alt={deal.titulo_gancho || deal.destino_nombre || deal.destino || 'Oferta de viaje'} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
+                  <img src={imgFinal} alt={tituloSeguro} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
                   
                   {#if isAdminModo && !estaMuerta}
                     <button type="button" onclick={(e) => handleMatarOferta(deal.id, e)} disabled={cargandoAdmin} class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-full font-black text-[10px] shadow-lg z-30 uppercase">
@@ -360,12 +327,6 @@
                       <div class="bg-black/80 text-white font-black px-6 py-2.5 rounded-full uppercase tracking-widest text-[11px]">
                         Fechas Pasadas / Expirada
                       </div>
-                    </div>
-                  {/if}
-
-                  {#if tiempoTranscurrido && !estaMuerta}
-                    <div class="absolute top-4 left-4 bg-white/95 text-lumiDark text-[10px] font-bold px-3 py-2 rounded-xl shadow-md uppercase tracking-wide">
-                      {tiempoTranscurrido}
                     </div>
                   {/if}
 
@@ -399,14 +360,16 @@
                   </div>
 
                   <h3 class="text-lg font-extrabold mb-4 text-gray-900 group-hover/card:text-[#0096ff] transition-colors leading-tight line-clamp-2 h-11 flex items-center">
-                    {deal.titulo_gancho || 'Oferta Especial'}
+                    {tituloSeguro}
                   </h3>
+
+                  <p class="mb-4 text-xs font-black uppercase tracking-widest text-gray-500">{fechasCortas}</p>
 
                   <AmenidadesLinea {deal} {paisActual} />
 
                   <div class="mt-auto pt-6 border-t border-gray-100 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 sm:gap-0">
                     <div class="flex flex-col">
-                      <p class="text-[10px] text-gray-400 uppercase tracking-widest font-extrabold mb-1">{estaMuerta ? 'Precio Pasado' : 'Precio Id/Vt'}</p>
+                      <p class="text-[10px] text-gray-400 uppercase tracking-widest font-extrabold mb-1">{estaMuerta ? 'Precio pasado' : 'Precio total mostrado'}</p>
                       <p class="text-4xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tighter flex items-start">
                         <span class="text-lg font-bold text-gray-400 mt-1.5 mr-1">$</span>
                         {Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')} 
@@ -425,6 +388,7 @@
                       </div>
                     </div>
                   </div>
+                  {#if !estaMuerta}<p class="mt-3 text-[10px] leading-relaxed text-gray-400">Enlace afiliado · reserva con la aerolínea o agencia.</p>{/if}
                 </div>
               </div>
             {/each}
@@ -456,7 +420,7 @@
         <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10 w-full mt-10">
           <div class="relative z-10 md:w-5/12 text-center md:text-left">
             <h3 class="text-3xl font-black text-white mb-4 tracking-tight leading-tight">¿No Encuentras Tu Destino?</h3>
-            <p class="text-gray-400 font-medium leading-relaxed text-sm">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos una tarifa oculta para ti.</p>
+            <p class="text-gray-400 font-medium leading-relaxed text-sm">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Te avisaremos por correo cuando encontremos una opción que coincida con tu solicitud.</p>
           </div>
           <div class="relative z-10 md:w-7/12 w-full bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10">
             <form class="space-y-5 w-full" onsubmit={handleSubmitRadar}>

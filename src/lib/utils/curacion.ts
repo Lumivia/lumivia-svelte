@@ -1,9 +1,11 @@
+import { filtrarOfertasPublicables } from '$lib/utils/ofertas';
+
 export function curarOfertas(ofertas: any[], paisActual: string) {
   if (!ofertas || ofertas.length === 0) {
     return { hookDeals: [], radarDeals: [] };
   }
 
-  const limpias = ofertas
+  const limpias = filtrarOfertasPublicables(ofertas)
     .filter((d) => d.destino && d.origen)
     .map((d) => ({
       ...d,

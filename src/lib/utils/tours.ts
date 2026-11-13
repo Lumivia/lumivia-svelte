@@ -43,8 +43,8 @@ export function obtenerTours(destino: string, salida: string, regreso: string): 
   return [
     {
       titulo: `Actividades en ${iata}`,
-      precio: 'Mejor precio garantizado',
-      duracion: 'Disponibilidad inmediata',
+      precio: 'Consulta el precio con el proveedor',
+      duracion: 'Sujeto a disponibilidad',
       url: urlFinal,
       // Dejamos la imagen vacía para que ExtrasOferta.svelte inyecte la imagen premium de Unsplash
       imagen: '' 

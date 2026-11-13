@@ -95,7 +95,7 @@
             <span class="w-6 h-[1px] bg-lumiCyan inline-block"></span> 3. Uso de Cookies y Tecnologías de Rastreo
           </h3>
           <p>
-            Nuestra plataforma utiliza cookies de sesión, analíticas (Google Analytics / GTM) y enlaces de rastreo de afiliados. Estas herramientas nos permiten medir el tráfico del sitio y asegurar que Lumivia reciba la comisión correspondiente cuando usted interactúa con nuestros socios comerciales (como aerolíneas, hoteles o agencias de tours). Usted puede deshabilitar estas cookies ajustando la configuración de su navegador, aunque esto podría limitar ciertas funcionalidades de nuestra plataforma.
+            Nuestra plataforma utiliza cookies esenciales y, solo con su consentimiento, cookies analíticas de Google Tag Manager para medir el uso del sitio. Puede aceptar o rechazar las cookies opcionales desde el aviso mostrado al visitar Lumivia; rechazarlas no impide usar el buscador. Los enlaces de afiliados pueden incluir identificadores necesarios para atribuir una comisión cuando usted interactúa con nuestros socios comerciales.
           </p>
         </section>
 

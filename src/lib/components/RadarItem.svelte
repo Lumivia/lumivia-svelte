@@ -2,6 +2,7 @@
   import { page } from '$app/state';
   import { obtenerImagen } from '$lib/utils/imagenes';
   import { copiarUrlUnica } from '$lib/utils/clipboard';
+  import { esOfertaVigente, tituloOferta } from '$lib/utils/ofertas';
 
   const { deal, monedaActual, onclick } = $props();
 
@@ -10,27 +11,7 @@
   // 🕵️ MODO DIOS: Lee si la URL tiene ?admin=true
   const isAdminModo = $derived(page.url.searchParams.get('admin') === 'true');
 
-  // 💀 Evalúa si la oferta está muerta (Manual o por fecha)
-  const estaMuerta = $derived.by(() => {
-    if (deal?.expirada_manualmente) return true;
-    if (!deal?.fecha_salida) return false;
-    try {
-      const fechaStr = String(deal.fecha_salida).split('T')[0];
-      const partes = fechaStr.split(/[-/]/);
-      if (partes.length === 3) {
-        let y, m, d;
-        if (partes[0].length === 4) { y = partes[0]; m = partes[1]; d = partes[2]; }
-        else if (partes[2].length === 4) { y = partes[2]; m = partes[1]; d = partes[0]; }
-        else return false;
-        
-        const fechaSalida = new Date(Number(y), Number(m)-1, Number(d));
-        const hoy = new Date();
-        hoy.setHours(0,0,0,0);
-        return fechaSalida < hoy;
-      }
-    } catch(e) {}
-    return false;
-  });
+  const estaMuerta = $derived(!esOfertaVigente(deal));
 
   const esVip = $derived(deal?.tipo_vuelo === 'directo' || deal?.escalas === 0);
   const imgFinal = $derived(obtenerImagen(deal, 150));
@@ -81,6 +62,7 @@
 
   const origenSeguro = $derived(String(deal.origen_nombre || deal.origen || '').toUpperCase());
   const destinoSeguro = $derived(String(deal.destino_nombre || deal.destino || '').toUpperCase());
+  const tituloSeguro = $derived(tituloOferta(deal));
 
   async function handleCopiar(e: Event) {
     e.stopPropagation();
@@ -129,7 +111,7 @@
           src={imgFinal}
           loading="lazy"
           class="h-14 w-14 rounded-xl object-cover shadow-sm border border-gray-200 transform group-hover/item:scale-105 transition-transform duration-500 ease-out"
-          alt={deal.titulo_gancho || destinoSeguro}
+          alt={tituloSeguro}
           onerror={handleImageError}
         />
         {#if estaMuerta}
@@ -141,7 +123,7 @@
 
       <div class="min-w-0 flex-1">
         <h4 class="font-bold text-gray-800 text-base group-hover/item:text-lumiDark transition-colors line-clamp-1">
-          {deal.titulo_gancho || `Oferta a ${destinoSeguro}`}
+          {tituloSeguro}
         </h4>
         <div class="flex flex-wrap items-center text-xs mt-1.5 gap-2">
           <div class="flex items-center text-[10.5px] font-black text-lumiDark uppercase tracking-widest break-words leading-snug">

@@ -1,6 +1,7 @@
 import type { RequestHandler } from './$types';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/public';
+import { fechaDeHoy } from '$lib/utils/ofertas';
 
 // 🔥 TIER 1 SVELTEKIT: Bloqueo de prerenderizado estático.
 // Garantiza a Google que este endpoint procesará datos frescos en cada petición.
@@ -31,8 +32,10 @@ export const GET: RequestHandler = async () => {
     // Limitamos a 10,000 para evitar Timeouts (Error 504) cuando el catálogo crezca masivamente.
     const { data: deals } = await supabase
         .from('publicaciones_lumivia')
-        .select('id, created_at, pais_mercado')
+        .select('id, created_at, pais_mercado, fecha_salida')
         .eq('activo', true)
+        .gte('fecha_salida', fechaDeHoy())
+        .or('expirada_manualmente.is.null,expirada_manualmente.eq.false')
         .order('created_at', { ascending: false })
         .limit(10000);
 

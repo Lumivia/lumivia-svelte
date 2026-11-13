@@ -20,10 +20,12 @@ export async function load({ params }) {
         // 2. EL NUEVO MOTOR DE REGLAS (Filtros MX y Calidad 9/10)
         const { data: publicaciones, error: vuelosError } = await supabase
             .from('publicaciones_lumivia') 
-            .select('origen, destino, precio, link_compra')
+            .select('origen, destino, precio, link_compra, fecha_salida')
             .eq('activo', true) 
             .eq('pais_mercado', 'MX')         // 👈 Regla 1: Solo mercado mexicano
             .gte('calidad_oferta', 9)         // 👈 Regla 2: Calidad Mayor o Igual a 9
+            .gte('fecha_salida', new Date().toISOString().slice(0, 10))
+            .or('expirada_manualmente.is.null,expirada_manualmente.eq.false')
             .order('created_at', { ascending: false })
             .limit(10); 
 

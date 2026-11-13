@@ -9,6 +9,7 @@
   import Footer from '$lib/components/Footer.svelte';
   import WhatsAppButton from '$lib/components/WhatsAppButton.svelte'; 
   import { obtenerImagen } from '$lib/utils/imagenes'; // 🔥 Sabueso de imágenes invocado
+  import { esOfertaVigente, tituloOferta } from '$lib/utils/ofertas';
 
   let { data }: { data: PageData } = $props();
 
@@ -107,24 +108,8 @@
   }
 
   function checarSiEstaMuerta(deal: any, reportados: Set<number | string>) {
-    if (deal?.expirada_manualmente) return true;
     if (reportados.has(deal.id)) return true;
-    if (!deal?.fecha_salida) return false;
-    try {
-      const fechaStr = String(deal.fecha_salida).split('T')[0];
-      const partes = fechaStr.split(/[-/]/);
-      if (partes.length === 3) {
-        let y, m, d;
-        if (partes[0].length === 4) { y = partes[0]; m = partes[1]; d = partes[2]; }
-        else if (partes[2].length === 4) { y = partes[2]; m = partes[1]; d = partes[0]; }
-        else return false;
-        const fechaSalida = new Date(Number(y), Number(m)-1, Number(d));
-        const hoy = new Date();
-        hoy.setHours(0,0,0,0);
-        return fechaSalida < hoy;
-      }
-    } catch(e) {}
-    return false;
+    return !esOfertaVigente(deal);
   }
 
   async function handleMatarOferta(id: number | string, e: Event) {
@@ -200,7 +185,7 @@
         </a>
         <a href="https://www.stay22.com/allez/roam?aid=lumivia" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden sm:flex">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg> 
-          <span class="hidden sm:inline">Hoteles</span>
+          <span class="hidden sm:inline">Hoteles ↗</span>
         </a>
         <a href="/escapadas?pais={paisActual}" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-lumiCyan transition-colors hidden lg:flex">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
@@ -235,8 +220,9 @@
     <div class="mb-12 text-center relative z-10">
       <h1 class="text-3xl md:text-5xl font-black tracking-tight text-lumiDark mb-4">Escapadas de Fin de Semana</h1>
       <p class="text-base md:text-lg text-gray-500 font-light max-w-2xl mx-auto">
-        Poco tiempo y sin gastar mucho. Vuelos seleccionados especialmente para que desconectes de la rutina el próximo fin de semana.
+        Viajes de 1 a 4 días con fechas futuras. Lumivia no vende boletos; la reserva se completa con la aerolínea o agencia.
       </p>
+      <p class="mt-2 text-xs text-gray-400">Algunos enlaces son de afiliado y pueden generar una comisión sin cambiar tu precio.</p>
     </div>
 
     <div id="escapadas-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20 relative z-10 w-full">
@@ -250,6 +236,7 @@
           {@const origenSeguro = String(deal.origen_nombre || deal.origen || '').toUpperCase()}
           {@const destinoSeguro = String(deal.destino_nombre || deal.destino || '').toUpperCase()}
           {@const fechasPremium = formatearFechasPremium(deal.fecha_salida, deal.fecha_regreso)}
+          {@const tituloSeguro = tituloOferta(deal)}
 
           <div 
             role="button" tabindex="0" 
@@ -258,7 +245,7 @@
             onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(deal); } }}
           >
             <div class="relative h-[220px] overflow-hidden bg-gray-200 shrink-0 w-full">
-              <img src={imgFinal} alt={destinoSeguro} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
+              <img src={imgFinal} alt={tituloSeguro} loading="lazy" class="w-full h-full object-cover transform group-hover/card:scale-105 transition-transform duration-700 ease-out" onerror={handleImageError} />
               
               {#if isAdminModo && !estaMuerta}
                 <button type="button" onclick={(e) => handleMatarOferta(deal.id, e)} class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600/90 text-white px-4 py-1.5 rounded-full font-black text-[10px] z-30 uppercase">MATAR</button>
@@ -296,15 +283,15 @@
                 {/if}
               </div>
 
-              <h3 class="font-bold text-lg leading-snug mb-3 text-lumiDark">✨ Escapada: {destinoSeguro} desde ${deal.precio} {monedaActual}.</h3>
+              <h3 class="font-bold text-lg leading-snug mb-3 text-lumiDark">{tituloSeguro}</h3>
               
               <div class="text-[10px] text-gray-400 font-bold flex items-center gap-2 mb-4 uppercase tracking-widest">
-                <span>🎒 MOCHILA PERSONAL</span> <span class="text-gray-300">•</span> <span>🛡️ IMPUESTOS INC.</span>
+                {#if deal.aerolinea}<span>✈️ {deal.aerolinea}</span><span class="text-gray-300">•</span>{/if}<span>🛡️ IMPUESTOS INC.</span>
               </div>
 
               <div class="mt-auto flex items-center justify-between pt-4 border-t border-gray-100 w-full">
                 <div>
-                  <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">Vuelo Ida/Vt</p>
+                  <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">Precio total mostrado</p>
                   <p class="text-2xl font-black text-lumiDark leading-none drop-shadow-sm">${deal.precio} <span class="text-xs font-bold text-gray-400">{monedaActual}</span></p>
                 </div>
                 <button class="bg-lumiDark group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark text-white px-5 py-2.5 rounded-full text-[11px] font-black uppercase transition-colors flex items-center gap-1.5 shadow-md">
@@ -312,6 +299,7 @@
                   <svg class="w-3.5 h-3.5 transition-transform group-hover/card:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </button>
               </div>
+              <p class="mt-3 text-[10px] leading-relaxed text-gray-400">Enlace afiliado · reserva con la aerolínea o agencia.</p>
             </div>
           </div>
         {/each}
@@ -338,7 +326,7 @@
     <div class="bg-lumiDark rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-10 border border-gray-800 z-10 w-full mb-20 mx-auto">
       <div class="relative z-10 md:w-5/12 text-center md:text-left">
         <h3 class="text-3xl font-black text-white mb-4 tracking-tight">¿No ves tu destino soñado?</h3>
-        <p class="text-gray-400 font-medium leading-relaxed text-sm">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Nuestro sistema rastreará los precios 24/7 y te avisaremos por correo en cuanto detectemos el momento perfecto.</p>
+        <p class="text-gray-400 font-medium leading-relaxed text-sm">Dinos desde dónde sales, a dónde quieres ir y en qué mes. Te avisaremos por correo cuando encontremos una opción que coincida con tu solicitud.</p>
       </div>
       <div class="relative z-10 md:w-7/12 w-full bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10">
         <form class="space-y-5 w-full" onsubmit={handleSubmitRadar}>

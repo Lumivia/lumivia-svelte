@@ -3,6 +3,7 @@ import { error as httpError, redirect } from '@sveltejs/kit';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/public';
 import { curarOfertas } from '$lib/utils/curacion';
+import { fechaDeHoy } from '$lib/utils/ofertas';
 
 const mercadosPermitidos = {
   mx: { nombre: 'México', moneda: 'MXN', bandera: 'https://flagcdn.com/w20/mx.png' },
@@ -44,6 +45,8 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, depends 
       .select('*')
       .eq('activo', true)
       .eq('pais_mercado', paisUpper)
+      .gte('fecha_salida', fechaDeHoy())
+      .or('expirada_manualmente.is.null,expirada_manualmente.eq.false')
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -93,7 +96,7 @@ export const load: PageServerLoad = async ({ params, setHeaders, fetch, depends 
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: `Vuelos baratos desde ${mercado.nombre} - Lumivia`,
-    description: `Ofertas destacadas y destinos populares desde ${mercado.nombre}. Planifica tu próxima gran historia con nuestra bóveda secreta.`,
+    description: `Compara vuelos vigentes desde ${mercado.nombre} y completa la reserva con la aerolínea o agencia.`,
     url: `https://www.lumivia.app/paises/${codigoPais}`
   });
 
