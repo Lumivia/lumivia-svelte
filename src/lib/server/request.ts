@@ -1,10 +1,13 @@
 export class ErrorSolicitud extends Error {
+  public readonly status: 400 | 413;
+
   constructor(
-    public readonly status: 400 | 413,
+    status: 400 | 413,
     message: string
   ) {
     super(message);
     this.name = 'ErrorSolicitud';
+    this.status = status;
   }
 }
 
