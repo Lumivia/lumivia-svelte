@@ -11,6 +11,12 @@ export const handle: Handle = async ({ event, resolve }) => {
   const headers = new Headers(response.headers);
   headers.set('X-Request-Id', requestId);
   headers.append('Server-Timing', `app;dur=${duracion}`);
+  headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  if (event.url.protocol === 'https:') {
+    headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
 
   if (duracion >= 1500) {
     registrarAdvertencia('http.slow_request', {

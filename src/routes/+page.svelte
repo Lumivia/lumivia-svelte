@@ -50,6 +50,16 @@
   });
 </script>
 
+<noscript>
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-50 p-6 text-center">
+    <div class="max-w-md rounded-3xl border border-gray-200 bg-white p-8 shadow-xl">
+      <h1 class="mb-3 text-2xl font-black text-lumiDark">Explora Lumivia</h1>
+      <p class="mb-6 text-sm leading-relaxed text-gray-600">Tu navegador tiene JavaScript desactivado. Puedes abrir directamente las ofertas disponibles para México.</p>
+      <a href="/paises/mx" class="inline-flex rounded-full bg-lumiDark px-6 py-3 text-sm font-black text-white">Ver ofertas</a>
+    </div>
+  </div>
+</noscript>
+
 <!-- Loader visual -->
 <div class="loader-container">
   <div class="loader"></div>
