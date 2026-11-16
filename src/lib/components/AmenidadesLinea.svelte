@@ -1,5 +1,5 @@
 <script lang="ts">
-  const { deal, paisActual } = $props();
+  const { deal, paisActual, mostrarRuta = false } = $props();
 
   const vueloDirecto = $derived(deal?.tipo_vuelo === 'directo');
   const escalas = $derived(deal?.escalas ?? 0);
@@ -8,6 +8,25 @@
   const equipaje = $derived(String(deal?.equipaje ?? '').trim());
   const duracion = $derived(deal?.duracion ?? deal?.duration ?? '');
   const clase = $derived(deal?.clase ?? deal?.fare_class ?? '');
+
+  const origenCodigo = $derived(String(deal?.origen ?? '').trim().toUpperCase());
+  const destinoCodigo = $derived(String(deal?.destino ?? '').trim().toUpperCase());
+  const origenCiudad = $derived(String(deal?.origen_nombre ?? deal?.origenNombre ?? origenCodigo).trim());
+  const destinoCiudad = $derived(String(deal?.destino_nombre ?? deal?.destinoNombre ?? destinoCodigo).trim());
+
+  function ciudadConIata(ciudad: string, codigo: string): string {
+    if (!codigo) return ciudad;
+    if (!ciudad || ciudad.toUpperCase() === codigo) return codigo;
+    return `${ciudad} (${codigo})`;
+  }
+
+  const rutaExacta = $derived(
+    origenCodigo && destinoCodigo
+      ? `${ciudadConIata(origenCiudad, origenCodigo)} → ${ciudadConIata(destinoCiudad, destinoCodigo)}`
+      : ''
+  );
+  const hayDetallePrevio = $derived((!vueloDirecto && Number(escalas) > 0) || Boolean(aerolinea || equipaje || duracion || clase));
+  const hayAntesDeImpuestos = $derived(hayDetallePrevio || Boolean(mostrarRuta && rutaExacta));
 </script>
 
 <div class="flex items-center flex-wrap gap-2 text-[10.5px] sm:text-[11px] font-bold text-gray-500 mb-5 uppercase tracking-widest leading-relaxed">
@@ -59,12 +78,22 @@
     </span>
   {/if}
 
-  <span class="text-gray-300">•</span>
+  {#if mostrarRuta && rutaExacta}
+    {#if hayDetallePrevio}<span class="text-gray-300">•</span>{/if}
+    <span class="flex items-center gap-1.5 normal-case tracking-normal" title="Ruta exacta del vuelo">
+      <svg class="w-3.5 h-3.5 shrink-0 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M13 6l6 6-6 6"></path>
+      </svg>
+      <span>{rutaExacta}</span>
+    </span>
+  {/if}
+
+  {#if hayAntesDeImpuestos}<span class="text-gray-300">•</span>{/if}
   <span class="flex items-center gap-1.5">
     <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
     </svg>
-    Impuestos Inc.
+    Impuestos incluidos
   </span>
 
 </div>

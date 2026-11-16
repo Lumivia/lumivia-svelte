@@ -387,7 +387,7 @@
 
                   <div class="mt-auto pt-6 border-t border-gray-100 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 sm:gap-0">
                     <div class="flex flex-col">
-                      <p class="text-[10px] text-gray-400 uppercase tracking-widest font-extrabold mb-1">{estaMuerta ? 'Precio pasado' : 'Precio total mostrado'}</p>
+                      <p class="text-[10px] text-gray-400 uppercase tracking-widest font-extrabold mb-1">{estaMuerta ? 'Precio pasado' : 'Tarifa aérea mostrada'}</p>
                       <p class="text-4xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tighter flex items-start">
                         <span class="text-lg font-bold text-gray-400 mt-1.5 mr-1">$</span>
                         {Number(deal.precio ?? deal.price ?? 0).toLocaleString('en-US')} 

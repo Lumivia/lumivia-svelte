@@ -193,7 +193,7 @@
 
     <div class="mt-auto pt-5 border-t border-gray-100 flex items-end justify-between">
       <div>
-        <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">{estaMuerta ? 'Precio histórico' : 'Precio total mostrado'}</p>
+        <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">{estaMuerta ? 'Precio histórico' : 'Tarifa aérea mostrada'}</p>
         <p class="text-3xl sm:text-4xl font-black {estaMuerta ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none tracking-tighter">
           <span class="text-lg font-bold text-gray-400 align-top mr-0.5">$</span>{precio} <span class="text-sm font-bold text-gray-400 align-baseline ml-1">{monedaDeal}</span>
         </p>

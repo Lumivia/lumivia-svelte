@@ -6,6 +6,7 @@
   import { crearSrcsetImagen, obtenerImagen } from '$lib/utils/imagenes';
   import { formatearFechaCorta } from '$lib/utils/fechas';
   import { AVISO_OFERTA } from '$lib/utils/avisos';
+  import { separarContenidoOferta } from '$lib/utils/contenido-oferta';
 
   let { data } = $props();
   const deal = $derived(data.deal);
@@ -129,11 +130,7 @@
     return `https://vuelos.lumivia.app/?flightSearch=${searchParam}`;
   });
 
-  const cuerpoPostLimpiado = $derived.by(() => {
-    let original = String(deal?.cuerpo_post || deal?.descripcion || "");
-    const splitText = original.split(/👉|👇|✨|Comenta la palabra/i);
-    return splitText[0].trim().replace(/[\(\[\{\-\:\s]+$/, '');
-  });
+  const contenidoOferta = $derived(separarContenidoOferta(deal?.cuerpo_post || deal?.descripcion || ''));
 
   const productoJsonLdSeguro = $derived.by(() => JSON.stringify({
     '@context': 'https://schema.org/',
@@ -236,7 +233,7 @@
             {/if}
 
             <div class="inline-flex h-7 items-center">
-              <AmenidadesLinea {deal} paisActual={deal?.pais} />
+              <AmenidadesLinea {deal} paisActual={deal?.pais} mostrarRuta={true} />
             </div>
           </div>
         </div>
@@ -248,11 +245,27 @@
               <span>Las fechas específicas de este vuelo ya pasaron, pero puedes consultar los precios actuales haciendo clic abajo.</span>
             </div>
           {/if}
-          {cuerpoPostLimpiado}
+          {contenidoOferta.descripcion}
         </div>
 
+        {#if contenidoOferta.sugerencias.length > 0}
+          <section class="mb-10 rounded-2xl border border-amber-200 bg-amber-50/70 p-5" aria-label="Sugerencias opcionales">
+            <h2 class="text-xs font-black uppercase tracking-widest text-amber-900">Sugerencias opcionales para tu viaje</h2>
+            <p class="mt-1 text-xs leading-relaxed text-amber-800">No están incluidas en la tarifa aérea mostrada y se reservan por separado.</p>
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+              {#each contenidoOferta.sugerencias as sugerencia}
+                <div class="rounded-xl border border-amber-100 bg-white/80 px-4 py-3">
+                  <p class="text-[10px] font-black uppercase tracking-wider text-amber-700">{sugerencia.tipo}</p>
+                  <p class="mt-1 text-sm font-semibold leading-relaxed text-gray-700">{sugerencia.detalle}</p>
+                </div>
+              {/each}
+            </div>
+          </section>
+        {/if}
+
         <div class="mt-auto bg-gray-50/80 -mx-6 sm:-mx-10 px-6 sm:px-10 pt-8 pb-6 border-t border-gray-100">
-          <h4 class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4 text-center sm:text-left">Planifica tu viaje</h4>
+          <h4 class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1 text-center sm:text-left">Opcionales para tu viaje</h4>
+          <p class="mb-4 text-center text-[11px] text-gray-500 sm:text-left">Se consultan y reservan por separado con cada proveedor.</p>
           
           {#if links.esim && !esNacional}
             <div class="bg-emerald-50/80 border border-emerald-100 rounded-xl p-3 mb-4">
@@ -294,7 +307,7 @@
           <div class="flex flex-col sm:flex-row items-center justify-between pt-5 gap-6">
             <div class="text-center sm:text-left w-full sm:w-auto">
               <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                {ofertaExpirada ? 'Precio histórico' : 'Precio total mostrado'}
+                {ofertaExpirada ? 'Precio histórico' : 'Tarifa aérea mostrada'}
               </p>
               <div class="text-4xl font-black {ofertaExpirada ? 'text-gray-400 line-through' : 'text-lumiDark'} leading-none">
                 ${Number(deal?.precio ?? 0).toLocaleString('en-US')}

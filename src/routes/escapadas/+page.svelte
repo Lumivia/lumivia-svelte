@@ -309,7 +309,7 @@
 
               <div class="mt-auto flex items-center justify-between pt-4 border-t border-gray-100 w-full">
                 <div>
-                  <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">Precio total mostrado</p>
+                  <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">Tarifa aérea mostrada</p>
                   <p class="text-2xl font-black text-lumiDark leading-none drop-shadow-sm">${deal.precio} <span class="text-xs font-bold text-gray-400">{monedaActual}</span></p>
                 </div>
                 <button class="bg-lumiDark group-hover/card:bg-lumiCyan group-hover/card:text-lumiDark text-white px-5 py-2.5 rounded-full text-[11px] font-black uppercase transition-colors flex items-center gap-1.5 shadow-md">

@@ -5,6 +5,7 @@
   import { formatDatesLumivia } from '$lib/utils/formatters';
   import AmenidadesLinea from '$lib/components/AmenidadesLinea.svelte';
   import { AVISO_OFERTA } from '$lib/utils/avisos';
+  import { separarContenidoOferta } from '$lib/utils/contenido-oferta';
 
   const { deal, abierto, cerrar } = $props();
   let links = $state({ tours: '', hotel: '', esim: '', seguro: '' });
@@ -120,11 +121,7 @@
     return `https://vuelos.lumivia.app/?flightSearch=${searchParam}`;
   });
 
-  const cuerpoPostLimpiado = $derived.by(() => {
-    let original = String(deal?.cuerpo_post || deal?.descripcion || "");
-    const splitText = original.split(/👉|👇|✨|Comenta la palabra/i);
-    return splitText[0].trim().replace(/[\(\[\{\-\:\s]+$/, '');
-  });
+  const contenidoOferta = $derived(separarContenidoOferta(deal?.cuerpo_post || deal?.descripcion || ''));
 </script>
 
 <svelte:head>
@@ -176,14 +173,30 @@
             <div class="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100 uppercase tracking-widest text-[10.5px]">
               {fechasCortas}
             </div>
-            <AmenidadesLinea {deal} paisActual={deal?.pais} />
+            <AmenidadesLinea {deal} paisActual={deal?.pais} mostrarRuta={true} />
           </div>
         </div>
 
-        <div class="text-[13px] text-gray-600 leading-relaxed font-medium whitespace-pre-line text-justify mb-6">{cuerpoPostLimpiado}</div>
+        <div class="text-[13px] text-gray-600 leading-relaxed font-medium whitespace-pre-line text-justify mb-4">{contenidoOferta.descripcion}</div>
+
+        {#if contenidoOferta.sugerencias.length > 0}
+          <section class="mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-4" aria-label="Sugerencias opcionales">
+            <h3 class="text-[11px] font-black uppercase tracking-widest text-amber-900">Sugerencias opcionales para tu viaje</h3>
+            <p class="mt-1 text-[11px] leading-relaxed text-amber-800">No están incluidas en la tarifa aérea mostrada y se reservan por separado.</p>
+            <div class="mt-3 space-y-2">
+              {#each contenidoOferta.sugerencias as sugerencia}
+                <div class="rounded-xl border border-amber-100 bg-white/80 px-3 py-2">
+                  <p class="text-[10px] font-black uppercase tracking-wider text-amber-700">{sugerencia.tipo}</p>
+                  <p class="mt-0.5 text-xs font-semibold leading-relaxed text-gray-700">{sugerencia.detalle}</p>
+                </div>
+              {/each}
+            </div>
+          </section>
+        {/if}
 
         <div class="mt-auto">
-          <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Complementos de Viaje</h4>
+          <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Opcionales para tu viaje</h4>
+          <p class="mb-3 text-[10px] text-gray-500">Se consultan y reservan por separado con cada proveedor.</p>
           
           {#if links.esim && !esNacional}
             <div class="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 mb-3">
@@ -227,7 +240,7 @@
 
         <div class="flex items-center justify-between pt-4">
           <div>
-            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Precio total mostrado</p>
+            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Tarifa aérea mostrada</p>
             <div class="text-3xl font-black text-lumiDark leading-none">
               ${Number(deal?.precio ?? 0).toLocaleString('en-US')}
               <span class="text-[11px] font-bold text-gray-400 uppercase ml-0.5">{monedaDeal}</span>
