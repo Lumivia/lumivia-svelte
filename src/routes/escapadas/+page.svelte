@@ -304,7 +304,7 @@
               <h3 class="font-bold text-lg leading-snug mb-3 text-lumiDark">{tituloSeguro}</h3>
               
               <div class="text-[10px] text-gray-400 font-bold flex items-center gap-2 mb-4 uppercase tracking-widest">
-                {#if deal.aerolinea}<span>✈️ {deal.aerolinea}</span><span class="text-gray-300">•</span>{/if}<span>🛡️ IMPUESTOS INC.</span>
+                <span>🛡️ IMPUESTOS INC.</span>
               </div>
 
               <div class="mt-auto flex items-center justify-between pt-4 border-t border-gray-100 w-full">

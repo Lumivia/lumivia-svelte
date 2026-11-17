@@ -4,7 +4,6 @@
   const vueloDirecto = $derived(deal?.tipo_vuelo === 'directo');
   const escalas = $derived(deal?.escalas ?? 0);
   
-  const aerolinea = $derived(String(deal?.aerolinea ?? '').trim());
   const equipaje = $derived(String(deal?.equipaje ?? '').trim());
   const duracion = $derived(deal?.duracion ?? deal?.duration ?? '');
   const clase = $derived(deal?.clase ?? deal?.fare_class ?? '');
@@ -25,7 +24,7 @@
       ? `${ciudadConIata(origenCiudad, origenCodigo)} → ${ciudadConIata(destinoCiudad, destinoCodigo)}`
       : ''
   );
-  const hayDetallePrevio = $derived((!vueloDirecto && Number(escalas) > 0) || Boolean(aerolinea || equipaje || duracion || clase));
+  const hayDetallePrevio = $derived((!vueloDirecto && Number(escalas) > 0) || Boolean(equipaje || duracion || clase));
   const hayAntesDeImpuestos = $derived(hayDetallePrevio || Boolean(mostrarRuta && rutaExacta));
 </script>
 
@@ -41,15 +40,7 @@
     <span class="text-gray-300">•</span>
   {/if}
 
-  {#if aerolinea}
-    <span class="flex items-center gap-1.5">
-      <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-      <span>{aerolinea}</span>
-    </span>
-  {/if}
-
   {#if equipaje}
-    {#if aerolinea}<span class="text-gray-300">•</span>{/if}
     <span class="flex items-center gap-1.5" title={equipaje}>
       <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
